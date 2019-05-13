@@ -1,9 +1,6 @@
 package com.example.cockounter.script
 
-import com.example.cockounter.core.GameRole
-import com.example.cockounter.core.GameState
-import com.example.cockounter.core.Player
-import com.github.andrewoma.dexx.kollection.toImmutableList
+import com.example.cockounter.core.*
 import com.github.andrewoma.dexx.kollection.toImmutableMap
 import org.luaj.vm2.Globals
 import org.luaj.vm2.LuaTable
@@ -15,42 +12,31 @@ fun evaluateScript(interpreter: Interpreter, script: String): Interpreter {
     return interpreter
 }
 
-fun mapFromGameState(state: GameState, currentPlayer: Player): Interpreter {
+fun mapFromGameState(state: GameState, currentPlayerName: String): Interpreter {
+    fun setValue(table: LuaTable, key: String, parameter: GameParameter): LuaTable {
+        when (parameter) {
+            is IntegerGameParameter -> table.set(key, parameter.value)
+            is StringGameParameter -> table.set(key, parameter.value)
+        }
+        return table
+    }
+
+    fun createTable(items: Map<String, GameParameter>) =
+        items.entries.fold(LuaValue.tableOf()!!) { table, (key, value) ->
+            setValue(table, key, value)
+        }
+
     val globals = JsePlatform.standardGlobals()!!;
-    fun setValue(table: LuaTable, key: String, value: Any) {
-        when (value) {
-            is Int -> table.set(key, value as Int)
-            is String -> table.set(key, value as String)
-            else -> table.set(key, LuaValue.NIL)
-        }
-    }
-    globals["shared"] = LuaValue.tableOf()
-    state.sharedParameters.forEach {
-        setValue(globals["shared"].checktable()!!, it.key, it.value)
-    }
-    globals["player"] = LuaValue.tableOf()
-    state.playersByRole.forEach {
-        val roleName = it.key;
-        val sharedParameters = state.roles[roleName]!!.sharedParameters
-        val sharedParametersTable = LuaValue.tableOf()
-        sharedParameters.forEach {
-            setValue(sharedParametersTable, it.key, it.value);
-        }
-        globals.set(roleName, LuaValue.tableOf())
-        val roleTable = globals[roleName].checktable()!!
-        it.value.forEachIndexed { index, player ->
-            roleTable.set(index, LuaValue.tableOf())
-            val playerTable = roleTable[index].checktable()!!
-            playerTable["__name"] = player.name
-            playerTable["shared"] = sharedParametersTable
-            val privateParametersTable = playerTable["private"].checktable()!!
-            player.privateParameters.forEach {
-                setValue(privateParametersTable, it.key, it.value)
-            }
-            playerTable["private"] = privateParametersTable
-            if (player.name == currentPlayer.name) {
-                globals["player"].checktable()!!["shared"] = sharedParametersTable
-                globals["player"].checktable()!!["private"] = privateParametersTable
+    globals["global"] = createTable(state.sharedParameters)
+    state.roles.forEach {
+        val roleName = it.key
+        globals[roleName] = LuaValue.tableOf()!!
+        globals[roleName]["shared"] = createTable(it.value.sharedParameters)
+        it.value.players.map { it.value }.forEachIndexed { index, player ->
+            globals[roleName][index] = createTable(player.privateParameters)
+            globals[roleName][index]["shared"] = globals[roleName]["shared"]
+            if (player.name == currentPlayerName) {
+                globals["player"] = globals[roleName][index]
             }
         }
     }
@@ -58,43 +44,29 @@ fun mapFromGameState(state: GameState, currentPlayer: Player): Interpreter {
 }
 
 fun mapToGameState(interpreter: Interpreter, oldState: GameState): GameState {
-    fun unpackValue(value: LuaValue, old: Any): Any = when (old) {
-        is Int -> value.toint()
-        is String -> value.tojstring()!!
-        else -> 0
+    fun unpackValue(value: LuaValue, old: GameParameter): GameParameter = when (old) {
+        is IntegerGameParameter -> IntegerGameParameter(value.toint())
+        is StringGameParameter -> StringGameParameter(value.tojstring()!!)
     }
 
+    fun unpackTable(table: LuaTable, old: Map<String, GameParameter>) =
+        old.mapValues { unpackValue(table[it.key], it.value) }.toImmutableMap()
+
     val globals = interpreter.globals
-    val sharedParametersTable = globals["shared"].checktable()!!
-    val sharedParameters = oldState.sharedParameters.mapValues { unpackValue(sharedParametersTable[it.key], it.value) }
-    val rolesTable = globals["roles"].checktable()!!
-    val roles = oldState.roles.mapValues { role ->
-        GameRole(role.value.name, role.value.sharedParameters.mapValues {
-            unpackValue(rolesTable[role.value.name]["shared"][it.key]!!, it.value)
+    val sharedParameters = unpackTable(globals["global"].checktable()!!, oldState.sharedParameters)
+    val roles = oldState.roles.mapValues { (roleName, role) ->
+        GameRole(role.name, unpackTable(globals[roleName]["shared"].checktable()!!, role.sharedParameters), role.players.values.mapIndexed { index, player ->
+            val privateParameters = unpackTable(globals[roleName][index].checktable()!!, player.privateParameters)
+            Pair(player.name, Player(player.name, privateParameters))
         }.toImmutableMap())
-    }
-    val playersByRole = oldState.playersByRole.mapValues {
-        it.value.mapIndexed { index, player ->
-            Player(
-                player.name,
-                roles.getValue(player.role.name),
-                player.privateParameters.mapValues {
-                    unpackValue(rolesTable[player.role.name][index]["private"][it.key]!!, it.value)
-                }.toImmutableMap()
-            )
-        }.toImmutableList()
-    }
-    return GameState(
-        sharedParameters.toImmutableMap(),
-        roles.toImmutableMap(),
-        playersByRole.toImmutableMap()
-    )
+    }.toImmutableMap()
+    return GameState(sharedParameters, roles)
 }
 
 fun loadScript(interpreter: Interpreter, script: String) =
     JsePlatform.standardGlobals().load(script, "script", interpreter.globals)!!
 
-fun performScript(state: GameState, player: Player, script: String): GameState =
-    mapToGameState(evaluateScript(mapFromGameState(state, player), script), state)
+fun performScript(state: GameState, playerName: String, script: String): GameState =
+    mapToGameState(evaluateScript(mapFromGameState(state, playerName), script), state)
 
 data class Interpreter(val globals: Globals)

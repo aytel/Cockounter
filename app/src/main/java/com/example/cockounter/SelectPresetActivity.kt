@@ -30,30 +30,40 @@ class SelectPresetActivity : AppCompatActivity() {
             PRESET_CHANGED -> if(resultCode == 0) {
                 val position = data.getIntExtra("position", -1)
                 presetsList[position] = data.getSerializableExtra("newPreset") as Preset
-
+                presetsAdapter.notifyDataSetChanged()
             }
         }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        verticalLayout {
-            val listView = listView {
-                adapter = presetsAdapter
-                onItemLongClick { _, _, index, _ ->
-                    selector(null, listOf("Edit", "Delete")) { _, i ->
-                        if(i == 0) {
-                            startActivityForResult(intentFor<EditPresetActivity>("preset" to presetsList[index], "position" to index), PRESET_CHANGED)
-                        } else if(i == 1) {
-                            presetsList.removeAt(index)
-                            presetsAdapter.notifyDataSetChanged()
+        scrollView {
+            verticalLayout {
+                val listView = listView {
+                    adapter = presetsAdapter
+                    onItemLongClick { _, _, index, _ ->
+                        selector(null, listOf("Edit", "Delete")) { _, i ->
+                            if (i == 0) {
+                                startActivityForResult(
+                                    intentFor<EditPresetActivity>(
+                                        "preset" to presetsList[index],
+                                        "position" to index
+                                    ), PRESET_CHANGED
+                                )
+                            } else if (i == 1) {
+                                presetsList.removeAt(index)
+                                presetsAdapter.notifyDataSetChanged()
+                            }
                         }
                     }
+                    onItemClick { p0, p1, p2, p3 ->
+                        startActivity(intentFor<PlayerGameScreenActivity>())
+                    }
                 }
-            }
-            button("New preset") {
-                onClick {
-                    startActivityForResult(intentFor<EditPresetActivity>("preset" to null), PRESET_ADDED)
+                button("New preset") {
+                    onClick {
+                        startActivityForResult(intentFor<EditPresetActivity>("preset" to null), PRESET_ADDED)
+                    }
                 }
             }
         }
