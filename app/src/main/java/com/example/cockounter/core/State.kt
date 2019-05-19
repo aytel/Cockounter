@@ -10,16 +10,15 @@ data class GameRole(val name: String, val sharedParameters: ImmutableMap<String,
 
 data class Player(val name: String, val privateParameters: ImmutableMap<String, GameParameter>) : Serializable
 
-sealed class GameParameter()
-data class IntegerGameParameter(val value: Int) : GameParameter() {
-    override fun toString(): String {
-        return "Integer: $value"
-    }
+sealed class GameParameter {
+    abstract val name: String
+    abstract val valueString: String
 }
-data class StringGameParameter(val value: String) : GameParameter() {
-    override fun toString(): String {
-        return "String: $value"
-    }
+data class IntegerGameParameter(override val name: String, val value: Int) : GameParameter() {
+    override val valueString = "Integer: $value"
+}
+data class StringGameParameter(override val name: String, val value: String) : GameParameter() {
+    override val valueString = "String: $value"
 }
 
 operator fun GameState.get(role: String) = roles.getValue(role)
