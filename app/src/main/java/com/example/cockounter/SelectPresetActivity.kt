@@ -39,10 +39,13 @@ class SelectPresetActivity : AppCompatActivity() {
                 val position = data.getIntExtra("position", -1)
                 val names = data.getStringArrayExtra("names")!!
                 val roles = data.getStringArrayExtra("roles")!!
-                val descriptions = names.zip(roles, ::PlayerDescription)
-                val state = buildState(presetsList[position], descriptions)
-                val preset = presetsList[position]
-                startActivity(intentFor<AdminGameScreenActivity>("state" to state, "preset" to preset))
+                startActivity(intentFor<AdminGameScreenActivity>(
+                    AdminGameScreenActivity.INIT_FLAG to AdminGameScreenActivity.FLAG_BUILD_NEW_STATE,
+                    AdminGameScreenActivity.ARG_PLAYER_NAMES to names,
+                    AdminGameScreenActivity.ARG_PLAYER_ROLES to roles,
+                    AdminGameScreenActivity.ARG_PRESET to presetsList[position])
+                )
+                finish()
             }
         }
     }

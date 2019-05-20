@@ -1,29 +1,46 @@
 package com.example.cockounter
 
 import android.os.Bundle
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
+import android.view.*
 import android.widget.Adapter
 import android.widget.ListAdapter
 import androidx.appcompat.app.AppCompatActivity
+import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentPagerAdapter
+import androidx.viewpager.widget.ViewPager
 import com.example.cockounter.adapters.GameStateAdapter
 import com.example.cockounter.adapters.ParameterAdapter
-import com.example.cockounter.core.GameState
-import com.example.cockounter.core.Preset
-import com.example.cockounter.core.get
+import com.example.cockounter.core.*
+import com.google.android.material.appbar.AppBarLayout
+import com.google.android.material.tabs.TabLayout
 import org.jetbrains.anko.*
+import org.jetbrains.anko.design.appBarLayout
+import org.jetbrains.anko.design.coordinatorLayout
 import org.jetbrains.anko.design.tabLayout
+import org.jetbrains.anko.design.themedTabLayout
 import org.jetbrains.anko.sdk27.coroutines.onClick
 import org.jetbrains.anko.support.v4.act
 import org.jetbrains.anko.support.v4.ctx
 import org.jetbrains.anko.support.v4.viewPager
 
+
 class AdminGameScreenActivity : AppCompatActivity(), GameHolder {
+
+    companion object {
+        const val INIT_FLAG = "INIT_FLAG"
+
+        const val FLAG_ERROR = -1;
+        const val FLAG_BUILD_NEW_STATE = 0;
+
+        const val ARG_PRESET = "preset"
+        const val ARG_PLAYER_NAMES = "names"
+        const val ARG_PLAYER_ROLES = "roles"
+
+
+    }
     override fun performScript(player: String, role: String, index: Int) {
         state = com.example.cockounter.script.performScript(state, player, preset.roles.getValue(role).scripts[index].script)
     }
@@ -33,15 +50,44 @@ class AdminGameScreenActivity : AppCompatActivity(), GameHolder {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        state = intent.getSerializableExtra("state") as GameState
-        preset = intent.getSerializableExtra("preset") as Preset
-        tabLayout {
-            val pager = viewPager {
-                adapter = PlayerGameScreenAdapter(supportFragmentManager, getState, preset)
+        val initFlag = intent.getIntExtra(INIT_FLAG, FLAG_ERROR)
+        when(initFlag) {
+            FLAG_ERROR -> {
+                toast("Error while loading preset")
+                finish()
             }
-            setupWithViewPager(pager)
+            FLAG_BUILD_NEW_STATE -> {
+                preset = intent.getSerializableExtra(ARG_PRESET) as Preset
+                val names = intent.getStringArrayExtra(ARG_PLAYER_NAMES)
+                val roles = intent.getStringArrayExtra(ARG_PLAYER_ROLES)
+                val players = names.zip(roles, ::PlayerDescription)
+                state = buildState(preset, players)
+            }
         }
+        val pagerAdapter = PlayerGameScreenAdapter(supportFragmentManager, getState, preset)
+        lateinit var myTabLayout: TabLayout;
+        lateinit var myViewPager: ViewPager;
+        coordinatorLayout {
+            lparams(matchParent, matchParent)
 
+            myViewPager = viewPager {
+                id = R.id.container
+            }.lparams(matchParent, matchParent)
+            (myViewPager.layoutParams as CoordinatorLayout.LayoutParams).behavior = AppBarLayout.ScrollingViewBehavior()
+            appBarLayout {
+                lparams(matchParent, wrapContent)
+
+                myTabLayout = themedTabLayout(R.style.ThemeOverlay_AppCompat_Dark) {
+                    lparams(matchParent, wrapContent)
+                    {
+                        tabGravity = TabLayout.GRAVITY_FILL
+                        tabMode = TabLayout.MODE_FIXED
+                    }
+                }
+            }
+        }
+        myViewPager.adapter = pagerAdapter
+        myTabLayout.setupWithViewPager(myViewPager)
     }
 
     override val getState = { state }
@@ -98,20 +144,20 @@ class PlayerGameScreenUI(val globalParametersAdapter: ListAdapter,
                 textView("Global counters")
                 listView {
                     adapter = globalParametersAdapter
-                }
+                }.lparams(matchParent, matchParent)
                 textView("Shared counters")
                 listView {
                     adapter = sharedParametersAdapter
-                }
+                }.lparams(matchParent, matchParent)
                 textView("Private counters")
                 listView {
                     adapter = privateParametersAdapter
-                }
-            }
-            scripts.forEachIndexed { index, script ->
-                button(script) {
-                    onClick {
-                        ui.owner.performScript(index)
+                }.lparams(matchParent, matchParent)
+                scripts.forEachIndexed { index, script ->
+                    button(script) {
+                        onClick {
+                            ui.owner.performScript(index)
+                        }
                     }
                 }
             }
@@ -126,9 +172,7 @@ class PlayerGameScreenAdapter(fm: FragmentManager, val getState: () -> GameState
     private val playerNames by lazy { getState().roles.values.flatMap { it.players.values.map { it.name } } }
     private val playerRoles by lazy { getState().roles.values.flatMap { role -> role.players.values.map { role.name } } }
 
-    override fun getItem(position: Int): Fragment {
-        TODO()
-    }
+    override fun getItem(position: Int): Fragment = PlayerGameScreenFragment.newInstance(playerNames[position], playerRoles[position])
 
     override fun getCount(): Int = playerNames.size
 
