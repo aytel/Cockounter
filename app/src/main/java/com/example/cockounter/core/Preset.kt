@@ -1,15 +1,29 @@
 package com.example.cockounter.core
 
+import androidx.room.*
 import arrow.core.*
 import java.io.Serializable
 
-data class Preset(
-    val name: String,
+@Entity
+public data class Preset(
+    @PrimaryKey val name: String,
     val globalParameters: Map<String, Parameter>,
     val roles: Map<String, Role>,
     val globalScripts: List<Script>
 ) :
     Serializable
+
+@Dao
+interface PresetDao {
+    @Query("SELECT * from preset")
+    fun getAll(): List<Preset>
+
+    @Insert
+    fun insert(preset: Preset)
+
+    @Delete
+    fun delete(preset: Preset)
+}
 
 data class Role(
     val name: String,
