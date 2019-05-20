@@ -37,6 +37,8 @@ dependencies {
     androidTestImplementation 'androidx.test:runner:1.1.1'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.1.1'
     implementation "org.jetbrains.anko:anko:0.10.8"
+    implementation "org.jetbrains.anko:anko-design:0.10.8"
+    implementation "org.jetbrains.anko:anko-design-coroutines:0.10.8"
     implementation 'io.arrow-kt:arrow-core:0.8.2'
     implementation 'io.arrow-kt:arrow-syntax:0.8.2'
     implementation 'io.arrow-kt:arrow-typeclasses:0.8.2'

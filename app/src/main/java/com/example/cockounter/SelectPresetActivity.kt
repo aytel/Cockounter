@@ -4,7 +4,9 @@ import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import com.example.cockounter.adapters.PresetAdapter
+import com.example.cockounter.core.PlayerDescription
 import com.example.cockounter.core.Preset
+import com.example.cockounter.core.buildState
 import org.jetbrains.anko.*
 import org.jetbrains.anko.sdk27.coroutines.onClick
 import org.jetbrains.anko.sdk27.coroutines.onItemClick
@@ -12,6 +14,7 @@ import org.jetbrains.anko.sdk27.coroutines.onItemLongClick
 
 private const val PRESET_ADDED = 0
 private const val PRESET_CHANGED = 1
+private const val START_GAME = 2
 
 class SelectPresetActivity : AppCompatActivity() {
 
@@ -31,6 +34,15 @@ class SelectPresetActivity : AppCompatActivity() {
                 val position = data.getIntExtra("position", -1)
                 presetsList[position] = data.getSerializableExtra("newPreset") as Preset
                 presetsAdapter.notifyDataSetChanged()
+            }
+            START_GAME -> if(resultCode == 0) {
+                val position = data.getIntExtra("position", -1)
+                val names = data.getStringArrayExtra("names")!!
+                val roles = data.getStringArrayExtra("roles")!!
+                val descriptions = names.zip(roles, ::PlayerDescription)
+                val state = buildState(presetsList[position], descriptions)
+                val preset = presetsList[position]
+                startActivity(intentFor<AdminGameScreenActivity>("state" to state, "preset" to preset))
             }
         }
     }
@@ -56,8 +68,9 @@ class SelectPresetActivity : AppCompatActivity() {
                             }
                         }
                     }
-                    onItemClick { p0, p1, p2, p3 ->
-                        startActivity(intentFor<PlayerGameScreenActivity>())
+                    onItemClick { p0, p1, index, p3 ->
+                        val roleNames = presetsList[index].roles.keys.toTypedArray()
+                        startActivityForResult(intentFor<StartSinglePlayerGameActivity>("roles" to roleNames, "position" to index), START_GAME)
                     }
                 }
                 button("New preset") {
