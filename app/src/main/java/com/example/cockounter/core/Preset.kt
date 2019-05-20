@@ -4,26 +4,13 @@ import androidx.room.*
 import arrow.core.*
 import java.io.Serializable
 
-@Entity
-public data class Preset(
+data class Preset(
     @PrimaryKey val name: String,
     val globalParameters: Map<String, Parameter>,
     val roles: Map<String, Role>,
     val globalScripts: List<Script>
 ) :
     Serializable
-
-@Dao
-interface PresetDao {
-    @Query("SELECT * from preset")
-    fun getAll(): List<Preset>
-
-    @Insert
-    fun insert(preset: Preset)
-
-    @Delete
-    fun delete(preset: Preset)
-}
 
 data class Role(
     val name: String,

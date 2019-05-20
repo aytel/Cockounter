@@ -6,25 +6,12 @@ import com.github.andrewoma.dexx.kollection.toImmutableList
 import com.github.andrewoma.dexx.kollection.toImmutableMap
 import java.io.Serializable
 
-@Entity
 data class GameState(
     @PrimaryKey
     val sharedParameters: ImmutableMap<String, GameParameter>,
     val roles: ImmutableMap<String, GameRole>
 ) :
     Serializable
-
-@Dao
-interface GameStateDao {
-    @Query("SELECT * from gameState")
-    fun getAll(): List<GameState>
-
-    @Insert
-    fun insert(gameState: GameState)
-
-    @Delete
-    fun delete(gameState: GameState)
-}
 
 data class GameRole(
     val name: String,
