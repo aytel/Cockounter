@@ -1,7 +1,9 @@
 package com.example.cockounter
 
 import android.os.Bundle
-import android.view.*
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
 import android.widget.ListAdapter
 import androidx.appcompat.app.AppCompatActivity
 import androidx.coordinatorlayout.widget.CoordinatorLayout
@@ -9,6 +11,7 @@ import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentPagerAdapter
+import androidx.viewpager.widget.PagerAdapter
 import androidx.viewpager.widget.ViewPager
 import com.example.cockounter.adapters.GameStateAdapter
 import com.example.cockounter.core.*
@@ -20,6 +23,7 @@ import org.jetbrains.anko.design.coordinatorLayout
 import org.jetbrains.anko.design.themedTabLayout
 import org.jetbrains.anko.sdk27.coroutines.onClick
 import org.jetbrains.anko.support.v4.act
+import org.jetbrains.anko.support.v4.alert
 import org.jetbrains.anko.support.v4.ctx
 import org.jetbrains.anko.support.v4.viewPager
 
@@ -38,17 +42,24 @@ class AdminGameScreenActivity : AppCompatActivity(), GameHolder {
 
 
     }
+
     override fun performScript(player: String, role: String, index: Int) {
-        state = com.example.cockounter.script.performScript(state, player, preset.roles.getValue(role).scripts[index].script)
+        state = com.example.cockounter.script.performScript(
+            state,
+            player,
+            preset.roles.getValue(role).scripts[index].script
+        )
+        pagerAdapter.notifyDataSetChanged()
     }
 
     private lateinit var state: GameState
     private lateinit var preset: Preset
+    val pagerAdapter by lazy { PlayerGameScreenAdapter(supportFragmentManager, getState, preset) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val initFlag = intent.getIntExtra(INIT_FLAG, FLAG_ERROR)
-        when(initFlag) {
+        when (initFlag) {
             FLAG_ERROR -> {
                 toast("Error while loading preset")
                 finish()
@@ -61,7 +72,6 @@ class AdminGameScreenActivity : AppCompatActivity(), GameHolder {
                 state = buildState(preset, players)
             }
         }
-        val pagerAdapter = PlayerGameScreenAdapter(supportFragmentManager, getState, preset)
         lateinit var myTabLayout: TabLayout;
         lateinit var myViewPager: ViewPager;
         coordinatorLayout {
@@ -106,6 +116,10 @@ class PlayerGameScreenFragment : Fragment() {
     private var playerName = ""
     private var playerRole = ""
 
+    lateinit var globalParametersAdapter: GameStateAdapter
+    lateinit var sharedParametersAdapter: GameStateAdapter
+    lateinit var privateParametersAdapter: GameStateAdapter
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         playerName = arguments!!.getString(ARG_NAME) ?: ""
@@ -115,11 +129,14 @@ class PlayerGameScreenFragment : Fragment() {
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         val state = getState()
         val preset = getPreset()
+        globalParametersAdapter = GameStateAdapter({ state }, { it.globalParameters.values.toList() })
+        sharedParametersAdapter = GameStateAdapter({ state }, { it[playerRole].sharedParameters.values.toList() })
+        privateParametersAdapter = GameStateAdapter({ state }, { it[playerRole][playerName].privateParameters.values.toList() })
         return PlayerGameScreenUI(
-            GameStateAdapter({ state }, {it.globalParameters.values.toList()}),
-            GameStateAdapter({ state }, {it[playerRole].sharedParameters.values.toList()}),
-            GameStateAdapter({ state }, {it[playerRole][playerName].privateParameters.values.toList()}),
-            preset.roles.getValue(playerRole).scripts.map{it.name}
+            globalParametersAdapter,
+            sharedParametersAdapter,
+            privateParametersAdapter,
+            preset.roles.getValue(playerRole).scripts.map { it.name }
         ).createView(AnkoContext.Companion.create(ctx, this))
     }
 
@@ -128,13 +145,23 @@ class PlayerGameScreenFragment : Fragment() {
 
     fun performScript(index: Int) {
         (act as GameHolder).performScript(playerName, playerRole, index)
+        /*
+        alert {
+            message = getState().toString()
+        }.show()
+        */
+        globalParametersAdapter.notifyDataSetChanged()
+        sharedParametersAdapter.notifyDataSetChanged()
+        privateParametersAdapter.notifyDataSetChanged()
     }
 }
 
-class PlayerGameScreenUI(val globalParametersAdapter: ListAdapter,
-                         val sharedParametersAdapter: ListAdapter,
-                         val privateParametersAdapter: ListAdapter,
-                         val scripts: List<String>) : AnkoComponent<PlayerGameScreenFragment> {
+class PlayerGameScreenUI(
+    val globalParametersAdapter: GameStateAdapter,
+    val sharedParametersAdapter: GameStateAdapter,
+    val privateParametersAdapter: GameStateAdapter,
+    val scripts: List<String>
+) : AnkoComponent<PlayerGameScreenFragment> {
     override fun createView(ui: AnkoContext<PlayerGameScreenFragment>): View = with(ui) {
         scrollView {
             verticalLayout {
@@ -169,11 +196,14 @@ class PlayerGameScreenAdapter(fm: FragmentManager, val getState: () -> GameState
     private val playerNames by lazy { getState().roles.values.flatMap { it.players.values.map { it.name } } }
     private val playerRoles by lazy { getState().roles.values.flatMap { role -> role.players.values.map { role.name } } }
 
-    override fun getItem(position: Int): Fragment = PlayerGameScreenFragment.newInstance(playerNames[position], playerRoles[position])
+    override fun getItem(position: Int): Fragment =
+        PlayerGameScreenFragment.newInstance(playerNames[position], playerRoles[position])
 
     override fun getCount(): Int = playerNames.size
 
     override fun getPageTitle(position: Int): CharSequence? = playerNames[position]
+
+    override fun getItemPosition(`object`: Any): Int = PagerAdapter.POSITION_NONE
 }
 
 interface GameHolder {
