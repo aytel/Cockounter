@@ -34,7 +34,7 @@ class PlayerGameScreenActivity : AppCompatActivity() {
 
     private fun updateAdapters(role: String, player: String) {
         globalParametersList.clear()
-        globalParametersList.addAll(state.sharedParameters.values)
+        globalParametersList.addAll(state.globalParameters.values)
         sharedParametersList.clear()
         sharedParametersList.addAll(state[role].sharedParameters.values)
         privateParametersList.clear()

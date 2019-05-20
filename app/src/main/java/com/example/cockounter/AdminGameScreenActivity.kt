@@ -2,7 +2,6 @@ package com.example.cockounter
 
 import android.os.Bundle
 import android.view.*
-import android.widget.Adapter
 import android.widget.ListAdapter
 import androidx.appcompat.app.AppCompatActivity
 import androidx.coordinatorlayout.widget.CoordinatorLayout
@@ -12,14 +11,12 @@ import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentPagerAdapter
 import androidx.viewpager.widget.ViewPager
 import com.example.cockounter.adapters.GameStateAdapter
-import com.example.cockounter.adapters.ParameterAdapter
 import com.example.cockounter.core.*
 import com.google.android.material.appbar.AppBarLayout
 import com.google.android.material.tabs.TabLayout
 import org.jetbrains.anko.*
 import org.jetbrains.anko.design.appBarLayout
 import org.jetbrains.anko.design.coordinatorLayout
-import org.jetbrains.anko.design.tabLayout
 import org.jetbrains.anko.design.themedTabLayout
 import org.jetbrains.anko.sdk27.coroutines.onClick
 import org.jetbrains.anko.support.v4.act
@@ -119,7 +116,7 @@ class PlayerGameScreenFragment : Fragment() {
         val state = getState()
         val preset = getPreset()
         return PlayerGameScreenUI(
-            GameStateAdapter({ state }, {it.sharedParameters.values.toList()}),
+            GameStateAdapter({ state }, {it.globalParameters.values.toList()}),
             GameStateAdapter({ state }, {it[playerRole].sharedParameters.values.toList()}),
             GameStateAdapter({ state }, {it[playerRole][playerName].privateParameters.values.toList()}),
             preset.roles.getValue(playerRole).scripts.map{it.name}

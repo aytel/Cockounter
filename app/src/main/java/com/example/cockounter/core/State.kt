@@ -1,25 +1,23 @@
 package com.example.cockounter.core
 
 import androidx.room.*
-import com.github.andrewoma.dexx.kollection.ImmutableMap
-import com.github.andrewoma.dexx.kollection.toImmutableList
 import com.github.andrewoma.dexx.kollection.toImmutableMap
 import java.io.Serializable
 
 data class GameState(
     @PrimaryKey
-    val sharedParameters: ImmutableMap<String, GameParameter>,
-    val roles: ImmutableMap<String, GameRole>
+    val globalParameters: Map<String, GameParameter>,
+    val roles: Map<String, GameRole>
 ) :
     Serializable
 
 data class GameRole(
     val name: String,
-    val sharedParameters: ImmutableMap<String, GameParameter>,
-    val players: ImmutableMap<String, Player>
+    val sharedParameters: Map<String, GameParameter>,
+    val players: Map<String, Player>
 ) : Serializable
 
-data class Player(val name: String, val privateParameters: ImmutableMap<String, GameParameter>) : Serializable
+data class Player(val name: String, val privateParameters: Map<String, GameParameter>) : Serializable
 
 sealed class GameParameter : Serializable {
     abstract val name: String

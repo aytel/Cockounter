@@ -24,8 +24,8 @@ class MainActivity : AppCompatActivity() {
             }
             button("Edit presets") {
                 onClick {
-                    //toast("Work in progress")
-                    startActivity(intentFor<PlayerGameScreenActivity>())
+                    toast("Work in progress")
+                    //startActivity(intentFor<PlayerGameScreenActivity>())
                 }
             }
         }

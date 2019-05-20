@@ -1,5 +1,7 @@
 package com.example.cockounter.script
 
+import com.example.cockounter.core.GameState
+import com.github.andrewoma.dexx.kollection.immutableMapOf
 import org.junit.Test
 
 import org.junit.Assert.*
@@ -11,7 +13,11 @@ class ScriptKtTest {
     }
 
     @Test
-    fun mapGameState() {
+    fun mapFromGameState() {
+    }
+
+    @Test
+    fun mapToGameState() {
     }
 
     @Test
@@ -19,8 +25,6 @@ class ScriptKtTest {
     }
 
     @Test
-    fun testMap() {
-        val m = mutableMapOf(1 to 1, 2 to 2);
-        assertNotEquals(m, m.mapValues { it.value + 1 })
+    fun performScript() {
     }
 }
