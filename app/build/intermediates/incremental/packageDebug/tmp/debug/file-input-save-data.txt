@@ -1,5 +1,5 @@
 #Internal package file, do not edit.
-#Tue May 14 23:17:58 MSK 2019
+#Mon May 20 14:41:56 MSK 2019
 1.base=C\:\\Users\\aytel\\Documents\\GitHub\\Cockounter\\app\\build\\intermediates\\dex\\debug\\mergeProjectDexDebug\\out
 2.path=classes2.dex
 0.baseType=DIRECTORY

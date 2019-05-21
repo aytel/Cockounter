@@ -2,13 +2,23 @@ package com.example.cockounter.core;
 
 import java.lang.System;
 
-@kotlin.Metadata(mv = {1, 1, 13}, bv = {1, 0, 3}, k = 1, d1 = {"\u0000&\n\u0002\u0018\u0002\n\u0002\u0018\u0002\n\u0000\n\u0002\u0010\b\n\u0002\b\u0006\n\u0002\u0010\u000b\n\u0000\n\u0002\u0010\u0000\n\u0002\b\u0002\n\u0002\u0010\u000e\n\u0000\b\u0086\b\u0018\u00002\u00020\u0001B\r\u0012\u0006\u0010\u0002\u001a\u00020\u0003\u00a2\u0006\u0002\u0010\u0004J\t\u0010\u0007\u001a\u00020\u0003H\u00c6\u0003J\u0013\u0010\b\u001a\u00020\u00002\b\b\u0002\u0010\u0002\u001a\u00020\u0003H\u00c6\u0001J\u0013\u0010\t\u001a\u00020\n2\b\u0010\u000b\u001a\u0004\u0018\u00010\fH\u00d6\u0003J\t\u0010\r\u001a\u00020\u0003H\u00d6\u0001J\b\u0010\u000e\u001a\u00020\u000fH\u0016R\u0011\u0010\u0002\u001a\u00020\u0003\u00a2\u0006\b\n\u0000\u001a\u0004\b\u0005\u0010\u0006\u00a8\u0006\u0010"}, d2 = {"Lcom/example/cockounter/core/IntegerGameParameter;", "Lcom/example/cockounter/core/GameParameter;", "value", "", "(I)V", "getValue", "()I", "component1", "copy", "equals", "", "other", "", "hashCode", "toString", "", "app_debug"})
+@kotlin.Metadata(mv = {1, 1, 13}, bv = {1, 0, 3}, k = 1, d1 = {"\u0000&\n\u0002\u0018\u0002\n\u0002\u0018\u0002\n\u0000\n\u0002\u0010\u000e\n\u0000\n\u0002\u0010\b\n\u0002\b\u000b\n\u0002\u0010\u000b\n\u0000\n\u0002\u0010\u0000\n\u0002\b\u0003\b\u0086\b\u0018\u00002\u00020\u0001B\u0015\u0012\u0006\u0010\u0002\u001a\u00020\u0003\u0012\u0006\u0010\u0004\u001a\u00020\u0005\u00a2\u0006\u0002\u0010\u0006J\t\u0010\r\u001a\u00020\u0003H\u00c6\u0003J\t\u0010\u000e\u001a\u00020\u0005H\u00c6\u0003J\u001d\u0010\u000f\u001a\u00020\u00002\b\b\u0002\u0010\u0002\u001a\u00020\u00032\b\b\u0002\u0010\u0004\u001a\u00020\u0005H\u00c6\u0001J\u0013\u0010\u0010\u001a\u00020\u00112\b\u0010\u0012\u001a\u0004\u0018\u00010\u0013H\u00d6\u0003J\t\u0010\u0014\u001a\u00020\u0005H\u00d6\u0001J\t\u0010\u0015\u001a\u00020\u0003H\u00d6\u0001R\u0014\u0010\u0002\u001a\u00020\u0003X\u0096\u0004\u00a2\u0006\b\n\u0000\u001a\u0004\b\u0007\u0010\bR\u0011\u0010\u0004\u001a\u00020\u0005\u00a2\u0006\b\n\u0000\u001a\u0004\b\t\u0010\nR\u0014\u0010\u000b\u001a\u00020\u0003X\u0096\u0004\u00a2\u0006\b\n\u0000\u001a\u0004\b\f\u0010\b\u00a8\u0006\u0016"}, d2 = {"Lcom/example/cockounter/core/IntegerGameParameter;", "Lcom/example/cockounter/core/GameParameter;", "name", "", "value", "", "(Ljava/lang/String;I)V", "getName", "()Ljava/lang/String;", "getValue", "()I", "valueString", "getValueString", "component1", "component2", "copy", "equals", "", "other", "", "hashCode", "toString", "app_debug"})
 public final class IntegerGameParameter extends com.example.cockounter.core.GameParameter {
+    @org.jetbrains.annotations.NotNull()
+    private final java.lang.String valueString = null;
+    @org.jetbrains.annotations.NotNull()
+    private final java.lang.String name = null;
     private final int value = 0;
     
     @org.jetbrains.annotations.NotNull()
     @java.lang.Override()
-    public java.lang.String toString() {
+    public java.lang.String getValueString() {
+        return null;
+    }
+    
+    @org.jetbrains.annotations.NotNull()
+    @java.lang.Override()
+    public java.lang.String getName() {
         return null;
     }
     
@@ -16,15 +26,28 @@ public final class IntegerGameParameter extends com.example.cockounter.core.Game
         return 0;
     }
     
-    public IntegerGameParameter(int value) {
+    public IntegerGameParameter(@org.jetbrains.annotations.NotNull()
+    java.lang.String name, int value) {
     }
     
-    public final int component1() {
+    @org.jetbrains.annotations.NotNull()
+    public final java.lang.String component1() {
+        return null;
+    }
+    
+    public final int component2() {
         return 0;
     }
     
     @org.jetbrains.annotations.NotNull()
-    public final com.example.cockounter.core.IntegerGameParameter copy(int value) {
+    public final com.example.cockounter.core.IntegerGameParameter copy(@org.jetbrains.annotations.NotNull()
+    java.lang.String name, int value) {
+        return null;
+    }
+    
+    @org.jetbrains.annotations.NotNull()
+    @java.lang.Override()
+    public java.lang.String toString() {
         return null;
     }
     
