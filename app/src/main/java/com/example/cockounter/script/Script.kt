@@ -27,7 +27,7 @@ fun mapFromGameState(state: GameState, currentPlayerName: String): Interpreter {
         }
 
     val globals = JsePlatform.standardGlobals()!!;
-    globals["global"] = createTable(state.sharedParameters)
+    globals["global"] = createTable(state.globalParameters)
     state.roles.forEach {
         val roleName = it.key
         globals[roleName] = LuaValue.tableOf()!!
@@ -53,7 +53,7 @@ fun mapToGameState(interpreter: Interpreter, oldState: GameState): GameState {
         old.mapValues { unpackValue(table[it.key], it.value) }.toImmutableMap()
 
     val globals = interpreter.globals
-    val sharedParameters = unpackTable(globals["global"].checktable()!!, oldState.sharedParameters)
+    val sharedParameters = unpackTable(globals["global"].checktable()!!, oldState.globalParameters)
     val roles = oldState.roles.mapValues { (roleName, role) ->
         GameRole(role.name, unpackTable(globals[roleName]["shared"].checktable()!!, role.sharedParameters), role.players.values.mapIndexed { index, player ->
             val privateParameters = unpackTable(globals[roleName][index].checktable()!!, player.privateParameters)

@@ -3,20 +3,13 @@ package com.example.cockounter
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import androidx.room.Room
-import com.example.cockounter.core.Preset
-import com.example.cockounter.storage.Storage
 import org.jetbrains.anko.*
 import org.jetbrains.anko.sdk27.coroutines.onClick
-import java.util.concurrent.Callable
-import java.util.concurrent.Executors
-import kotlin.reflect.KProperty
 
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         //setContentView(R.layout.activity_main)
-
-        Storage.database = Room.databaseBuilder(this, Storage::class.java, "storage").build()
 
         verticalLayout {
             button("Create game") {
@@ -31,8 +24,8 @@ class MainActivity : AppCompatActivity() {
             }
             button("Edit presets") {
                 onClick {
-                    //toast("Work in progress")
-                    startActivity(intentFor<PlayerGameScreenActivity>())
+                    toast("Work in progress")
+                    //startActivity(intentFor<PlayerGameScreenActivity>())
                 }
             }
         }
