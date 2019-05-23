@@ -1,2 +1,0 @@
-C:\Users\aytel\Documents\GitHub\Cockounter\app\src\main\java\com\example\cockounter\MainActivity.kt
-C:\Users\aytel\Documents\GitHub\Cockounter\app\src\main\java\com\example\cockounter\storage\Storage.kt
