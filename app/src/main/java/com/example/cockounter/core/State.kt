@@ -1,11 +1,12 @@
 package com.example.cockounter.core
 
 import androidx.room.*
-import com.github.andrewoma.dexx.kollection.ImmutableList
 import com.github.andrewoma.dexx.kollection.ImmutableMap
+import com.google.gson.Gson
 import java.io.Serializable
 
 @Entity
+@TypeConverters(GameStateConverter::class)
 data class GameState(@PrimaryKey
     val sharedParameters: ImmutableMap<String, GameParameter>,
     val roles: ImmutableMap<String, GameRole>
@@ -22,6 +23,29 @@ interface GameStateDao {
 
     @Delete
     fun delete(gameState: GameState)
+}
+
+class GameStateConverter {
+    companion object {
+        val gson = Gson()
+
+        data class Parameters(val parameters: ImmutableMap<String, GameParameter>)
+        data class Roles(val roles: ImmutableMap<String, GameRole>)
+    }
+
+    @TypeConverter
+    fun fromSharedParameters(sharedParameters: ImmutableMap<String, GameParameter>): String =
+        gson.toJson(Parameters(sharedParameters))
+
+    @TypeConverter
+    fun fromRoles(roles: ImmutableMap<String, GameRole>): String = gson.toJson(Roles(roles))
+
+    @TypeConverter
+    fun toSharedParameters(data: String): ImmutableMap<String, GameParameter> =
+        gson.fromJson(data, Parameters::class.java).parameters
+
+    @TypeConverter
+    fun toRoles(data: String): ImmutableMap<String, GameRole> = gson.fromJson(data, Roles::class.java).roles
 }
 
 data class GameRole(val name: String, val sharedParameters: ImmutableMap<String, GameParameter>, val players: ImmutableMap<String, Player>) : Serializable

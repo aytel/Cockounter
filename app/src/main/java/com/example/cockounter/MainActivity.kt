@@ -7,15 +7,16 @@ import com.example.cockounter.core.Preset
 import com.example.cockounter.storage.Storage
 import org.jetbrains.anko.*
 import org.jetbrains.anko.sdk27.coroutines.onClick
+import java.util.concurrent.Callable
+import java.util.concurrent.Executors
+import kotlin.reflect.KProperty
 
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         //setContentView(R.layout.activity_main)
 
-        val database = Room.databaseBuilder(this, Storage::class.java, "storage").build()
-        database.presetDao().insert(Preset("kek", emptyMap(), emptyMap(), emptyList()));
-        print(database.presetDao().getAll().size)
+        Storage.database = Room.databaseBuilder(this, Storage::class.java, "storage").build()
 
         verticalLayout {
             button("Create game") {
