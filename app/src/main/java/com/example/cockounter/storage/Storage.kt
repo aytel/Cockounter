@@ -14,7 +14,7 @@ import java.util.concurrent.Future
 @Database(entities = [GameState::class, Preset::class], version = 1)
 abstract class Storage: RoomDatabase() {
     companion object {
-        private lateinit var database: Storage
+        lateinit var database: Storage
         private val databaseWorker = Executors.newSingleThreadExecutor()
 
         fun getAllPresets() = databaseWorker.submit ( Callable<List<Preset>> { database.presetDao().getAll() } )

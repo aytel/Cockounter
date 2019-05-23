@@ -44,10 +44,11 @@ class AdminGameScreenActivity : AppCompatActivity(), GameHolder {
     }
 
     override fun performScript(player: String, role: String, index: Int) {
-        state = com.example.cockounter.script.performScript(
+        state = com.example.cockounter.script.performScriptWithContext(
             state,
             player,
-            preset.roles.getValue(role).scripts[index].script
+            preset.roles.getValue(role).scripts[index].script,
+            this
         )
         pagerAdapter.notifyDataSetChanged()
     }
