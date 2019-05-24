@@ -1,14 +1,22 @@
 package com.example.cockounter.script
 
+import android.content.Context
+import arrow.core.Tuple2
 import com.example.cockounter.core.*
 import com.github.andrewoma.dexx.kollection.toImmutableMap
 import org.luaj.vm2.Globals
+import org.luaj.vm2.LuaFunction
 import org.luaj.vm2.LuaTable
 import org.luaj.vm2.LuaValue
 import org.luaj.vm2.lib.jse.JsePlatform
 
 fun evaluateScript(interpreter: Interpreter, script: String): Interpreter {
     loadScript(interpreter, script).call()
+    return interpreter
+}
+
+fun mapFunctions(interpreter: Interpreter, functions: List<Tuple2<String, LuaFunction>>): Interpreter {
+    functions.forEach { interpreter.globals[it.a] = it.b }
     return interpreter
 }
 
@@ -55,10 +63,14 @@ fun mapToGameState(interpreter: Interpreter, oldState: GameState): GameState {
     val globals = interpreter.globals
     val sharedParameters = unpackTable(globals["global"].checktable()!!, oldState.globalParameters)
     val roles = oldState.roles.mapValues { (roleName, role) ->
-        GameRole(role.name, unpackTable(globals[roleName]["shared"].checktable()!!, role.sharedParameters), role.players.values.mapIndexed { index, player ->
-            val privateParameters = unpackTable(globals[roleName][index].checktable()!!, player.privateParameters)
-            Pair(player.name, Player(player.name, privateParameters))
-        }.toImmutableMap())
+        GameRole(
+            role.name,
+            unpackTable(globals[roleName]["shared"].checktable()!!, role.sharedParameters),
+            role.players.values.mapIndexed { index, player ->
+                val privateParameters = unpackTable(globals[roleName][index].checktable()!!, player.privateParameters)
+                Pair(player.name, Player(player.name, privateParameters))
+            }.toImmutableMap()
+        )
     }.toImmutableMap()
     return GameState(sharedParameters, roles)
 }
@@ -68,5 +80,15 @@ fun loadScript(interpreter: Interpreter, script: String) =
 
 fun performScript(state: GameState, playerName: String, script: String): GameState =
     mapToGameState(evaluateScript(mapFromGameState(state, playerName), script), state)
+
+fun performScriptWithContext(state: GameState, playerName: String, script: String, context: Context): GameState =
+    mapToGameState(
+        evaluateScript(
+            mapFunctions(
+                mapFromGameState(state, playerName),
+                buildInteractionFunctionsWithContext(context)
+            ), script
+        ), state
+    )
 
 data class Interpreter(val globals: Globals)

@@ -7,6 +7,7 @@ import com.example.cockounter.adapters.PresetAdapter
 import com.example.cockounter.core.PlayerDescription
 import com.example.cockounter.core.Preset
 import com.example.cockounter.core.buildState
+import com.example.cockounter.storage.Storage
 import org.jetbrains.anko.*
 import org.jetbrains.anko.sdk27.coroutines.onClick
 import org.jetbrains.anko.sdk27.coroutines.onItemClick
@@ -27,13 +28,18 @@ class SelectPresetActivity : AppCompatActivity() {
         }
         when(requestCode) {
             PRESET_ADDED -> if(resultCode == 0) {
-                presetsList.add(data.getSerializableExtra("newPreset") as Preset)
+                val preset = data.getSerializableExtra("newPreset") as Preset
+                presetsList.add(preset)
                 presetsAdapter.notifyDataSetChanged()
+                Storage.insertPreset(preset)
             }
             PRESET_CHANGED -> if(resultCode == 0) {
                 val position = data.getIntExtra("position", -1)
-                presetsList[position] = data.getSerializableExtra("newPreset") as Preset
+                val preset = data.getSerializableExtra("newPreset") as Preset
+                Storage.deletePreset(presetsList[position])
+                presetsList[position] = preset
                 presetsAdapter.notifyDataSetChanged()
+                Storage.insertPreset(preset)
             }
             START_GAME -> if(resultCode == 0) {
                 val position = data.getIntExtra("position", -1)
@@ -52,6 +58,7 @@ class SelectPresetActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        presetsList.addAll(Storage.getAllPresets().get())
         scrollView {
             verticalLayout {
                 val listView = listView {
