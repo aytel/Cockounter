@@ -41,6 +41,10 @@ class PresetConverter {
         gson.toJson(Parameters(globalParameters))
 
     @TypeConverter
+    fun fromParameter(parameter: Parameter): String =
+        gson.toJson(parameter)
+
+    @TypeConverter
     fun fromRoles(roles: Map<String, Role>): String =
         gson.toJson(Roles(roles))
 
@@ -51,6 +55,10 @@ class PresetConverter {
     @TypeConverter
     fun toGlobalParameters(data: String): Map<String, Parameter> =
         gson.fromJson(data, Parameters::class.java).parameters
+
+    @TypeConverter
+    fun toParameter(data: String): Parameter =
+        gson.fromJson(data, Parameter::class.java)
 
     @TypeConverter
     fun toRoles(data: String): Map<String, Role> =
