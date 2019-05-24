@@ -8,7 +8,8 @@ import java.io.Serializable
 
 @Entity
 @TypeConverters(GameStateConverter::class)
-data class GameState(@PrimaryKey
+data class GameState(
+    @PrimaryKey
     val globalParameters: ImmutableMap<String, GameParameter>,
     val roles: ImmutableMap<String, GameRole>
 ) :
@@ -49,19 +50,38 @@ class GameStateConverter {
     fun toRoles(data: String): ImmutableMap<String, GameRole> = gson.fromJson(data, Roles::class.java).roles
 }
 
-data class GameRole(val name: String, val sharedParameters: ImmutableMap<String, GameParameter>, val players: ImmutableMap<String, Player>) : Serializable
+data class GameRole(
+    val name: String,
+    val sharedParameters: ImmutableMap<String, GameParameter>,
+    val players: ImmutableMap<String, Player>
+) : Serializable
 
 data class Player(val name: String, val privateParameters: ImmutableMap<String, GameParameter>) : Serializable
 
 sealed class GameParameter {
     abstract val name: String
+    abstract val visibleName: String
     abstract val valueString: String
 }
-data class IntegerGameParameter(override val name: String, val value: Int) : GameParameter() {
+
+data class IntegerGameParameter(override val name: String, override val visibleName: String, val value: Int) :
+    GameParameter() {
     override val valueString = "Integer: $value"
 }
-data class StringGameParameter(override val name: String, val value: String) : GameParameter() {
+
+data class StringGameParameter(override val name: String, override val visibleName: String, val value: String) :
+    GameParameter() {
     override val valueString = "String: $value"
+}
+
+data class DoubleGameParameter(override val name: String, override val visibleName: String, val value: Double) :
+    GameParameter() {
+    override val valueString = "Double: $value"
+}
+
+data class BooleanGameParameter(override val name: String, override val visibleName: String, val value: Boolean) :
+    GameParameter() {
+    override val valueString = "Boolean: $value"
 }
 
 operator fun GameState.get(role: String) = roles.getValue(role)
@@ -73,8 +93,10 @@ data class PlayerDescription(val name: String, val role: String)
 operator fun GameState.get(description: PlayerDescription) = get(description.role)[description.name]
 
 fun buildGameParameter(parameter: Parameter) = when (parameter) {
-    is IntegerParameter -> IntegerGameParameter(parameter.name, parameter.initialValue)
-    is StringParameter -> StringGameParameter(parameter.name, parameter.initialValue)
+    is IntegerParameter -> IntegerGameParameter(parameter.name, parameter.visibleName, parameter.initialValue)
+    is StringParameter -> StringGameParameter(parameter.name, parameter.visibleName, parameter.initialValue)
+    is DoubleParameter -> DoubleGameParameter(parameter.name, parameter.visibleName, parameter.initialValue)
+    is BooleanParameter -> BooleanGameParameter(parameter.name, parameter.visibleName, parameter.initialValue)
 }
 
 fun buildPlayer(role: Role, playerName: PlayerDescription) =
@@ -82,9 +104,14 @@ fun buildPlayer(role: Role, playerName: PlayerDescription) =
 
 fun buildState(preset: Preset, players: List<PlayerDescription>): GameState {
     val globalParameters = preset.globalParameters.mapValues { buildGameParameter(it.value) }.toImmutableMap()
-    val byRole = players.map { Pair(it.role, buildPlayer(preset.roles.getValue(it.role), it))}.groupBy { it.first }.mapValues { it.value.map {it.second} }
+    val byRole = players.map { Pair(it.role, buildPlayer(preset.roles.getValue(it.role), it)) }.groupBy { it.first }
+        .mapValues { it.value.map { it.second } }
     val roles = preset.roles.mapValues { (key, v) ->
-        GameRole(key, v.sharedParameters.mapValues { buildGameParameter(it.value) }.toImmutableMap(), byRole.getValue(key).map{Pair(it.name, it)}.toImmutableMap())
+        GameRole(
+            key,
+            v.sharedParameters.mapValues { buildGameParameter(it.value) }.toImmutableMap(),
+            byRole.getValue(key).map { Pair(it.name, it) }.toImmutableMap()
+        )
     }
     return GameState(globalParameters, roles.toImmutableMap())
 }

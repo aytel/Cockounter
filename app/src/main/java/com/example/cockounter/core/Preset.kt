@@ -1,7 +1,10 @@
 package com.example.cockounter.core
 
 import androidx.room.*
-import arrow.core.*
+import arrow.core.Either
+import arrow.core.Left
+import arrow.core.Right
+import arrow.core.toOption
 import com.google.gson.Gson
 import java.io.Serializable
 
@@ -81,29 +84,67 @@ data class Role(
 
 sealed class Parameter : Serializable {
     abstract val name: String
-    abstract val type: String
+    abstract val visibleName: String
+    abstract fun initialValueString(): String
+    abstract fun typeString(): String
 }
 
-data class IntegerParameter(override val name: String, val initialValue: Int) : Parameter(), Serializable {
-    override val type: String = "Integer"
+data class IntegerParameter(override val name: String, override val visibleName: String, val initialValue: Int) :
+    Parameter(), Serializable {
+    override fun typeString(): String = typeName
+
+    companion object {
+        const val typeName: String = "Integer"
+    }
+
+    override fun initialValueString(): String = initialValue.toString()
 }
 
-data class StringParameter(override val name: String, val initialValue: String) : Parameter(), Serializable {
-    override val type: String = "String"
+data class DoubleParameter(override val name: String, override val visibleName: String, val initialValue: Double) :
+    Parameter(), Serializable {
+    override fun typeString(): String = typeName
+
+    companion object {
+        const val typeName: String = "Double"
+    }
+
+    override fun initialValueString(): String = initialValue.toString()
+}
+
+data class StringParameter(override val name: String, override val visibleName: String, val initialValue: String) :
+    Parameter(), Serializable {
+    override fun typeString(): String = typeName
+
+    companion object {
+        const val typeName: String = "String"
+    }
+
+    override fun initialValueString(): String = initialValue
+}
+
+data class BooleanParameter(override val name: String, override val visibleName: String, val initialValue: Boolean) :
+    Parameter(), Serializable {
+    override fun typeString(): String = typeName
+
+    companion object {
+        const val typeName: String = "Boolean"
+    }
+
+    override fun initialValueString(): String = initialValue.toString()
 }
 
 data class Script(val name: String, val script: String) : Serializable
 
-fun initialValueString(parameter: Parameter): String = when (parameter) {
-    is IntegerParameter -> parameter.initialValue.toString()
-    is StringParameter -> parameter.initialValue
-}
-
-fun toParameter(x: Any, name: String, defaultValue: String): Either<String, Parameter> = when (x.toString()) {
-    "Integer" -> Try { IntegerParameter(name, defaultValue.trim().toInt()) }.fold(
-        { Left("$defaultValue is not integer") },
-        { Right(it) })
-    "String" -> Try { StringParameter(name, defaultValue) }.fold({ Left("$defaultValue is not string") }, { Right(it) })
-    else -> Left("Unknown type")
-}
+fun toParameter(x: Any, name: String, visibleName: String, defaultValue: String): Either<String, Parameter> =
+    when (x.toString()) {
+        IntegerParameter.typeName -> defaultValue.toIntOrNull().toOption().fold(
+            { Left("$defaultValue is not an integer") },
+            { Right(IntegerParameter(name, visibleName, it)) })
+        StringParameter.typeName -> Right(StringParameter(name, visibleName, defaultValue))
+        DoubleParameter.typeName -> defaultValue.toDoubleOrNull().toOption().fold(
+            { Left("$defaultValue is not a double") },
+            { Right(DoubleParameter(name, visibleName, it)) })
+        BooleanParameter.typeName -> Right(BooleanParameter(name, visibleName, defaultValue.toBoolean()))
+        else -> Left("Unknown type")
+    }
 

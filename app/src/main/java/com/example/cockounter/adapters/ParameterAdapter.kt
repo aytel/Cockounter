@@ -5,7 +5,6 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import com.example.cockounter.core.Parameter
-import com.example.cockounter.core.initialValueString
 import org.jetbrains.anko.textView
 import org.jetbrains.anko.verticalLayout
 
@@ -17,8 +16,8 @@ class ParameterAdapter(val ctx: Context, val resource: Int, val items: MutableLi
             with(parent.context!!) {
                 verticalLayout {
                     textView(item.name)
-                    textView(item.type)
-                    textView(initialValueString(item))
+                    textView(item.typeString())
+                    textView(item.initialValueString())
                 }
             }
         } else {
@@ -26,8 +25,8 @@ class ParameterAdapter(val ctx: Context, val resource: Int, val items: MutableLi
             with(parent.context!!) {
                 verticalLayout {
                     textView(item.name)
-                    textView(item.type)
-                    textView(initialValueString(item))
+                    textView(item.typeString())
+                    textView(item.initialValueString())
                 }
             }
         }
