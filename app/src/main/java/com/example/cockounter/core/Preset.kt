@@ -25,6 +25,9 @@ interface PresetDao {
 
     @Delete
     fun delete(preset: Preset)
+
+    @Query("DELETE FROM preset")
+    fun nukeTable()
 }
 
 class PresetConverter {
