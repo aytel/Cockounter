@@ -11,9 +11,16 @@ import org.jetbrains.anko.sdk27.coroutines.onClick
 
 class EditScriptActivity : AppCompatActivity() {
 
+    companion object {
+        const val ARG_SCRIPT = "script"
+        const val ARG_POSITION = "position"
+        const val RESULT_POSITION = "position"
+        const val RESULT_SCRIPT = "newScript"
+        const val RESULT_OK = 0
+    }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val script = intent.getSerializableExtra("script") as Script?
+        val script = intent.getSerializableExtra(ARG_SCRIPT) as Script?
         EditScriptUI(script).setContentView(this)
     }
 
@@ -24,13 +31,13 @@ class EditScriptActivity : AppCompatActivity() {
     fun save(scriptName: String, script: String) {
         val result = Intent()
         result.putExtra(
-            "newScript",
+            RESULT_SCRIPT,
             Script(
                 scriptName,
                 script
             )
         )
-        result.putExtra("position", intent.getIntExtra("position", -1))
+        result.putExtra(RESULT_POSITION, intent.getIntExtra(ARG_POSITION, -1))
         setResult(0, result)
         finish()
     }
@@ -43,7 +50,7 @@ class EditScriptUI(val script: Script?) : AnkoComponent<EditScriptActivity> {
                 val scriptName = editText(script?.name ?: "") {
                     hint = "Name"
                 }
-                val scriptSource = editText(script?.name ?: "") {
+                val scriptSource = editText(script?.script ?: "") {
                     hint = "Script"
                 }
                 button("Run script") {

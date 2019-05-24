@@ -14,12 +14,12 @@ import androidx.viewpager.widget.PagerAdapter
 import androidx.viewpager.widget.ViewPager
 import com.example.cockounter.adapters.GameStateAdapter
 import com.example.cockounter.core.*
+import com.example.cockounter.script.performScriptWithContext
 import com.google.android.material.appbar.AppBarLayout
 import com.google.android.material.tabs.TabLayout
 import org.jetbrains.anko.*
 import org.jetbrains.anko.design.appBarLayout
 import org.jetbrains.anko.design.coordinatorLayout
-import org.jetbrains.anko.design.tabItem
 import org.jetbrains.anko.design.themedTabLayout
 import org.jetbrains.anko.sdk27.coroutines.onClick
 import org.jetbrains.anko.sdk27.coroutines.onMenuItemClick
@@ -60,6 +60,12 @@ class AdminGameScreenActivity : AppCompatActivity(), GameHolder {
         )
         pagerAdapter.notifyDataSetChanged()
     }
+
+    override fun performScript(player: String, role: String, script: Script) {
+        state = performScriptWithContext(state, player, script.script, this)
+        pagerAdapter.notifyDataSetChanged()
+    }
+
 
     private lateinit var state: GameState
     private lateinit var preset: Preset
@@ -149,10 +155,24 @@ class PlayerGameScreenFragment : Fragment() {
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         val state = getState()
         val preset = getPreset()
-        globalParametersAdapter = GameStateAdapter({ state }, { it.globalParameters.values.toList() })
-        sharedParametersAdapter = GameStateAdapter({ state }, { it[playerRole].sharedParameters.values.toList() })
-        privateParametersAdapter =
-            GameStateAdapter({ state }, { it[playerRole][playerName].privateParameters.values.toList() })
+        globalParametersAdapter = GameStateAdapter(
+            getState = { state },
+            extract = { it.globalParameters.values.toList() },
+            parameters = preset.globalParameters,
+            callback = this::performScript
+        )
+        sharedParametersAdapter = GameStateAdapter(
+            getState = { state },
+            extract = { it[playerRole].sharedParameters.values.toList() },
+            parameters = preset.roles[playerRole]!!.sharedParameters,
+            callback = this::performScript
+        )
+        privateParametersAdapter = GameStateAdapter(
+                getState = { state },
+                extract = { it[playerRole][playerName].privateParameters.values.toList() },
+                parameters = preset.roles[playerRole]!!.privateParameters,
+                callback = this::performScript
+        )
         return PlayerGameScreenUI(
             globalParametersAdapter,
             sharedParametersAdapter,
@@ -184,6 +204,13 @@ class PlayerGameScreenFragment : Fragment() {
             message = getState().toString()
         }.show()
         */
+        globalParametersAdapter.notifyDataSetChanged()
+        sharedParametersAdapter.notifyDataSetChanged()
+        privateParametersAdapter.notifyDataSetChanged()
+    }
+
+    fun performScript(script: Script) {
+        (act as GameHolder).performScript(playerName, playerRole, script)
         globalParametersAdapter.notifyDataSetChanged()
         sharedParametersAdapter.notifyDataSetChanged()
         privateParametersAdapter.notifyDataSetChanged()
@@ -251,6 +278,7 @@ class PlayerGameScreenAdapter(fm: FragmentManager, val getState: () -> GameState
 interface GameHolder {
     fun performGlobalScript(player: String, role: String, index: Int): Unit
     fun performScript(player: String, role: String, index: Int): Unit
+    fun performScript(player: String, role: String, script: Script): Unit
     val getState: () -> GameState
     val getPreset: () -> Preset
 }

@@ -4,22 +4,37 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.BaseAdapter
+import android.widget.LinearLayout
 import arrow.core.Id
 import arrow.core.compose
 import arrow.syntax.function.pipe
-import com.example.cockounter.core.GameParameter
-import com.example.cockounter.core.GameState
-import org.jetbrains.anko.textView
-import org.jetbrains.anko.verticalLayout
+import com.example.cockounter.core.*
+import org.jetbrains.anko.*
+import org.jetbrains.anko.sdk27.coroutines.onClick
 
-class GameStateAdapter(val getState: () -> GameState, val extract: (GameState) -> List<GameParameter>) : BaseAdapter() {
+class GameStateAdapter(val getState: () -> GameState, val extract: (GameState) -> List<GameParameter>, val parameters: Map<String, Parameter>, val callback: (Script) -> Unit) : BaseAdapter() {
     override fun getView(position: Int, convertView: View?, parent: ViewGroup?): View = with(parent!!.context) {
-        verticalLayout {
-            textView {
-                text = (getItem(position) as GameParameter).name
+        linearLayout {
+            var parameter = getItem(position) as GameParameter
+            verticalLayout {
+                textView {
+                    text = parameter.visibleName
+                }
+
+                textView {
+                    text = parameter.valueString()
+                }
             }
-            textView {
-                text = (getItem(position) as GameParameter).toString()
+            horizontalScrollView {
+                linearLayout {
+                    parameters.getValue(parameter.name).attachedScripts.forEach { script ->
+                        button(script.name) {
+                            onClick {
+                                callback(script)
+                            }
+                        }
+                    }
+                }
             }
         }
     }

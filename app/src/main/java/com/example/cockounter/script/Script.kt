@@ -53,8 +53,10 @@ fun mapFromGameState(state: GameState, currentPlayerName: String): Interpreter {
 
 fun mapToGameState(interpreter: Interpreter, oldState: GameState): GameState {
     fun unpackValue(value: LuaValue, old: GameParameter): GameParameter = when (old) {
-        is IntegerGameParameter -> IntegerGameParameter(old.name, value.toint())
-        is StringGameParameter -> StringGameParameter(old.name, value.tojstring()!!)
+        is IntegerGameParameter -> IntegerGameParameter(old.name, old.visibleName, value.toint())
+        is StringGameParameter -> StringGameParameter(old.name, old.visibleName, value.tojstring()!!)
+        is DoubleGameParameter -> TODO()
+        is BooleanGameParameter -> TODO()
     }
 
     fun unpackTable(table: LuaTable, old: Map<String, GameParameter>) =

@@ -12,6 +12,7 @@ import java.io.Serializable
 @TypeConverters(PresetConverter::class)
 data class Preset(
     @PrimaryKey val name: String,
+    val description: String,
     val globalParameters: Map<String, Parameter>,
     val roles: Map<String, Role>,
     val globalScripts: List<Script>
@@ -47,10 +48,6 @@ class PresetConverter {
         gson.toJson(Parameters(globalParameters))
 
     @TypeConverter
-    fun fromParameter(parameter: Parameter): String =
-        gson.toJson(parameter)
-
-    @TypeConverter
     fun fromRoles(roles: Map<String, Role>): String =
         gson.toJson(Roles(roles))
 
@@ -61,10 +58,6 @@ class PresetConverter {
     @TypeConverter
     fun toGlobalParameters(data: String): Map<String, Parameter> =
         gson.fromJson(data, Parameters::class.java).parameters
-
-    @TypeConverter
-    fun toParameter(data: String): Parameter =
-        gson.fromJson(data, Parameter::class.java)
 
     @TypeConverter
     fun toRoles(data: String): Map<String, Role> =
@@ -87,9 +80,13 @@ sealed class Parameter : Serializable {
     abstract val visibleName: String
     abstract fun initialValueString(): String
     abstract fun typeString(): String
+    abstract val attachedScripts: List<Script>
 }
 
-data class IntegerParameter(override val name: String, override val visibleName: String, val initialValue: Int) :
+data class IntegerParameter(
+    override val name: String, override val visibleName: String, val initialValue: Int,
+    override val attachedScripts: List<Script>
+) :
     Parameter(), Serializable {
     override fun typeString(): String = typeName
 
@@ -100,7 +97,12 @@ data class IntegerParameter(override val name: String, override val visibleName:
     override fun initialValueString(): String = initialValue.toString()
 }
 
-data class DoubleParameter(override val name: String, override val visibleName: String, val initialValue: Double) :
+data class DoubleParameter(
+    override val name: String,
+    override val visibleName: String,
+    val initialValue: Double,
+    override val attachedScripts: List<Script>
+) :
     Parameter(), Serializable {
     override fun typeString(): String = typeName
 
@@ -111,7 +113,12 @@ data class DoubleParameter(override val name: String, override val visibleName: 
     override fun initialValueString(): String = initialValue.toString()
 }
 
-data class StringParameter(override val name: String, override val visibleName: String, val initialValue: String) :
+data class StringParameter(
+    override val name: String,
+    override val visibleName: String,
+    val initialValue: String,
+    override val attachedScripts: List<Script>
+) :
     Parameter(), Serializable {
     override fun typeString(): String = typeName
 
@@ -122,7 +129,12 @@ data class StringParameter(override val name: String, override val visibleName: 
     override fun initialValueString(): String = initialValue
 }
 
-data class BooleanParameter(override val name: String, override val visibleName: String, val initialValue: Boolean) :
+data class BooleanParameter(
+    override val name: String,
+    override val visibleName: String,
+    val initialValue: Boolean,
+    override val attachedScripts: List<Script>
+) :
     Parameter(), Serializable {
     override fun typeString(): String = typeName
 
@@ -135,16 +147,16 @@ data class BooleanParameter(override val name: String, override val visibleName:
 
 data class Script(val name: String, val script: String) : Serializable
 
-fun toParameter(x: Any, name: String, visibleName: String, defaultValue: String): Either<String, Parameter> =
+fun toParameter(x: Any, name: String, visibleName: String, defaultValue: String, attachedScripts: List<Script>): Either<String, Parameter> =
     when (x.toString()) {
         IntegerParameter.typeName -> defaultValue.toIntOrNull().toOption().fold(
             { Left("$defaultValue is not an integer") },
-            { Right(IntegerParameter(name, visibleName, it)) })
-        StringParameter.typeName -> Right(StringParameter(name, visibleName, defaultValue))
+            { Right(IntegerParameter(name, visibleName, it, attachedScripts)) })
+        StringParameter.typeName -> Right(StringParameter(name, visibleName, defaultValue, attachedScripts))
         DoubleParameter.typeName -> defaultValue.toDoubleOrNull().toOption().fold(
             { Left("$defaultValue is not a double") },
-            { Right(DoubleParameter(name, visibleName, it)) })
-        BooleanParameter.typeName -> Right(BooleanParameter(name, visibleName, defaultValue.toBoolean()))
+            { Right(DoubleParameter(name, visibleName, it, attachedScripts)) })
+        BooleanParameter.typeName -> Right(BooleanParameter(name, visibleName, defaultValue.toBoolean(), attachedScripts))
         else -> Left("Unknown type")
     }
 

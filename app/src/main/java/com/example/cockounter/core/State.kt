@@ -43,11 +43,28 @@ class GameStateConverter {
     fun fromRoles(roles: ImmutableMap<String, GameRole>): String = gson.toJson(Roles(roles))
 
     @TypeConverter
+    fun fromGameParameter(parameter: GameParameter): String = when(parameter) {
+        is IntegerGameParameter -> "1" + gson.toJson(parameter)
+        is StringGameParameter -> "2" + gson.toJson(parameter)
+        is DoubleGameParameter -> "3" + gson.toJson(parameter)
+        is BooleanGameParameter -> "4" + gson.toJson(parameter)
+    }
+
+    @TypeConverter
     fun toSharedParameters(data: String): ImmutableMap<String, GameParameter> =
         gson.fromJson(data, Parameters::class.java).parameters
 
     @TypeConverter
     fun toRoles(data: String): ImmutableMap<String, GameRole> = gson.fromJson(data, Roles::class.java).roles
+
+    @TypeConverter
+    fun toGameParameter(data: String): GameParameter = when(data[0]) {
+        '1' -> gson.fromJson(data.substring(1), IntegerGameParameter::class.java)
+        '2' -> gson.fromJson(data.substring(1), StringGameParameter::class.java)
+        '3' -> gson.fromJson(data.substring(1), DoubleGameParameter::class.java)
+        '4' -> gson.fromJson(data.substring(1), BooleanGameParameter::class.java)
+        else -> throw IllegalArgumentException("Can't convert string to GameParameter")
+    }
 }
 
 data class GameRole(
@@ -61,27 +78,27 @@ data class Player(val name: String, val privateParameters: ImmutableMap<String, 
 sealed class GameParameter {
     abstract val name: String
     abstract val visibleName: String
-    abstract val valueString: String
+    abstract fun valueString(): String
 }
 
 data class IntegerGameParameter(override val name: String, override val visibleName: String, val value: Int) :
     GameParameter() {
-    override val valueString = "Integer: $value"
+    override fun valueString() = "Integer: $value"
 }
 
 data class StringGameParameter(override val name: String, override val visibleName: String, val value: String) :
     GameParameter() {
-    override val valueString = "String: $value"
+    override fun valueString() = "String: $value"
 }
 
 data class DoubleGameParameter(override val name: String, override val visibleName: String, val value: Double) :
     GameParameter() {
-    override val valueString = "Double: $value"
+    override fun valueString() = "Double: $value"
 }
 
 data class BooleanGameParameter(override val name: String, override val visibleName: String, val value: Boolean) :
     GameParameter() {
-    override val valueString = "Boolean: $value"
+    override fun valueString() = "Boolean: $value"
 }
 
 operator fun GameState.get(role: String) = roles.getValue(role)

@@ -58,7 +58,7 @@ class SelectPresetActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        presetsList.addAll(Storage.getAllPresets().get())
+        //presetsList.addAll(Storage.getAllPresets().get())
         scrollView {
             verticalLayout {
                 val listView = listView {

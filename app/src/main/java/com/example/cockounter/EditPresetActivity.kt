@@ -45,6 +45,9 @@ class EditPresetActivity : AppCompatActivity() {
                 val presetName = editText(preset?.name ?: "") {
                     hint = "Name"
                 }
+                val presetDescription = editText(preset?.description ?: "") {
+                    hint = "Description"
+                }
                 textView("Global counters")
                 listView {
                     adapter = globalParametersAdapter
@@ -127,10 +130,11 @@ class EditPresetActivity : AppCompatActivity() {
                         result.putExtra(
                             "newPreset",
                             Preset(
-                                presetName.text.toString(),
-                                globalParametersList.map { Pair(it.name, it) }.toMap(),
-                                rolesList.map { Pair(it.name, it) }.toMap(),
-                                scriptsList
+                                name = presetName.text.toString(),
+                                description = presetDescription.text.toString(),
+                                globalParameters = globalParametersList.map { Pair(it.name, it) }.toMap(),
+                                roles = rolesList.map { Pair(it.name, it) }.toMap(),
+                                globalScripts = scriptsList
                             )
                         )
                         result.putExtra("position", intent.getIntExtra("position", -1))

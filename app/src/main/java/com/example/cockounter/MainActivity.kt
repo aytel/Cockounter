@@ -16,12 +16,17 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         //setContentView(R.layout.activity_main)
 
-        initDatabase()
-        Storage.nukePresets()
+        //initDatabase()
+        //Storage.nukePresets()
         verticalLayout {
             button("Create game") {
                 onClick {
                     startActivity(intentFor<SelectPresetActivity>())
+                }
+            }
+            button("Resume game") {
+                onClick {
+                    toast("Work in progress")
                 }
             }
             button("Join game") {
