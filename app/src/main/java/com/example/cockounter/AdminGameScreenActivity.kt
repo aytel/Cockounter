@@ -4,7 +4,6 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ListAdapter
 import androidx.appcompat.app.AppCompatActivity
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.os.bundleOf
@@ -20,10 +19,11 @@ import com.google.android.material.tabs.TabLayout
 import org.jetbrains.anko.*
 import org.jetbrains.anko.design.appBarLayout
 import org.jetbrains.anko.design.coordinatorLayout
+import org.jetbrains.anko.design.tabItem
 import org.jetbrains.anko.design.themedTabLayout
 import org.jetbrains.anko.sdk27.coroutines.onClick
+import org.jetbrains.anko.sdk27.coroutines.onMenuItemClick
 import org.jetbrains.anko.support.v4.act
-import org.jetbrains.anko.support.v4.alert
 import org.jetbrains.anko.support.v4.ctx
 import org.jetbrains.anko.support.v4.viewPager
 
@@ -33,14 +33,22 @@ class AdminGameScreenActivity : AppCompatActivity(), GameHolder {
     companion object {
         const val INIT_FLAG = "INIT_FLAG"
 
-        const val FLAG_ERROR = -1;
-        const val FLAG_BUILD_NEW_STATE = 0;
+        const val FLAG_ERROR = -1
+        const val FLAG_BUILD_NEW_STATE = 0
 
         const val ARG_PRESET = "preset"
         const val ARG_PLAYER_NAMES = "names"
         const val ARG_PLAYER_ROLES = "roles"
+    }
 
-
+    override fun performGlobalScript(player: String, role: String, index: Int) {
+        state = com.example.cockounter.script.performScriptWithContext(
+            state,
+            player,
+            preset.globalScripts[index].script,
+            this
+        )
+        pagerAdapter.notifyDataSetChanged()
     }
 
     override fun performScript(player: String, role: String, index: Int) {
@@ -55,7 +63,7 @@ class AdminGameScreenActivity : AppCompatActivity(), GameHolder {
 
     private lateinit var state: GameState
     private lateinit var preset: Preset
-    val pagerAdapter by lazy { PlayerGameScreenAdapter(supportFragmentManager, getState, preset) }
+    private val pagerAdapter by lazy { PlayerGameScreenAdapter(supportFragmentManager, getState, preset) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -73,8 +81,8 @@ class AdminGameScreenActivity : AppCompatActivity(), GameHolder {
                 state = buildState(preset, players)
             }
         }
-        lateinit var myTabLayout: TabLayout;
-        lateinit var myViewPager: ViewPager;
+        lateinit var myTabLayout: TabLayout
+        lateinit var myViewPager: ViewPager
         coordinatorLayout {
             lparams(matchParent, matchParent)
 
@@ -84,6 +92,17 @@ class AdminGameScreenActivity : AppCompatActivity(), GameHolder {
             (myViewPager.layoutParams as CoordinatorLayout.LayoutParams).behavior = AppBarLayout.ScrollingViewBehavior()
             appBarLayout {
                 lparams(matchParent, wrapContent)
+
+                toolbar {
+                    menu.apply {
+                        onMenuItemClick {
+                            toast("Wow")
+                        }
+                        add("Save state").apply {
+                        }
+                    }
+
+                }
 
                 myTabLayout = themedTabLayout(R.style.ThemeOverlay_AppCompat_Dark) {
                     lparams(matchParent, wrapContent)
@@ -132,11 +151,13 @@ class PlayerGameScreenFragment : Fragment() {
         val preset = getPreset()
         globalParametersAdapter = GameStateAdapter({ state }, { it.globalParameters.values.toList() })
         sharedParametersAdapter = GameStateAdapter({ state }, { it[playerRole].sharedParameters.values.toList() })
-        privateParametersAdapter = GameStateAdapter({ state }, { it[playerRole][playerName].privateParameters.values.toList() })
+        privateParametersAdapter =
+            GameStateAdapter({ state }, { it[playerRole][playerName].privateParameters.values.toList() })
         return PlayerGameScreenUI(
             globalParametersAdapter,
             sharedParametersAdapter,
             privateParametersAdapter,
+            preset.globalScripts.map { it.name },
             preset.roles.getValue(playerRole).scripts.map { it.name }
         ).createView(AnkoContext.Companion.create(ctx, this))
     }
@@ -155,12 +176,25 @@ class PlayerGameScreenFragment : Fragment() {
         sharedParametersAdapter.notifyDataSetChanged()
         privateParametersAdapter.notifyDataSetChanged()
     }
+
+    fun performGlobalScript(index: Int) {
+        (act as GameHolder).performGlobalScript(playerName, playerRole, index)
+        /*
+        alert {
+            message = getState().toString()
+        }.show()
+        */
+        globalParametersAdapter.notifyDataSetChanged()
+        sharedParametersAdapter.notifyDataSetChanged()
+        privateParametersAdapter.notifyDataSetChanged()
+    }
 }
 
 class PlayerGameScreenUI(
     val globalParametersAdapter: GameStateAdapter,
     val sharedParametersAdapter: GameStateAdapter,
     val privateParametersAdapter: GameStateAdapter,
+    val globalScripts: List<String>,
     val scripts: List<String>
 ) : AnkoComponent<PlayerGameScreenFragment> {
     override fun createView(ui: AnkoContext<PlayerGameScreenFragment>): View = with(ui) {
@@ -178,6 +212,13 @@ class PlayerGameScreenUI(
                 listView {
                     adapter = privateParametersAdapter
                 }.lparams(matchParent, matchParent)
+                globalScripts.forEachIndexed { index, script ->
+                    button(script) {
+                        onClick {
+                            ui.owner.performGlobalScript(index)
+                        }
+                    }
+                }
                 scripts.forEachIndexed { index, script ->
                     button(script) {
                         onClick {
@@ -208,6 +249,7 @@ class PlayerGameScreenAdapter(fm: FragmentManager, val getState: () -> GameState
 }
 
 interface GameHolder {
+    fun performGlobalScript(player: String, role: String, index: Int): Unit
     fun performScript(player: String, role: String, index: Int): Unit
     val getState: () -> GameState
     val getPreset: () -> Preset

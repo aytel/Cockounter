@@ -4,7 +4,7 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.widget.ArrayAdapter
 import com.example.cockounter.core.*
-import com.example.cockounter.script.performScript
+import com.example.cockounter.script.performScriptUsingGameState
 import org.jetbrains.anko.*
 import org.jetbrains.anko.sdk27.coroutines.onClick
 
@@ -70,7 +70,7 @@ class PlayerGameScreenActivity : AppCompatActivity() {
             scripts.forEachIndexed { index, script ->
                 button(script.name) {
                     onClick {
-                        state = performScript(state, player, script.script)
+                        state = performScriptUsingGameState(state, player, script.script)
                         updateAdapters(role, player)
                     }
                 }

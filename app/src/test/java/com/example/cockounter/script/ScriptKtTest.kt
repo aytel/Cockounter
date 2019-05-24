@@ -18,7 +18,7 @@ class ScriptKtTest {
             mapOf("x" to IntegerGameParameter("x", 0)),
             mapOf("role" to GameRole("role", mapOf(), mapOf("player" to Player("player", mapOf()))))
         )
-        val res = performScript(state, "player", "global.x = global.x + 1")
+        val res = performScriptUsingGameState(state, "player", "global.x = global.x + 1")
         val newState = mapToGameState(mapFromGameState(state, "player"), state)
 
     }

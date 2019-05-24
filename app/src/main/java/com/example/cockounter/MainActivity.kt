@@ -17,7 +17,7 @@ class MainActivity : AppCompatActivity() {
         //setContentView(R.layout.activity_main)
 
         initDatabase()
-        //Storage.nukePresets()
+        Storage.nukePresets()
         verticalLayout {
             button("Create game") {
                 onClick {

@@ -1,7 +1,7 @@
 package com.example.cockounter.script
 
 import android.content.Context
-import arrow.core.Tuple2
+import arrow.core.*
 import com.example.cockounter.core.*
 import com.github.andrewoma.dexx.kollection.toImmutableMap
 import org.luaj.vm2.Globals
@@ -78,7 +78,7 @@ fun mapToGameState(interpreter: Interpreter, oldState: GameState): GameState {
 fun loadScript(interpreter: Interpreter, script: String) =
     JsePlatform.standardGlobals().load(script, "script", interpreter.globals)!!
 
-fun performScript(state: GameState, playerName: String, script: String): GameState =
+fun performScriptUsingGameState(state: GameState, playerName: String, script: String): GameState =
     mapToGameState(evaluateScript(mapFromGameState(state, playerName), script), state)
 
 fun performScriptWithContext(state: GameState, playerName: String, script: String, context: Context): GameState =
@@ -90,5 +90,17 @@ fun performScriptWithContext(state: GameState, playerName: String, script: Strin
             ), script
         ), state
     )
+
+inline fun <reified T> performScript(map: (T) -> Interpreter, unmap: (Interpreter) -> T, functions: List<Tuple2<String, LuaFunction>>, script: String, value: T): T {
+    val interpreter = mapFunctions(map(value), functions)
+    return unmap(evaluateScript(interpreter, script))
+}
+
+fun mapFromNothing(unit: Unit) = Interpreter(JsePlatform.standardGlobals()!!)
+
+fun mapToNothing(interpreter: Interpreter) = Unit
+
+fun performScriptUsingNothingWithContext(script: String, context: Context) = performScript(::mapFromNothing, ::mapToNothing, buildInteractionFunctionsWithContext(context), script, Unit)
+
 
 data class Interpreter(val globals: Globals)

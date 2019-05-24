@@ -28,6 +28,7 @@ android {
 }
 
 dependencies {
+    ext.anko_version='0.10.8'
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
     implementation 'androidx.appcompat:appcompat:1.0.2'
@@ -42,6 +43,8 @@ dependencies {
     implementation "org.jetbrains.anko:anko-design:0.10.8"
     implementation "org.jetbrains.anko:anko-design-coroutines:0.10.8"
     implementation "org.jetbrains.anko:anko-support-v4:0.10.8"
+    implementation "org.jetbrains.anko:anko-support-v4-commons:$anko_version"
+
     implementation 'io.arrow-kt:arrow-core:0.8.2'
     implementation 'io.arrow-kt:arrow-syntax:0.8.2'
     implementation 'io.arrow-kt:arrow-typeclasses:0.8.2'
@@ -52,6 +55,8 @@ dependencies {
     implementation 'com.github.andrewoma.dexx:kollection:0.7'
     implementation 'org.luaj:luaj-jse:3.0.1'
     implementation 'com.google.code.gson:gson:2.8.5'
+    //implementation 'org.funktionale:funktionale-all:1.2'
+
 
     def room_version = "2.1.0-beta01"
 
