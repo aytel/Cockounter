@@ -17,7 +17,7 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         MainUI().setContentView(this)
 
-        //initDatabase()
+        initDatabase()
         //Storage.nukePresets()
     }
 

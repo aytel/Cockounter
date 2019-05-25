@@ -6,6 +6,7 @@ import android.os.Bundle
 import com.example.cockounter.adapters.PresetAdapter
 import com.example.cockounter.core.PlayerDescription
 import com.example.cockounter.core.Preset
+import com.example.cockounter.core.PresetInfo
 import com.example.cockounter.core.buildState
 import com.example.cockounter.storage.Storage
 import org.jetbrains.anko.*
@@ -19,7 +20,7 @@ private const val START_GAME = 2
 
 class SelectPresetActivity : AppCompatActivity() {
 
-    private val presetsList = mutableListOf<Preset>()
+    private val presetsList = mutableListOf<PresetInfo>()
     private val presetsAdapter: PresetAdapter by lazy { PresetAdapter(this, 0, presetsList) }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -28,14 +29,14 @@ class SelectPresetActivity : AppCompatActivity() {
         }
         when(requestCode) {
             PRESET_ADDED -> if(resultCode == 0) {
-                val preset = data.getSerializableExtra("newPreset") as Preset
+                val preset = data.getSerializableExtra("newPreset") as PresetInfo
                 presetsList.add(preset)
                 presetsAdapter.notifyDataSetChanged()
                 Storage.insertPreset(preset)
             }
             PRESET_CHANGED -> if(resultCode == 0) {
                 val position = data.getIntExtra("position", -1)
-                val preset = data.getSerializableExtra("newPreset") as Preset
+                val preset = data.getSerializableExtra("newPreset") as PresetInfo
                 Storage.deletePreset(presetsList[position])
                 presetsList[position] = preset
                 presetsAdapter.notifyDataSetChanged()
@@ -58,7 +59,7 @@ class SelectPresetActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        //presetsList.addAll(Storage.getAllPresets().get())
+        presetsList.addAll(Storage.getAllPresetInfos().get())
         scrollView {
             verticalLayout {
                 val listView = listView {
@@ -79,7 +80,7 @@ class SelectPresetActivity : AppCompatActivity() {
                         }
                     }
                     onItemClick { p0, p1, index, p3 ->
-                        val roleNames = presetsList[index].roles.keys.toTypedArray()
+                        val roleNames = presetsList[index].preset.roles.keys.toTypedArray()
                         startActivityForResult(intentFor<StartSinglePlayerGameActivity>("roles" to roleNames, "position" to index), START_GAME)
                     }
                 }
