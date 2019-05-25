@@ -10,9 +10,15 @@ import java.io.Serializable
 
 @Entity
 @TypeConverters(PresetConverter::class)
-data class Preset(
-    @PrimaryKey val name: String,
+data class PresetInfo(
+    val name: String,
     val description: String,
+    val preset: Preset
+) : Serializable
+
+@Entity
+@TypeConverters(PresetConverter::class)
+data class Preset(
     val globalParameters: Map<String, Parameter>,
     val roles: Map<String, Role>,
     val globalScripts: List<Script>
@@ -22,13 +28,13 @@ data class Preset(
 @Dao
 interface PresetDao {
     @Query("SELECT * from preset")
-    fun getAll(): List<Preset>
+    fun getAll(): List<PresetInfo>
 
     @Insert
-    fun insert(preset: Preset)
+    fun insert(preset: PresetInfo)
 
     @Delete
-    fun delete(preset: Preset)
+    fun delete(preset: PresetInfo)
 
     @Query("DELETE FROM preset")
     fun nukeTable()

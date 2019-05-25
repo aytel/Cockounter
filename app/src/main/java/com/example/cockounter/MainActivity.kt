@@ -2,6 +2,7 @@ package com.example.cockounter
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.view.View
 import androidx.room.Room
 import com.example.cockounter.storage.Storage
 import org.jetbrains.anko.*
@@ -14,30 +15,51 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        //setContentView(R.layout.activity_main)
+        MainUI().setContentView(this)
 
         //initDatabase()
         //Storage.nukePresets()
+    }
+
+    fun createGame() {
+        startActivity(intentFor<SelectPresetActivity>())
+    }
+
+    fun resumeGame() {
+        toast("Work in progress")
+    }
+
+    fun joinGame() {
+        toast("Work in progress")
+    }
+
+    fun editPresets() {
+        toast("Work in progress")
+        //startActivity(intentFor<PlayerGameScreenActivity>())
+    }
+}
+
+private class MainUI : AnkoComponent<MainActivity> {
+    override fun createView(ui: AnkoContext<MainActivity>): View = with(ui) {
         verticalLayout {
             button("Create game") {
                 onClick {
-                    startActivity(intentFor<SelectPresetActivity>())
+                    owner.createGame()
                 }
             }
             button("Resume game") {
                 onClick {
-                    toast("Work in progress")
+                    owner.resumeGame()
                 }
             }
             button("Join game") {
                 onClick {
-                    toast("Work in progress")
+                    owner.joinGame()
                 }
             }
             button("Edit presets") {
                 onClick {
-                    toast("Work in progress")
-                    //startActivity(intentFor<PlayerGameScreenActivity>())
+                    owner.editPresets()
                 }
             }
         }
