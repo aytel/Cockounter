@@ -7,7 +7,7 @@ import java.util.concurrent.Callable
 import java.util.concurrent.Executors
 
 
-@Database(entities = [GameState::class, PresetInfo::class], version = 1)
+@Database(entities = [GameState::class, PresetInfo::class], version = 2)
 abstract class Storage : RoomDatabase() {
     companion object {
         lateinit var database: Storage

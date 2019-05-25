@@ -10,7 +10,7 @@ import org.jetbrains.anko.sdk27.coroutines.onClick
 
 class MainActivity : AppCompatActivity() {
     fun initDatabase() {
-        Storage.database = Room.databaseBuilder(this, Storage::class.java, "storage").build()
+        Storage.database = Room.databaseBuilder(this, Storage::class.java, "storage").fallbackToDestructiveMigration().build()
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
