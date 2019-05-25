@@ -29,6 +29,7 @@ android {
 
 dependencies {
     ext.anko_version='0.10.8'
+    ext.arrow_version = '0.9.0'
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
     implementation 'androidx.appcompat:appcompat:1.0.2'
@@ -45,12 +46,13 @@ dependencies {
     implementation "org.jetbrains.anko:anko-support-v4:0.10.8"
     implementation "org.jetbrains.anko:anko-support-v4-commons:$anko_version"
 
-    implementation 'io.arrow-kt:arrow-core:0.8.2'
-    implementation 'io.arrow-kt:arrow-syntax:0.8.2'
-    implementation 'io.arrow-kt:arrow-typeclasses:0.8.2'
-    implementation "io.arrow-kt:arrow-data:0.8.2"
-    implementation "io.arrow-kt:arrow-instances-core:0.8.2"
-    implementation "io.arrow-kt:arrow-instances-data:0.8.2"
+    implementation "io.arrow-kt:arrow-core-data:$arrow_version"
+    implementation "io.arrow-kt:arrow-core-extensions:$arrow_version"
+    implementation "io.arrow-kt:arrow-syntax:$arrow_version"
+    implementation "io.arrow-kt:arrow-typeclasses:$arrow_version"
+    implementation "io.arrow-kt:arrow-extras-data:$arrow_version"
+    implementation "io.arrow-kt:arrow-extras-extensions:$arrow_version"
+    kapt    "io.arrow-kt:arrow-meta:$arrow_version"
     implementation 'com.android.support:design:28.0.0'
     implementation 'com.github.andrewoma.dexx:kollection:0.7'
     implementation 'org.luaj:luaj-jse:3.0.1'

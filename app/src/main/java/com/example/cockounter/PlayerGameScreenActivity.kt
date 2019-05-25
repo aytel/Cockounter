@@ -70,7 +70,8 @@ class PlayerGameScreenActivity : AppCompatActivity() {
             scripts.forEachIndexed { index, script ->
                 button(script.name) {
                     onClick {
-                        state = performScriptUsingGameState(state, player, script.script)
+                        //FIXME
+                        //state = performScriptUsingGameState(state, player, script.script)
                         updateAdapters(role, player)
                     }
                 }

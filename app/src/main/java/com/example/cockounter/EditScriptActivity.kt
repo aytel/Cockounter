@@ -4,7 +4,9 @@ import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.View
+import android.widget.ArrayAdapter
 import com.example.cockounter.core.Script
+import com.example.cockounter.core.ScriptContext
 import com.example.cockounter.script.performScriptUsingNothingWithContext
 import org.jetbrains.anko.*
 import org.jetbrains.anko.sdk27.coroutines.onClick
@@ -21,20 +23,22 @@ class EditScriptActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val script = intent.getSerializableExtra(ARG_SCRIPT) as Script?
-        EditScriptUI(script).setContentView(this)
+        val contextAdapter = ArrayAdapter(this, android.R.layout.simple_list_item_1, ScriptContext.values())
+        EditScriptUI(script, contextAdapter).setContentView(this)
     }
 
     fun runScript(script: String) {
         performScriptUsingNothingWithContext(script, this)
     }
 
-    fun save(scriptName: String, script: String) {
+    fun save(scriptName: String, script: String, context: ScriptContext) {
         val result = Intent()
         result.putExtra(
             RESULT_SCRIPT,
             Script(
                 scriptName,
-                script
+                script,
+                context
             )
         )
         result.putExtra(RESULT_POSITION, intent.getIntExtra(ARG_POSITION, -1))
@@ -43,12 +47,15 @@ class EditScriptActivity : AppCompatActivity() {
     }
 }
 
-class EditScriptUI(val script: Script?) : AnkoComponent<EditScriptActivity> {
+class EditScriptUI(val script: Script?, val contextAdapter: ArrayAdapter<ScriptContext>) : AnkoComponent<EditScriptActivity> {
     override fun createView(ui: AnkoContext<EditScriptActivity>): View = with(ui) {
          scrollView {
             verticalLayout {
                 val scriptName = editText(script?.name ?: "") {
                     hint = "Name"
+                }
+                val spinner = spinner {
+                    adapter = contextAdapter
                 }
                 val scriptSource = editText(script?.script ?: "") {
                     hint = "Script"
@@ -60,11 +67,10 @@ class EditScriptUI(val script: Script?) : AnkoComponent<EditScriptActivity> {
                 }
                 button("Save") {
                     onClick {
-                        owner.save(scriptName.text.toString(), scriptSource.text.toString())
+                        owner.save(scriptName.text.toString(), scriptSource.text.toString(), spinner.selectedItem as ScriptContext)
                     }
                 }
             }
         }
     }
-
 }

@@ -3,13 +3,11 @@ package com.example.cockounter
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.view.View
 import android.widget.ArrayAdapter
 import com.example.cockounter.adapters.ParameterAdapter
 import com.example.cockounter.adapters.ScriptAdapter
-import com.example.cockounter.core.Parameter
-import com.example.cockounter.core.Preset
-import com.example.cockounter.core.Role
-import com.example.cockounter.core.Script
+import com.example.cockounter.core.*
 import org.jetbrains.anko.*
 import org.jetbrains.anko.sdk27.coroutines.onClick
 import org.jetbrains.anko.sdk27.coroutines.onItemLongClick
@@ -31,21 +29,21 @@ class EditPresetActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val preset = intent.getSerializableExtra("preset") as Preset?
-        if (preset != null) {
-            globalParametersList.addAll(preset.globalParameters.values)
-            rolesList.addAll(preset.roles.values)
-            scriptsList.addAll(preset.globalScripts)
+        val presetInfo = intent.getSerializableExtra("preset") as PresetInfo?
+        if (presetInfo != null) {
+            globalParametersList.addAll(presetInfo.preset.globalParameters.values)
+            rolesList.addAll(presetInfo.preset.roles.values)
+            scriptsList.addAll(presetInfo.preset.globalScripts)
             globalParametersAdapter.notifyDataSetChanged()
             rolesAdapter.notifyDataSetChanged()
             scriptsAdapter.notifyDataSetChanged()
         }
         scrollView {
             verticalLayout {
-                val presetName = editText(preset?.name ?: "") {
+                val presetName = editText(presetInfo?.name ?: "") {
                     hint = "Name"
                 }
-                val presetDescription = editText(preset?.description ?: "") {
+                val presetDescription = editText(presetInfo?.description ?: "") {
                     hint = "Description"
                 }
                 textView("Global counters")
@@ -129,12 +127,14 @@ class EditPresetActivity : AppCompatActivity() {
                         val result = Intent()
                         result.putExtra(
                             "newPreset",
-                            Preset(
+                            PresetInfo(
                                 name = presetName.text.toString(),
                                 description = presetDescription.text.toString(),
-                                globalParameters = globalParametersList.map { Pair(it.name, it) }.toMap(),
-                                roles = rolesList.map { Pair(it.name, it) }.toMap(),
-                                globalScripts = scriptsList
+                                preset = Preset(
+                                    globalParameters = globalParametersList.map { Pair(it.name, it) }.toMap(),
+                                    roles = rolesList.map { Pair(it.name, it) }.toMap(),
+                                    globalScripts = scriptsList
+                                )
                             )
                         )
                         result.putExtra("position", intent.getIntExtra("position", -1))
@@ -179,6 +179,12 @@ class EditPresetActivity : AppCompatActivity() {
                 scriptsAdapter.notifyDataSetChanged()
             }
         }
+    }
+}
+
+private class EditPresetUI : AnkoComponent<EditPresetActivity> {
+    override fun createView(ui: AnkoContext<EditPresetActivity>): View = with(ui) {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 }
 

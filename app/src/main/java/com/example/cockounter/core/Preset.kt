@@ -151,7 +151,11 @@ data class BooleanParameter(
     override fun initialValueString(): String = initialValue.toString()
 }
 
-data class Script(val name: String, val script: String) : Serializable
+data class Script(val name: String, val script: String, val context: ScriptContext) : Serializable
+
+enum class ScriptContext {
+    X, PLAYER, FULL
+}
 
 fun toParameter(x: Any, name: String, visibleName: String, defaultValue: String, attachedScripts: List<Script>): Either<String, Parameter> =
     when (x.toString()) {
