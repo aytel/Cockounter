@@ -28,8 +28,8 @@ data class Preset(
     Serializable
 
 @Dao
-interface PresetDao {
-    @Query("SELECT * from preset")
+interface PresetInfoDao {
+    @Query("SELECT * from presetInfo")
     fun getAll(): List<PresetInfo>
 
     @Insert
@@ -38,8 +38,8 @@ interface PresetDao {
     @Delete
     fun delete(preset: PresetInfo)
 
-    @Query("DELETE FROM preset")
-    fun nukeDatabse()
+    @Query("DELETE FROM presetInfo")
+    fun nukeTable()
 }
 
 class InterfaceAdapter<T: Any>: JsonSerializer<T>, JsonDeserializer<T> {
