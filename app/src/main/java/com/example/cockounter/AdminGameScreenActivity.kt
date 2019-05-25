@@ -16,6 +16,7 @@ import arrow.core.Failure
 import arrow.core.Try
 import com.example.cockounter.adapters.GameStateAdapter
 import com.example.cockounter.core.*
+import com.example.cockounter.storage.Storage
 import com.google.android.material.appbar.AppBarLayout
 import com.google.android.material.tabs.TabLayout
 import org.jetbrains.anko.*
@@ -27,19 +28,21 @@ import org.jetbrains.anko.sdk27.coroutines.onMenuItemClick
 import org.jetbrains.anko.support.v4.act
 import org.jetbrains.anko.support.v4.ctx
 import org.jetbrains.anko.support.v4.viewPager
+import java.util.*
 
 
 class AdminGameScreenActivity : AppCompatActivity(), GameHolder {
 
     companion object {
-        const val INIT_FLAG = "INIT_FLAG"
+        const val MODE = "MODE"
+        const val MODE_ERROR = -1
+        const val MODE_BUILD_NEW_STATE = 0
+        const val MODE_USE_STATE = 1
 
-        const val FLAG_ERROR = -1
-        const val FLAG_BUILD_NEW_STATE = 0
-
-        const val ARG_PRESET = "preset"
-        const val ARG_PLAYER_NAMES = "names"
-        const val ARG_PLAYER_ROLES = "roles"
+        const val ARG_PRESET = "ARG_PRESET"
+        const val ARG_PLAYER_NAMES = "ARG_PLAYER_NAMES"
+        const val ARG_PLAYER_ROLES = "ARG_PLAYER_ROLES"
+        const val ARG_STATE = "ARG_STATE"
     }
 
     private fun scriptFailure(message: String) {
@@ -85,25 +88,49 @@ class AdminGameScreenActivity : AppCompatActivity(), GameHolder {
         pagerAdapter.notifyDataSetChanged()
     }
 
+    fun saveState() {
+        alert {
+            customView {
+                val stateName = editText() {
+                    hint = "Name"
+                }
+                yesButton {
+                    Storage.insertGameState(StateCapture(stateName.text.toString(), state, preset, players, Calendar.getInstance().time))
+                }
+                noButton {
+
+                }
+            }
+        }.show()
+    }
+
 
     private lateinit var state: GameState
     private lateinit var preset: Preset
+    private lateinit var players: List<PlayerDescription>
     private val pagerAdapter by lazy { PlayerGameScreenAdapter(supportFragmentManager, getState, preset) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val initFlag = intent.getIntExtra(INIT_FLAG, FLAG_ERROR)
-        when (initFlag) {
-            FLAG_ERROR -> {
+        val mode = intent.getIntExtra(MODE, MODE_ERROR)
+        when (mode) {
+            MODE_ERROR -> {
                 toast("Error while loading preset")
                 finish()
             }
-            FLAG_BUILD_NEW_STATE -> {
+            MODE_BUILD_NEW_STATE -> {
                 preset = intent.getSerializableExtra(ARG_PRESET) as Preset
                 val names = intent.getStringArrayExtra(ARG_PLAYER_NAMES)
                 val roles = intent.getStringArrayExtra(ARG_PLAYER_ROLES)
-                val players = names.zip(roles, ::PlayerDescription)
+                players = names.zip(roles, ::PlayerDescription)
                 state = buildState(preset, players)
+            }
+            MODE_USE_STATE -> {
+                preset = intent.getSerializableExtra(ARG_PRESET) as Preset
+                val names = intent.getStringArrayExtra(ARG_PLAYER_NAMES)
+                val roles = intent.getStringArrayExtra(ARG_PLAYER_ROLES)
+                players = names.zip(roles, ::PlayerDescription)
+                state = intent.getSerializableExtra(ARG_STATE) as GameState
             }
         }
         lateinit var myTabLayout: TabLayout
@@ -121,7 +148,8 @@ class AdminGameScreenActivity : AppCompatActivity(), GameHolder {
                 toolbar {
                     menu.apply {
                         onMenuItemClick {
-                            toast("Wow")
+                            toast("click")
+                            saveState()
                         }
                         add("Save state").apply {
                         }
@@ -176,20 +204,17 @@ class PlayerGameScreenFragment : Fragment() {
         val preset = getPreset()
         globalParametersAdapter = GameStateAdapter(
             getState = { state },
-            extract = { it.globalParameters.values.toList() },
-            parameters = preset.globalParameters,
+            extract = { it.globalParameters.values.toList().zip(preset.globalParameters.values) },
             callback = this::performScript
         )
         sharedParametersAdapter = GameStateAdapter(
             getState = { state },
-            extract = { it[playerRole].sharedParameters.values.toList() },
-            parameters = preset.roles[playerRole]!!.sharedParameters,
+            extract = { it[playerRole].sharedParameters.values.toList().zip(preset.roles.getValue(playerRole).sharedParameters.values) },
             callback = this::performScript
         )
         privateParametersAdapter = GameStateAdapter(
                 getState = { state },
-                extract = { it[playerRole][playerName].privateParameters.values.toList() },
-                parameters = preset.roles[playerRole]!!.privateParameters,
+                extract = { it[playerRole][playerName].privateParameters.values.toList().zip(preset.roles.getValue(playerRole).privateParameters.values) },
                 callback = this::performScript
         )
         return PlayerGameScreenUI(

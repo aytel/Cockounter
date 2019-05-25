@@ -63,20 +63,18 @@ class StartSinglePlayerGameActivity : AppCompatActivity() {
 
 class StartSinglePlayerGameUI(val playersAdapter: PlayersAdapter) : AnkoComponent<StartSinglePlayerGameActivity> {
     override fun createView(ui: AnkoContext<StartSinglePlayerGameActivity>): View = with(ui) {
-        scrollView {
-            verticalLayout {
-                listView {
-                    adapter = playersAdapter
+        verticalLayout {
+            listView {
+                adapter = playersAdapter
+            }
+            button("Add new player") {
+                onClick {
+                    ui.owner.addNewPlayer()
                 }
-                button("Add new player") {
-                    onClick {
-                        ui.owner.addNewPlayer()
-                    }
-                }
-                button("Start game") {
-                    onClick {
-                        ui.owner.startGame()
-                    }
+            }
+            button("Start game") {
+                onClick {
+                    ui.owner.startGame()
                 }
             }
         }

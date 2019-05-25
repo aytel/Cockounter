@@ -41,7 +41,7 @@ class EditParameterActivity : AppCompatActivity() {
     }
 
     fun save(type: String, name: String, visibleName: String, defaultValue: String) {
-        toParameter(type, name, visibleName, defaultValue, listOf()).fold(
+        toParameter(type, name, visibleName, defaultValue, scripts).fold(
             { errorMessage ->
                 alert(errorMessage).show()
             },

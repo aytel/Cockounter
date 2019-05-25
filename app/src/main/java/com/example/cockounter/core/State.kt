@@ -4,81 +4,90 @@ import androidx.room.*
 import com.github.andrewoma.dexx.kollection.ImmutableMap
 import com.github.andrewoma.dexx.kollection.immutableMapOf
 import com.github.andrewoma.dexx.kollection.toImmutableMap
-import com.google.gson.Gson
+import com.google.gson.GsonBuilder
 import java.io.Serializable
+import java.util.*
 
 @Entity
-@TypeConverters(GameStateConverter::class)
-data class GameState(
+@TypeConverters(StateCaptureConverter::class)
+data class StateCapture(
     @PrimaryKey
-    val globalParameters: ImmutableMap<String, GameParameter>,
-    val roles: ImmutableMap<String, GameRole>
+    val name: String,
+    val state: GameState,
+    val preset: Preset,
+    val players: List<PlayerDescription>,
+    val date: Date
+)
+
+data class GameState(
+    val globalParameters: Map<String, GameParameter>,
+    val roles: Map<String, GameRole>
 ) :
     Serializable
 
 @Dao
-interface GameStateDao {
-    @Query("SELECT * from gameState")
-    fun getAll(): List<GameState>
+interface StateCaptureDao {
+    @Query("SELECT * from stateCapture")
+    fun getAll(): List<StateCapture>
 
     @Insert
-    fun insert(gameState: GameState)
+    fun insert(stateCapture: StateCapture)
 
     @Delete
-    fun delete(gameState: GameState)
+    fun delete(stateCapture: StateCapture)
 }
 
-class GameStateConverter {
+class StateCaptureConverter {
     companion object {
-        val gson = Gson()
-
-        data class Parameters(val parameters: ImmutableMap<String, GameParameter>)
-        data class Roles(val roles: ImmutableMap<String, GameRole>)
+        val gson = GsonBuilder().registerTypeAdapter(GameParameter::class.java, InterfaceAdapter<GameParameter>())
+            .registerTypeAdapter(Parameter::class.java, InterfaceAdapter<Parameter>()).create()
+        data class PlayersWrapper(val players: List<PlayerDescription>)
     }
 
     @TypeConverter
-    fun fromSharedParameters(sharedParameters: ImmutableMap<String, GameParameter>): String =
-        gson.toJson(Parameters(sharedParameters))
+    fun fromGameState(gameState: GameState): String =
+        gson.toJson(gameState)
 
     @TypeConverter
-    fun fromRoles(roles: ImmutableMap<String, GameRole>): String = gson.toJson(Roles(roles))
+    fun fromPreset(preset: Preset): String =
+        gson.toJson(preset)
 
     @TypeConverter
-    fun fromGameParameter(parameter: GameParameter): String = when(parameter) {
-        is IntegerGameParameter -> "1" + gson.toJson(parameter)
-        is StringGameParameter -> "2" + gson.toJson(parameter)
-        is DoubleGameParameter -> "3" + gson.toJson(parameter)
-        is BooleanGameParameter -> "4" + gson.toJson(parameter)
-    }
+    fun fromPlayers(players: List<PlayerDescription>): String =
+        gson.toJson(PlayersWrapper(players))
 
     @TypeConverter
-    fun toSharedParameters(data: String): ImmutableMap<String, GameParameter> =
-        gson.fromJson(data, Parameters::class.java).parameters
+    fun fromDate(date: Date): String =
+        gson.toJson(date)
 
     @TypeConverter
-    fun toRoles(data: String): ImmutableMap<String, GameRole> = gson.fromJson(data, Roles::class.java).roles
+    fun toGameState(data: String): GameState =
+        gson.fromJson(data, GameState::class.java)
 
     @TypeConverter
-    fun toGameParameter(data: String): GameParameter = when(data[0]) {
-        '1' -> gson.fromJson(data.substring(1), IntegerGameParameter::class.java)
-        '2' -> gson.fromJson(data.substring(1), StringGameParameter::class.java)
-        '3' -> gson.fromJson(data.substring(1), DoubleGameParameter::class.java)
-        '4' -> gson.fromJson(data.substring(1), BooleanGameParameter::class.java)
-        else -> throw IllegalArgumentException("Can't convert string to GameParameter")
-    }
+    fun toPreset(data: String): Preset =
+        gson.fromJson(data, Preset::class.java)
+
+    @TypeConverter
+    fun toPlayers(data: String): List<PlayerDescription> =
+        gson.fromJson(data, PlayersWrapper::class.java).players
+
+    @TypeConverter
+    fun toDate(data: String): Date =
+        gson.fromJson(data, Date::class.java)
 }
 
 val dummyState = GameState(immutableMapOf(), immutableMapOf())
 
 data class GameRole(
     val name: String,
-    val sharedParameters: ImmutableMap<String, GameParameter>,
-    val players: ImmutableMap<String, Player>
+    val sharedParameters: Map<String, GameParameter>,
+    val players: Map<String, Player>
 ) : Serializable
 
-data class Player(val name: String, val privateParameters: ImmutableMap<String, GameParameter>) : Serializable
+data class Player(val name: String, val privateParameters: Map<String, GameParameter>) : Serializable
 
-sealed class GameParameter {
+sealed class GameParameter : Serializable {
     abstract val name: String
     abstract val visibleName: String
     abstract fun valueString(): String
@@ -111,6 +120,7 @@ operator fun GameRole.get(player: String) = players.getValue(player)
 data class PlayerDescription(val name: String, val role: String)
 
 operator fun GameState.get(description: PlayerDescription) = get(description.role)[description.name]
+
 
 fun buildGameParameter(parameter: Parameter) = when (parameter) {
     is IntegerParameter -> IntegerGameParameter(parameter.name, parameter.visibleName, parameter.initialValue)

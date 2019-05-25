@@ -26,7 +26,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun resumeGame() {
-        toast("Work in progress")
+        startActivity(intentFor<ResumeGameActivity>())
     }
 
     fun joinGame() {

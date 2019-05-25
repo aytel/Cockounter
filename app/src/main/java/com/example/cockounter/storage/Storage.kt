@@ -7,7 +7,7 @@ import java.util.concurrent.Callable
 import java.util.concurrent.Executors
 
 
-@Database(entities = [GameState::class, PresetInfo::class], version = 2)
+@Database(entities = [StateCapture::class, PresetInfo::class], version = 9)
 abstract class Storage : RoomDatabase() {
     companion object {
         lateinit var database: Storage
@@ -18,11 +18,11 @@ abstract class Storage : RoomDatabase() {
         fun deletePreset(presetInfo: PresetInfo) = databaseWorker.submit { database.presetInfoDao().delete(presetInfo) }
         fun nukePresets() = databaseWorker.submit { database.presetInfoDao().nukeTable() }
 
-        fun getAllGameStates() = databaseWorker.submit(Callable<List<GameState>> { database.gameStateDao().getAll() })
-        fun insertGameState(gameState: GameState) = databaseWorker.submit { database.gameStateDao().insert(gameState) }
-        fun deleteGameState(gameState: GameState) = databaseWorker.submit { database.gameStateDao().delete(gameState) }
+        fun getAllGameStates() = databaseWorker.submit(Callable<List<StateCapture>> { database.stateCaptureDao().getAll() })
+        fun insertGameState(stateCapture: StateCapture) = databaseWorker.submit { database.stateCaptureDao().insert(stateCapture) }
+        fun deleteGameState(stateCapture: StateCapture) = databaseWorker.submit { database.stateCaptureDao().delete(stateCapture) }
     }
 
-    abstract fun gameStateDao(): GameStateDao
+    abstract fun stateCaptureDao(): StateCaptureDao
     abstract fun presetInfoDao(): PresetInfoDao
 }

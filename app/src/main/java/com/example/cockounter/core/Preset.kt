@@ -60,38 +60,11 @@ class InterfaceAdapter<T: Any>: JsonSerializer<T>, JsonDeserializer<T> {
 class PresetConverter {
     companion object {
         val gson = GsonBuilder().registerTypeAdapter(Parameter::class.java, InterfaceAdapter<Parameter>()).create()
-        data class Parameters(val parameters: Map<String, Parameter>)
-        data class Roles(val roles: Map<String, Role>)
-        data class Scripts(val scripts: List<Script>)
     }
-
-    @TypeConverter
-    fun fromGlobalParameters(globalParameters: Map<String, Parameter>): String =
-        gson.toJson(Parameters(globalParameters))
-
-    @TypeConverter
-    fun fromRoles(roles: Map<String, Role>): String =
-        gson.toJson(Roles(roles))
-
-    @TypeConverter
-    fun fromScripts(scripts: List<Script>): String =
-        gson.toJson(Scripts(scripts))
 
     @TypeConverter
     fun fromPreset(preset: Preset): String =
         gson.toJson(preset)
-
-    @TypeConverter
-    fun toGlobalParameters(data: String): Map<String, Parameter> =
-        gson.fromJson(data, Parameters::class.java).parameters
-
-    @TypeConverter
-    fun toRoles(data: String): Map<String, Role> =
-        gson.fromJson(data, Roles::class.java).roles
-
-    @TypeConverter
-    fun toScripts(data: String): List<Script> =
-        gson.fromJson(data, Scripts::class.java).scripts
 
     @TypeConverter
     fun toPreset(data: String): Preset =

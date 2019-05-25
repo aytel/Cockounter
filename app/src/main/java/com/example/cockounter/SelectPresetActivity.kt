@@ -47,10 +47,10 @@ class SelectPresetActivity : AppCompatActivity() {
                 val names = data.getStringArrayExtra("names")!!
                 val roles = data.getStringArrayExtra("roles")!!
                 startActivity(intentFor<AdminGameScreenActivity>(
-                    AdminGameScreenActivity.INIT_FLAG to AdminGameScreenActivity.FLAG_BUILD_NEW_STATE,
+                    AdminGameScreenActivity.MODE to AdminGameScreenActivity.MODE_BUILD_NEW_STATE,
                     AdminGameScreenActivity.ARG_PLAYER_NAMES to names,
                     AdminGameScreenActivity.ARG_PLAYER_ROLES to roles,
-                    AdminGameScreenActivity.ARG_PRESET to presetsList[position])
+                    AdminGameScreenActivity.ARG_PRESET to presetsList[position].preset)
                 )
                 finish()
             }
@@ -74,6 +74,7 @@ class SelectPresetActivity : AppCompatActivity() {
                                     ), PRESET_CHANGED
                                 )
                             } else if (i == 1) {
+                                Storage.deletePreset(presetsList[index])
                                 presetsList.removeAt(index)
                                 presetsAdapter.notifyDataSetChanged()
                             }
