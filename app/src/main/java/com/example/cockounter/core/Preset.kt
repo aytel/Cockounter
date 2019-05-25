@@ -13,13 +13,12 @@ import kotlin.reflect.KClass
 @Entity
 @TypeConverters(PresetConverter::class)
 data class PresetInfo(
+    @PrimaryKey
     val name: String,
     val description: String,
     val preset: Preset
 ) : Serializable
 
-@Entity
-@TypeConverters(PresetConverter::class)
 data class Preset(
     val globalParameters: Map<String, Parameter>,
     val roles: Map<String, Role>,
@@ -79,6 +78,10 @@ class PresetConverter {
         gson.toJson(Scripts(scripts))
 
     @TypeConverter
+    fun fromPreset(preset: Preset): String =
+        gson.toJson(preset)
+
+    @TypeConverter
     fun toGlobalParameters(data: String): Map<String, Parameter> =
         gson.fromJson(data, Parameters::class.java).parameters
 
@@ -89,6 +92,10 @@ class PresetConverter {
     @TypeConverter
     fun toScripts(data: String): List<Script> =
         gson.fromJson(data, Scripts::class.java).scripts
+
+    @TypeConverter
+    fun toPreset(data: String): Preset =
+        gson.fromJson(data, Preset::class.java)
 }
 
 data class Role(
