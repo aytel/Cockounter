@@ -2,24 +2,21 @@ package com.example.cockounter.storage
 
 import androidx.room.Database
 import androidx.room.RoomDatabase
-import com.example.cockounter.core.GameState
-import com.example.cockounter.core.GameStateDao
-import com.example.cockounter.core.Preset
-import com.example.cockounter.core.PresetDao
+import com.example.cockounter.core.*
 import java.util.concurrent.Callable
 import java.util.concurrent.Executors
 
 
-@Database(entities = [GameState::class, Preset::class], version = 1)
+@Database(entities = [GameState::class, PresetInfo::class], version = 1)
 abstract class Storage : RoomDatabase() {
     companion object {
         lateinit var database: Storage
         private val databaseWorker = Executors.newSingleThreadExecutor()
 
-        fun getAllPresets() = databaseWorker.submit(Callable<List<Preset>> { database.presetDao().getAll() })
-        fun insertPreset(preset: Preset) = databaseWorker.submit { database.presetDao().insert(preset) }
-        fun deletePreset(preset: Preset) = databaseWorker.submit { database.presetDao().delete(preset) }
-        fun nukePresets() = databaseWorker.submit { database.presetDao().nukeTable() }
+        fun getAllPresetInfos() = databaseWorker.submit(Callable<List<PresetInfo>> { database.presetInfoDao().getAll() })
+        fun insertPreset(presetInfo: PresetInfo) = databaseWorker.submit { database.presetInfoDao().insert(presetInfo) }
+        fun deletePreset(presetInfo: PresetInfo) = databaseWorker.submit { database.presetInfoDao().delete(presetInfo) }
+        fun nukePresets() = databaseWorker.submit { database.presetInfoDao().nukeTable() }
 
         fun getAllGameStates() = databaseWorker.submit(Callable<List<GameState>> { database.gameStateDao().getAll() })
         fun insertGameState(gameState: GameState) = databaseWorker.submit { database.gameStateDao().insert(gameState) }
@@ -27,5 +24,5 @@ abstract class Storage : RoomDatabase() {
     }
 
     abstract fun gameStateDao(): GameStateDao
-    abstract fun presetDao(): PresetDao
+    abstract fun presetInfoDao(): PresetInfoDao
 }
