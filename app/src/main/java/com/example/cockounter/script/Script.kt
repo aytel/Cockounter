@@ -3,7 +3,6 @@ package com.example.cockounter.script
 import android.content.Context
 import arrow.core.Try
 import arrow.core.Tuple2
-import arrow.core.extensions.`try`.monad.binding
 import com.example.cockounter.core.*
 import com.github.andrewoma.dexx.kollection.toImmutableMap
 import org.luaj.vm2.Globals
@@ -18,18 +17,24 @@ private object Constants {
     const val PLAYER = "pl"
 }
 
-fun evaluateScript(interpreter: Interpreter, script: String): Interpreter {
+private data class Interpreter(val globals: Globals)
+
+private fun loadScript(interpreter: Interpreter, script: String) =
+    JsePlatform.standardGlobals().load(script, "script", interpreter.globals)!!
+
+private fun evaluateScript(interpreter: Interpreter, script: String): Try<Interpreter> = Try {
     loadScript(interpreter, script).call()
-    return interpreter
+    interpreter
 }
 
-fun mapFunctions(interpreter: Interpreter, functions: List<Tuple2<String, LuaFunction>>): Interpreter {
+private fun mapFunctions(interpreter: Interpreter, functions: List<Tuple2<String, LuaFunction>>): Interpreter {
     functions.forEach { interpreter.globals[it.a] = it.b }
     return interpreter
 }
 
-fun mapFromGameState(context: ScriptContext, state: GameState, player: PlayerDescription): Try<Interpreter> =
+private fun mapFromGameState(context: ScriptContext, state: GameState, player: PlayerDescription): Try<Interpreter> =
     when (context) {
+        ScriptContext.NONE -> Try { Interpreter(JsePlatform.standardGlobals()!!) }
         ScriptContext.X -> TODO()
         ScriptContext.PLAYER -> mapPlayerFromGameState(state, player)
         ScriptContext.FULL -> mapAllFromGameState(state, player.name)
@@ -56,7 +61,7 @@ private fun addToTable(table: LuaTable, items: Map<String, GameParameter>) {
     }
 }
 
-fun mapAllFromGameState(state: GameState, currentPlayerName: String): Try<Interpreter> = Try {
+private fun mapAllFromGameState(state: GameState, currentPlayerName: String): Try<Interpreter> = Try {
     val globals = JsePlatform.standardGlobals()!!;
     globals[Constants.GLOBAL_PARAMETERS] = createTable(state.globalParameters)
     state.roles.forEach {
@@ -74,7 +79,7 @@ fun mapAllFromGameState(state: GameState, currentPlayerName: String): Try<Interp
     Interpreter(globals)
 }
 
-fun mapPlayerFromGameState(state: GameState, player: PlayerDescription): Try<Interpreter> = Try {
+private fun mapPlayerFromGameState(state: GameState, player: PlayerDescription): Try<Interpreter> = Try {
     val globals = JsePlatform.standardGlobals()!!
     globals[Constants.GLOBAL_PARAMETERS] = createTable(state.globalParameters)
     globals[Constants.SHARED_PARAMETERS] = createTable(state[player.role].sharedParameters)
@@ -82,7 +87,7 @@ fun mapPlayerFromGameState(state: GameState, player: PlayerDescription): Try<Int
     Interpreter(globals)
 }
 
-fun mapXFromGameState(state: GameState, player: PlayerDescription, parameterName: String) = Try {
+private fun mapXFromGameState(state: GameState, player: PlayerDescription, parameterName: String) = Try {
     val globals = JsePlatform.standardGlobals()!!
     TODO()
 }
@@ -97,13 +102,14 @@ private fun unpackValue(value: LuaValue, old: GameParameter): GameParameter = wh
 private fun unpackTable(table: LuaTable, old: Map<String, GameParameter>) =
     old.mapValues { unpackValue(table[it.key], it.value) }.toImmutableMap()
 
-fun mapToGameState(interpreter: Interpreter, oldState: GameState, player: PlayerDescription, context: ScriptContext): Try<GameState> = when(context) {
+private fun mapToGameState(interpreter: Interpreter, oldState: GameState, player: PlayerDescription, context: ScriptContext): Try<GameState> = when(context) {
+    ScriptContext.NONE -> Try { oldState }
     ScriptContext.X -> TODO()
     ScriptContext.PLAYER -> mapPlayerToGameState(interpreter, oldState, player)
     ScriptContext.FULL -> mapAllToGameState(interpreter, oldState)
 }
 
-fun mapAllToGameState(interpreter: Interpreter, oldState: GameState): Try<GameState> = Try {
+private fun mapAllToGameState(interpreter: Interpreter, oldState: GameState): Try<GameState> = Try {
     val globals = interpreter.globals
     val globalParameters = unpackTable(globals[Constants.GLOBAL_PARAMETERS].checktable()!!, oldState.globalParameters)
     val roles = oldState.roles.mapValues { (roleName, role) ->
@@ -119,7 +125,7 @@ fun mapAllToGameState(interpreter: Interpreter, oldState: GameState): Try<GameSt
     GameState(globalParameters, roles)
 }
 
-fun mapPlayerToGameState(interpreter: Interpreter, oldState: GameState, player: PlayerDescription): Try<GameState> = Try {
+private fun mapPlayerToGameState(interpreter: Interpreter, oldState: GameState, player: PlayerDescription): Try<GameState> = Try {
     val globals = interpreter.globals
     val globalParameters = unpackTable(globals[Constants.GLOBAL_PARAMETERS].checktable()!!, oldState.globalParameters)
     val sharedParameters = unpackTable(globals[Constants.SHARED_PARAMETERS].checktable()!!, oldState[player.role].sharedParameters)
@@ -127,45 +133,10 @@ fun mapPlayerToGameState(interpreter: Interpreter, oldState: GameState, player: 
     TODO()
 }
 
-fun loadScript(interpreter: Interpreter, script: String) =
-    JsePlatform.standardGlobals().load(script, "script", interpreter.globals)!!
 
-fun performScriptUsingGameState(state: GameState, player: PlayerDescription, script: String, context: ScriptContext): Try<GameState> = binding {
-    val (interpreter) = mapFromGameState(context, state, player)
-    val interperter2 = evaluateScript(interpreter, script)
-    val (result) = mapToGameState(interperter2, state, player, context)
-    result
+fun performScript(state: GameState, player: PlayerDescription, script: String, scriptContext: ScriptContext, context: Context): Try<GameState> {
+    return mapFromGameState(scriptContext, state, player)
+        .flatMap { evaluateScript(mapFunctions(it, buildInteractionFunctionsWithContext(context)), script) }
+        .flatMap { mapToGameState(it, state, player, scriptContext) }
 }
 
-fun performScriptWithContext(state: GameState, playerName: String, script: String, context: Context): GameState = TODO()
-/*
-    mapToGameState(
-        evaluateScript(
-            mapFunctions(
-                mapFromGameState(state, playerName),
-                buildInteractionFunctionsWithContext(context)
-            ), script
-        ), state
-    )
-*/
-
-inline fun <reified T> performScript(
-    map: (T) -> Interpreter,
-    unmap: (Interpreter) -> T,
-    functions: List<Tuple2<String, LuaFunction>>,
-    script: String,
-    value: T
-): T {
-    val interpreter = mapFunctions(map(value), functions)
-    return unmap(evaluateScript(interpreter, script))
-}
-
-fun mapFromNothing(unit: Unit) = Interpreter(JsePlatform.standardGlobals()!!)
-
-fun mapToNothing(interpreter: Interpreter) = Unit
-
-fun performScriptUsingNothingWithContext(script: String, context: Context) =
-    performScript(::mapFromNothing, ::mapToNothing, buildInteractionFunctionsWithContext(context), script, Unit)
-
-
-data class Interpreter(val globals: Globals)

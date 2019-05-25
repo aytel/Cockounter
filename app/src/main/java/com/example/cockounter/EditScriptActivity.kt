@@ -5,9 +5,11 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.View
 import android.widget.ArrayAdapter
+import com.example.cockounter.core.PlayerDescription
 import com.example.cockounter.core.Script
 import com.example.cockounter.core.ScriptContext
-import com.example.cockounter.script.performScriptUsingNothingWithContext
+import com.example.cockounter.core.dummyState
+import com.example.cockounter.script.performScript
 import org.jetbrains.anko.*
 import org.jetbrains.anko.sdk27.coroutines.onClick
 
@@ -28,7 +30,7 @@ class EditScriptActivity : AppCompatActivity() {
     }
 
     fun runScript(script: String) {
-        performScriptUsingNothingWithContext(script, this)
+        performScript(dummyState, PlayerDescription("None", "None"), script, ScriptContext.NONE, this)
     }
 
     fun save(scriptName: String, script: String, context: ScriptContext) {

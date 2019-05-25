@@ -2,6 +2,7 @@ package com.example.cockounter.core
 
 import androidx.room.*
 import com.github.andrewoma.dexx.kollection.ImmutableMap
+import com.github.andrewoma.dexx.kollection.immutableMapOf
 import com.github.andrewoma.dexx.kollection.toImmutableMap
 import com.google.gson.Gson
 import java.io.Serializable
@@ -66,6 +67,8 @@ class GameStateConverter {
         else -> throw IllegalArgumentException("Can't convert string to GameParameter")
     }
 }
+
+val dummyState = GameState(immutableMapOf(), immutableMapOf())
 
 data class GameRole(
     val name: String,

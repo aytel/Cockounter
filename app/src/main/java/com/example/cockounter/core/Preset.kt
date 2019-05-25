@@ -171,7 +171,7 @@ data class BooleanParameter(
 data class Script(val name: String, val script: String, val context: ScriptContext) : Serializable
 
 enum class ScriptContext {
-    X, PLAYER, FULL
+    NONE, X, PLAYER, FULL
 }
 
 fun toParameter(x: Any, name: String, visibleName: String, defaultValue: String, attachedScripts: List<Script>): Either<String, Parameter> =

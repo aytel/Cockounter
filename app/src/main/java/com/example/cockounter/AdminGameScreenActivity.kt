@@ -12,9 +12,10 @@ import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentPagerAdapter
 import androidx.viewpager.widget.PagerAdapter
 import androidx.viewpager.widget.ViewPager
+import arrow.core.Failure
+import arrow.core.Try
 import com.example.cockounter.adapters.GameStateAdapter
 import com.example.cockounter.core.*
-import com.example.cockounter.script.performScriptWithContext
 import com.google.android.material.appbar.AppBarLayout
 import com.google.android.material.tabs.TabLayout
 import org.jetbrains.anko.*
@@ -41,28 +42,46 @@ class AdminGameScreenActivity : AppCompatActivity(), GameHolder {
         const val ARG_PLAYER_ROLES = "roles"
     }
 
+    private fun scriptFailure(message: String) {
+        alert(message)
+    }
+
     override fun performGlobalScript(player: String, role: String, index: Int) {
-        state = com.example.cockounter.script.performScriptWithContext(
-            state,
-            player,
-            preset.globalScripts[index].script,
-            this
-        )
+        com.example.cockounter.script.performScript(
+            state = state,
+            player = PlayerDescription(player, role),
+            script = preset.globalScripts[index].script,
+            scriptContext = preset.globalScripts[index].context,
+            context = this
+        ).fold({
+            scriptFailure(it.message ?: "Failed when performing script")
+        }, {
+            state = it
+        })
         pagerAdapter.notifyDataSetChanged()
     }
 
     override fun performScript(player: String, role: String, index: Int) {
-        state = com.example.cockounter.script.performScriptWithContext(
-            state,
-            player,
-            preset.roles.getValue(role).scripts[index].script,
-            this
-        )
+        com.example.cockounter.script.performScript(
+            state = state,
+            player = PlayerDescription(player, role),
+            script = preset.roles.getValue(role).scripts[index].script,
+            scriptContext = preset.roles.getValue(role).scripts[index].context,
+            context = this
+        ).fold({
+            scriptFailure(it.message ?: "Failed when performing script")
+        }, {
+            state = it
+        })
         pagerAdapter.notifyDataSetChanged()
     }
 
     override fun performScript(player: String, role: String, script: Script) {
-        state = performScriptWithContext(state, player, script.script, this)
+        com.example.cockounter.script.performScript(state, PlayerDescription(player, role), script.script, script.context, this).fold({
+            scriptFailure(it.message ?: "Failed when performing script")
+        }, {
+            state = it
+        })
         pagerAdapter.notifyDataSetChanged()
     }
 
