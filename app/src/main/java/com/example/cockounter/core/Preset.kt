@@ -5,8 +5,10 @@ import arrow.core.Either
 import arrow.core.Left
 import arrow.core.Right
 import arrow.core.toOption
-import com.google.gson.Gson
+import com.google.gson.*
 import java.io.Serializable
+import java.lang.reflect.Type
+import kotlin.reflect.KClass
 
 @Entity
 @TypeConverters(PresetConverter::class)
@@ -37,13 +39,28 @@ interface PresetDao {
     fun delete(preset: PresetInfo)
 
     @Query("DELETE FROM preset")
-    fun nukeTable()
+    fun nukeDatabse()
+}
+
+class InterfaceAdapter<T: Any>: JsonSerializer<T>, JsonDeserializer<T> {
+    override fun serialize(src: T, typeOfSrc: Type?, context: JsonSerializationContext?): JsonElement {
+        val member = JsonObject()
+        member.addProperty("type", src.javaClass.name)
+        member.add("data", context!!.serialize(src))
+        return member
+    }
+
+    override fun deserialize(json: JsonElement?, typeOfT: Type?, context: JsonDeserializationContext?): T {
+        val member = json as JsonObject
+        val actualType = Class.forName(member.get("type").asString)
+        return context!!.deserialize(member.get("data"), actualType)
+    }
+
 }
 
 class PresetConverter {
     companion object {
-        val gson = Gson()
-
+        val gson = GsonBuilder().registerTypeAdapter(Parameter::class.java, InterfaceAdapter<Parameter>()).create()
         data class Parameters(val parameters: Map<String, Parameter>)
         data class Roles(val roles: Map<String, Role>)
         data class Scripts(val scripts: List<Script>)
