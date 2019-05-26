@@ -323,6 +323,17 @@ class PlayerGameScreenUI(
 
 }
 
+private class RoleGameScreenFragment : Fragment() {
+    //TODO
+}
+
+private class RoleGameScreenUI : AnkoComponent<RoleGameScreenFragment> {
+    override fun createView(ui: AnkoContext<RoleGameScreenFragment>): View {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
+}
+
 class PlayerGameScreenAdapter(fm: FragmentManager, val getState: () -> GameState, val preset: Preset) :
     FragmentPagerAdapter(fm) {
     private val playerNames by lazy { getState().roles.values.flatMap { it.players.values.map { it.name } } }

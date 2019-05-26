@@ -122,6 +122,12 @@ class EditPresetActivity : AppCompatActivity() {
                         startActivityForResult(intentFor<EditScriptActivity>("role" to null), SCRIPT_ADDED)
                     }
                 }
+                listView {
+
+                }
+                button("Add library") {
+
+                }
                 button("Save") {
                     onClick {
                         val result = Intent()

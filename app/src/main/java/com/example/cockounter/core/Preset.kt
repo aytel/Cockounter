@@ -66,9 +66,16 @@ class PresetConverter {
     fun fromPreset(preset: Preset): String =
         gson.toJson(preset)
 
+    fun fromPresetInfo(presetInfo: PresetInfo): String =
+        gson.toJson(presetInfo)
+
     @TypeConverter
     fun toPreset(data: String): Preset =
         gson.fromJson(data, Preset::class.java)
+
+    fun toPresetInfo(data: String): PresetInfo =
+        gson.fromJson(data, PresetInfo::class.java)
+
 }
 
 data class Role(
