@@ -59,6 +59,7 @@ class AdminGameScreenActivity : AppCompatActivity(), GameHolder {
         ).fold({
             scriptFailure(it.message ?: "Failed when performing script")
         }, {
+            stack.push(state)
             state = it
         })
         pagerAdapter.notifyDataSetChanged()
@@ -74,6 +75,7 @@ class AdminGameScreenActivity : AppCompatActivity(), GameHolder {
         ).fold({
             scriptFailure(it.message ?: "Failed when performing script")
         }, {
+            stack.push(state)
             state = it
         })
         pagerAdapter.notifyDataSetChanged()
@@ -83,6 +85,7 @@ class AdminGameScreenActivity : AppCompatActivity(), GameHolder {
         com.example.cockounter.script.performScript(state, PlayerDescription(player, role), script.script, script.context, this).fold({
             scriptFailure(it.message ?: "Failed when performing script")
         }, {
+            stack.push(state)
             state = it
         })
         pagerAdapter.notifyDataSetChanged()
@@ -104,11 +107,21 @@ class AdminGameScreenActivity : AppCompatActivity(), GameHolder {
         }.show()
     }
 
+    fun undo() {
+        if(stack.empty()) {
+            toast("At the beginning")
+        } else {
+            state = stack.pop()
+            pagerAdapter.notifyDataSetChanged()
+        }
+    }
+
 
     private lateinit var state: GameState
     private lateinit var preset: Preset
     private lateinit var players: List<PlayerDescription>
     private val pagerAdapter by lazy { PlayerGameScreenAdapter(supportFragmentManager, getState, preset) }
+    private val stack: Stack<GameState> = Stack()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -147,11 +160,17 @@ class AdminGameScreenActivity : AppCompatActivity(), GameHolder {
 
                 toolbar {
                     menu.apply {
-                        onMenuItemClick {
-                            toast("click")
-                            saveState()
-                        }
                         add("Save state").apply {
+                            setOnMenuItemClickListener {
+                                saveState()
+                                true
+                            }
+                        }
+                        add("Undo").apply {
+                            setOnMenuItemClickListener {
+                                undo()
+                                true
+                            }
                         }
                     }
 
