@@ -1,5 +1,6 @@
 package com.example.cockounter
 
+import android.app.Activity
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
@@ -56,7 +57,7 @@ class StartSinglePlayerGameActivity : AppCompatActivity() {
         result.putExtra("names", players.map { it.name }.toTypedArray())
         result.putExtra("roles", players.map { it.role }.toTypedArray())
         result.putExtra("position", intent.getIntExtra("position", -1))
-        setResult(0, result)
+        setResult(Activity.RESULT_OK, result)
         finish()
     }
 }

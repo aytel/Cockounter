@@ -1,5 +1,6 @@
 package com.example.cockounter
 
+import android.app.Activity
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
@@ -37,13 +38,13 @@ class SelectPresetActivity : AppCompatActivity() {
             return
         }
         when(requestCode) {
-            PRESET_ADDED -> if(resultCode == 0) {
+            PRESET_ADDED -> if(resultCode == Activity.RESULT_OK) {
                 val preset = data.getSerializableExtra("newPreset") as PresetInfo
                 presetsList.add(preset)
                 presetsAdapter.notifyDataSetChanged()
                 Storage.insertPreset(preset)
             }
-            PRESET_CHANGED -> if(resultCode == 0) {
+            PRESET_CHANGED -> if(resultCode == Activity.RESULT_OK) {
                 val position = data.getIntExtra("position", -1)
                 val preset = data.getSerializableExtra("newPreset") as PresetInfo
                 Storage.deletePreset(presetsList[position])
@@ -51,7 +52,7 @@ class SelectPresetActivity : AppCompatActivity() {
                 presetsAdapter.notifyDataSetChanged()
                 Storage.insertPreset(preset)
             }
-            START_GAME -> if(resultCode == 0) {
+            START_GAME -> if(resultCode == Activity.RESULT_OK) {
                 val position = data.getIntExtra("position", -1)
                 val names = data.getStringArrayExtra("names")!!
                 val roles = data.getStringArrayExtra("roles")!!
@@ -63,7 +64,7 @@ class SelectPresetActivity : AppCompatActivity() {
                 )
                 finish()
             }
-            LOAD_FILE -> {
+            LOAD_FILE -> if (resultCode == Activity.RESULT_OK){
                 val uri = data.data!!
                 val preset = loadPreset(this, uri).fold({
                     alert(it.message!!).show()
@@ -73,7 +74,7 @@ class SelectPresetActivity : AppCompatActivity() {
                     Storage.insertPreset(it)
                 })
             }
-            SAVE_FILE -> {
+            SAVE_FILE -> if (resultCode == Activity.RESULT_OK){
                 val uri = data.data!!
                 if(presetToSave != null) {
                     savePreset(this, uri, presetToSave!!).fold({

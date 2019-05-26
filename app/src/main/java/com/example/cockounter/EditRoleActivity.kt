@@ -1,9 +1,9 @@
 package com.example.cockounter
 
+import android.app.Activity
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.util.Log
 import com.example.cockounter.adapters.ParameterAdapter
 import com.example.cockounter.adapters.ScriptAdapter
 import com.example.cockounter.core.Parameter
@@ -13,12 +13,6 @@ import org.jetbrains.anko.*
 import org.jetbrains.anko.sdk27.coroutines.onClick
 import org.jetbrains.anko.sdk27.coroutines.onItemLongClick
 
-private const val SHARED_PARAMETER_ADDED = 0
-private const val PRIVATE_PARAMETER_ADDED = 1
-private const val SHARED_PARAMETER_CHANGED = 2
-private const val PRIVATE_PARAMETER_CHANGED = 3
-private const val SCRIPT_ADDED = 4
-private const val SCRIPT_CHANGED = 5
 
 class EditRoleActivity : AppCompatActivity() {
     private val sharedParameterList = mutableListOf<Parameter>()
@@ -27,6 +21,15 @@ class EditRoleActivity : AppCompatActivity() {
     private val sharedParameterAdapter by lazy { ParameterAdapter(this, 0, sharedParameterList) }
     private val privateParameterAdapter by lazy { ParameterAdapter(this, 0, privateParameterList) }
     private val scriptsAdapter by lazy { ScriptAdapter(this, 0, scriptsList) }
+
+    companion object {
+        private const val CODE_SHARED_PARAMETER_ADDED = 0
+        private const val CODE_PRIVATE_PARAMETER_ADDED = 1
+        private const val CODE_SHARED_PARAMETER_CHANGED = 2
+        private const val CODE_PRIVATE_PARAMETER_CHANGED = 3
+        private const val CODE_SCRIPT_ADDED = 4
+        private const val CODE_SCRIPT_CHANGED = 5
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         fun parameterListToMap(list: List<Parameter>) = list.map { Pair(it.name, it) }.toMap()
@@ -55,7 +58,7 @@ class EditRoleActivity : AppCompatActivity() {
                                     intentFor<EditRoleActivity>(
                                         "parameter" to sharedParameterList[index],
                                         "position" to index
-                                    ), PRIVATE_PARAMETER_CHANGED
+                                    ), CODE_PRIVATE_PARAMETER_CHANGED
                                 )
                                 1 -> {
                                     sharedParameterList.removeAt(index)
@@ -69,7 +72,7 @@ class EditRoleActivity : AppCompatActivity() {
                     onClick {
                         startActivityForResult(
                             intentFor<EditParameterActivity>("parameter" to null),
-                            SHARED_PARAMETER_ADDED
+                            CODE_SHARED_PARAMETER_ADDED
                         )
                     }
                 }
@@ -82,7 +85,7 @@ class EditRoleActivity : AppCompatActivity() {
                                     intentFor<EditRoleActivity>(
                                         "parameter" to privateParameterList[index],
                                         "position" to index
-                                    ), PRIVATE_PARAMETER_CHANGED
+                                    ), CODE_PRIVATE_PARAMETER_CHANGED
                                 )
                                 1 -> {
                                     privateParameterList.removeAt(index)
@@ -96,7 +99,7 @@ class EditRoleActivity : AppCompatActivity() {
                     onClick {
                         startActivityForResult(
                             intentFor<EditParameterActivity>("parameter" to null),
-                            PRIVATE_PARAMETER_ADDED
+                            CODE_PRIVATE_PARAMETER_ADDED
                         )
                     }
                 }
@@ -109,7 +112,7 @@ class EditRoleActivity : AppCompatActivity() {
                                     intentFor<EditScriptActivity>(
                                         "script" to scriptsList[index],
                                         "position" to index
-                                    ), SCRIPT_CHANGED
+                                    ), CODE_SCRIPT_CHANGED
                                 )
                                 1 -> {
                                     scriptsList.removeAt(index)
@@ -121,7 +124,7 @@ class EditRoleActivity : AppCompatActivity() {
                 }
                 button("Add new script") {
                     onClick {
-                        startActivityForResult(intentFor<EditScriptActivity>("role" to null), SCRIPT_ADDED)
+                        startActivityForResult(intentFor<EditScriptActivity>("role" to null), CODE_SCRIPT_ADDED)
                     }
                 }
                 button("Save") {
@@ -137,7 +140,7 @@ class EditRoleActivity : AppCompatActivity() {
                             )
                         )
                         result.putExtra("position", intent.getIntExtra("position", -1))
-                        setResult(0, result)
+                        setResult(Activity.RESULT_OK, result)
                         finish()
                     }
                 }
@@ -150,29 +153,29 @@ class EditRoleActivity : AppCompatActivity() {
             return
         }
         when (requestCode) {
-            SHARED_PARAMETER_ADDED -> if (resultCode == 0) {
+            CODE_SHARED_PARAMETER_ADDED -> if (resultCode == Activity.RESULT_OK) {
                 sharedParameterList.add(data.getSerializableExtra("newParameter") as Parameter)
                 sharedParameterAdapter.notifyDataSetChanged()
             }
-            PRIVATE_PARAMETER_ADDED -> if (resultCode == 0) {
+            CODE_PRIVATE_PARAMETER_ADDED -> if (resultCode == Activity.RESULT_OK) {
                 privateParameterList.add(data.getSerializableExtra("newParameter") as Parameter)
                 privateParameterAdapter.notifyDataSetChanged()
             }
-            SHARED_PARAMETER_CHANGED -> if(resultCode == 0) {
+            CODE_SHARED_PARAMETER_CHANGED -> if(resultCode == Activity.RESULT_OK) {
                 val index = data.getIntExtra("position", -1)
                 sharedParameterList[index] = data.getSerializableExtra("newParameter") as Parameter
                 sharedParameterAdapter.notifyDataSetChanged()
             }
-            PRIVATE_PARAMETER_CHANGED -> if(resultCode == 0) {
+            CODE_PRIVATE_PARAMETER_CHANGED -> if(resultCode == Activity.RESULT_OK) {
                 val index = data.getIntExtra("position", -1)
                 privateParameterList[index] = data.getSerializableExtra("newParameter") as Parameter
                 privateParameterAdapter.notifyDataSetChanged()
             }
-            SCRIPT_ADDED -> if(resultCode == 0) {
+            CODE_SCRIPT_ADDED -> if(resultCode == Activity.RESULT_OK) {
                 scriptsList.add(data.getSerializableExtra("newScript") as Script)
                 scriptsAdapter.notifyDataSetChanged()
             }
-            SCRIPT_CHANGED -> if(requestCode == 0) {
+            CODE_SCRIPT_CHANGED -> if(requestCode == Activity.RESULT_OK) {
                 val index = data.getIntExtra("position", -1)
                 scriptsList[index] = data.getSerializableExtra("newScript") as Script
                 scriptsAdapter.notifyDataSetChanged()

@@ -1,5 +1,6 @@
 package com.example.cockounter
 
+import android.app.Activity
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
@@ -18,9 +19,8 @@ class EditScriptActivity : AppCompatActivity() {
     companion object {
         const val ARG_SCRIPT = "script"
         const val ARG_POSITION = "position"
-        const val RESULT_POSITION = "position"
-        const val RESULT_SCRIPT = "newScript"
-        const val RESULT_OK = 0
+        const val RETURN_POSITION = "position"
+        const val RETURN_SCRIPT = "newScript"
     }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -36,15 +36,15 @@ class EditScriptActivity : AppCompatActivity() {
     fun save(scriptName: String, script: String, context: ScriptContext) {
         val result = Intent()
         result.putExtra(
-            RESULT_SCRIPT,
+            RETURN_SCRIPT,
             Script(
                 scriptName,
                 script,
                 context
             )
         )
-        result.putExtra(RESULT_POSITION, intent.getIntExtra(ARG_POSITION, -1))
-        setResult(0, result)
+        result.putExtra(RETURN_POSITION, intent.getIntExtra(ARG_POSITION, -1))
+        setResult(Activity.RESULT_OK, result)
         finish()
     }
 }

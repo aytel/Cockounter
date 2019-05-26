@@ -1,5 +1,6 @@
 package com.example.cockounter
 
+import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
@@ -16,14 +17,13 @@ import org.jetbrains.anko.sdk27.coroutines.onItemLongClick
 class EditParameterActivity : AppCompatActivity() {
 
     companion object {
-        const val INIT_FLAG = "INIT_FLAG"
-        const val FLAG_ERROR = -1
-        const val FLAG_NEW_PARAMETER = 0
+        const val REQUEST = "INIT_FLAG"
+        const val REQUEST_ERROR = -1
+        const val REQUEST_NEW_PARAMETER = 0
         const val ARG_PARAMETER = "parameter"
         const val ARG_POSITION = "position"
-        const val RESULT_PARAMETER = "newParameter"
-        const val RESULT_POSITION = "position"
-        const val RESULT_OK = 0
+        const val RETURN_PARAMETER = "newParameter"
+        const val RETURN_POSITION = "position"
         const val CODE_NEW_SCRIPT_ADDED = 0
         const val CODE_SCRIPT_CHANGED = 1
     }
@@ -48,10 +48,10 @@ class EditParameterActivity : AppCompatActivity() {
             { parameter ->
                 val result = Intent()
                 result.apply {
-                    putExtra(RESULT_PARAMETER, parameter)
-                    putExtra(RESULT_POSITION, intent.getIntExtra(ARG_POSITION, -1))
+                    putExtra(RETURN_PARAMETER, parameter)
+                    putExtra(RETURN_POSITION, intent.getIntExtra(ARG_POSITION, -1))
                 }
-                setResult(RESULT_OK, result)
+                setResult(Activity.RESULT_OK, result)
                 finish()
             }
         )
@@ -80,14 +80,14 @@ class EditParameterActivity : AppCompatActivity() {
             return
         }
         when (requestCode) {
-            CODE_NEW_SCRIPT_ADDED -> if (resultCode == EditScriptActivity.RESULT_OK) {
-                val script = data.getSerializableExtra(EditScriptActivity.RESULT_SCRIPT) as Script
+            CODE_NEW_SCRIPT_ADDED -> if (resultCode == Activity.RESULT_OK) {
+                val script = data.getSerializableExtra(EditScriptActivity.RETURN_SCRIPT) as Script
                 scripts.add(script)
                 scriptsAdapter.notifyDataSetChanged()
             }
-            CODE_SCRIPT_CHANGED -> if (resultCode == EditScriptActivity.RESULT_OK) {
-                val script = data.getSerializableExtra(EditScriptActivity.RESULT_SCRIPT) as Script
-                val position = data.getIntExtra(EditScriptActivity.RESULT_POSITION, -1)
+            CODE_SCRIPT_CHANGED -> if (resultCode == Activity.RESULT_OK) {
+                val script = data.getSerializableExtra(EditScriptActivity.RETURN_SCRIPT) as Script
+                val position = data.getIntExtra(EditScriptActivity.RETURN_POSITION, -1)
                 scripts[position] = script
                 scriptsAdapter.notifyDataSetChanged()
             }
