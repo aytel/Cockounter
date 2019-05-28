@@ -1,6 +1,7 @@
 package com.example.cockounter.core
 
 import androidx.room.*
+import arrow.core.Option
 import com.github.andrewoma.dexx.kollection.ImmutableMap
 import com.github.andrewoma.dexx.kollection.immutableMapOf
 import com.github.andrewoma.dexx.kollection.toImmutableMap
@@ -23,7 +24,9 @@ data class GameState(
     val globalParameters: Map<String, GameParameter>,
     val roles: Map<String, GameRole>
 ) :
-    Serializable
+    Serializable {
+    companion object
+}
 
 @Dao
 interface StateCaptureDao {
@@ -41,6 +44,7 @@ class StateCaptureConverter {
     companion object {
         val gson = GsonBuilder().registerTypeAdapter(GameParameter::class.java, InterfaceAdapter<GameParameter>())
             .registerTypeAdapter(Parameter::class.java, InterfaceAdapter<Parameter>()).create()
+
         data class PlayersWrapper(val players: List<PlayerDescription>)
     }
 
@@ -83,9 +87,13 @@ data class GameRole(
     val name: String,
     val sharedParameters: Map<String, GameParameter>,
     val players: Map<String, Player>
-) : Serializable
+) : Serializable {
+    companion object
+}
 
-data class Player(val name: String, val privateParameters: Map<String, GameParameter>) : Serializable
+data class Player(val name: String, val privateParameters: Map<String, GameParameter>) : Serializable {
+    companion object
+}
 
 sealed class GameParameter : Serializable {
     abstract val name: String
@@ -114,12 +122,45 @@ data class BooleanGameParameter(override val name: String, override val visibleN
 }
 
 operator fun GameState.get(role: String) = roles.getValue(role)
+operator fun GameState.get(description: PlayerDescription) = get(description.role)[description.name]
+operator fun GameState.get(parameterDescription: ParameterDescription) = when (parameterDescription) {
+    is ParameterDescription.Global -> globalParameters[parameterDescription.name]!!
+    is ParameterDescription.Shared -> roles[parameterDescription.role]!!.sharedParameters[parameterDescription.name]!!
+    is ParameterDescription.Private -> get(parameterDescription.player).privateParameters[parameterDescription.name]!!
+}
+
+fun <V> ImmutableMap<String, V>.modify(key: String, f: (V) -> V): ImmutableMap<String, V> {
+    val oldValue = getValue(key)
+    return put(key, f(oldValue))
+}
+
+operator fun GameState.set(parameterDescription: ParameterDescription, parameter: GameParameter): GameState =
+    when (parameterDescription) {
+        is ParameterDescription.Global -> this.copy(
+            globalParameters = globalParameters.toImmutableMap().put(
+                parameterDescription.name,
+                parameter
+            )
+        )
+        is ParameterDescription.Shared -> copy(roles = roles.toImmutableMap().modify(parameterDescription.role) {
+            it.copy(sharedParameters = it.sharedParameters.toImmutableMap().modify(parameterDescription.name) {parameter})
+        })
+        is ParameterDescription.Private -> copy(roles = roles.toImmutableMap().modify(parameterDescription.player.role) {
+            it.copy(players = it.players.toImmutableMap().modify(parameterDescription.player.name) {
+                it.copy(privateParameters = it.privateParameters.toImmutableMap().modify(parameterDescription.name) { parameter })
+            })
+        })
+    }
 
 operator fun GameRole.get(player: String) = players.getValue(player)
 
 data class PlayerDescription(val name: String, val role: String)
 
-operator fun GameState.get(description: PlayerDescription) = get(description.role)[description.name]
+sealed class ParameterDescription {
+    data class Global(val name: String) : ParameterDescription()
+    data class Shared(val role: String, val name: String) : ParameterDescription()
+    data class Private(val player: PlayerDescription, val name: String) : ParameterDescription()
+}
 
 
 fun buildGameParameter(parameter: Parameter) = when (parameter) {
@@ -144,4 +185,22 @@ fun buildState(preset: Preset, players: List<PlayerDescription>): GameState {
         )
     }
     return GameState(globalParameters, roles.toImmutableMap())
+}
+
+sealed class ActionButtonDescription {
+    data class Attached(val parameter: ParameterDescription, val index: Int) : ActionButtonDescription()
+    data class Global(val index: Int) : ActionButtonDescription()
+    data class Role(val role: String, val index: Int) : ActionButtonDescription()
+}
+
+sealed class ScriptContext {
+    object None : ScriptContext()
+    data class SingleParameter(val parameter: ParameterDescription) : ScriptContext()
+    data class PlayerOnly(val player: PlayerDescription) : ScriptContext()
+    data class Full(val player: PlayerDescription) : ScriptContext()
+}
+
+data class ActionButton(val visibleName: String, val functionName: Option<String>, val script: String, val context: ScriptContext) :
+    Serializable {
+    companion object
 }

@@ -39,14 +39,14 @@ class SelectPresetActivity : AppCompatActivity() {
         }
         when(requestCode) {
             PRESET_ADDED -> if(resultCode == Activity.RESULT_OK) {
-                val preset = data.getSerializableExtra("newPreset") as PresetInfo
+                val preset = data.getSerializableExtra(EditPresetActivity.RETURN_PRESET_INFO) as PresetInfo
                 presetsList.add(preset)
                 presetsAdapter.notifyDataSetChanged()
                 Storage.insertPreset(preset)
             }
             PRESET_CHANGED -> if(resultCode == Activity.RESULT_OK) {
-                val position = data.getIntExtra("position", -1)
-                val preset = data.getSerializableExtra("newPreset") as PresetInfo
+                val position = data.getIntExtra(EditPresetActivity.RETURN_POSITION, -1)
+                val preset = data.getSerializableExtra(EditPresetActivity.RETURN_PRESET_INFO) as PresetInfo
                 Storage.deletePreset(presetsList[position])
                 presetsList[position] = preset
                 presetsAdapter.notifyDataSetChanged()
@@ -96,8 +96,8 @@ class SelectPresetActivity : AppCompatActivity() {
     fun editPreset(index: Int) {
         startActivityForResult(
             intentFor<EditPresetActivity>(
-                "preset" to presetsList[index],
-                "position" to index
+                EditPresetActivity.ARG_PRESET_INFO to presetsList[index],
+                EditPresetActivity.ARG_POSITION to index
             ), PRESET_CHANGED
         )
     }

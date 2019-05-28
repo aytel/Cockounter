@@ -12,8 +12,6 @@ import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentPagerAdapter
 import androidx.viewpager.widget.PagerAdapter
 import androidx.viewpager.widget.ViewPager
-import arrow.core.Failure
-import arrow.core.Try
 import com.example.cockounter.adapters.GameStateAdapter
 import com.example.cockounter.core.*
 import com.example.cockounter.storage.Storage
@@ -24,7 +22,6 @@ import org.jetbrains.anko.design.appBarLayout
 import org.jetbrains.anko.design.coordinatorLayout
 import org.jetbrains.anko.design.themedTabLayout
 import org.jetbrains.anko.sdk27.coroutines.onClick
-import org.jetbrains.anko.sdk27.coroutines.onMenuItemClick
 import org.jetbrains.anko.support.v4.act
 import org.jetbrains.anko.support.v4.ctx
 import org.jetbrains.anko.support.v4.viewPager
@@ -53,11 +50,11 @@ class AdminGameScreenActivity : AppCompatActivity(), GameHolder {
         com.example.cockounter.script.performScript(
             state = state,
             player = PlayerDescription(player, role),
-            script = preset.globalScripts[index].script,
-            scriptContext = preset.globalScripts[index].context,
+            script = preset.globalActionButtons[index].script,
+            scriptContext = preset.globalActionButtons[index].context,
             context = this
         ).fold({
-            scriptFailure(it.message ?: "Failed when performing script")
+            scriptFailure(it.message ?: "Failed when performing actionButton")
         }, {
             stack.push(state)
             state = it
@@ -69,11 +66,11 @@ class AdminGameScreenActivity : AppCompatActivity(), GameHolder {
         com.example.cockounter.script.performScript(
             state = state,
             player = PlayerDescription(player, role),
-            script = preset.roles.getValue(role).scripts[index].script,
-            scriptContext = preset.roles.getValue(role).scripts[index].context,
+            script = preset.roles.getValue(role).actionButtons[index].script,
+            scriptContext = preset.roles.getValue(role).actionButtons[index].context,
             context = this
         ).fold({
-            scriptFailure(it.message ?: "Failed when performing script")
+            scriptFailure(it.message ?: "Failed when performing actionButton")
         }, {
             stack.push(state)
             state = it
@@ -81,9 +78,9 @@ class AdminGameScreenActivity : AppCompatActivity(), GameHolder {
         pagerAdapter.notifyDataSetChanged()
     }
 
-    override fun performScript(player: String, role: String, script: Script) {
-        com.example.cockounter.script.performScript(state, PlayerDescription(player, role), script.script, script.context, this).fold({
-            scriptFailure(it.message ?: "Failed when performing script")
+    override fun performScript(player: String, role: String, actionButton: ActionButton) {
+        com.example.cockounter.script.performScript(state, PlayerDescription(player, role), actionButton.script, actionButton.context, this).fold({
+            scriptFailure(it.message ?: "Failed when performing actionButton")
         }, {
             stack.push(state)
             state = it
@@ -240,8 +237,8 @@ class PlayerGameScreenFragment : Fragment() {
             globalParametersAdapter,
             sharedParametersAdapter,
             privateParametersAdapter,
-            preset.globalScripts.map { it.name },
-            preset.roles.getValue(playerRole).scripts.map { it.name }
+            preset.globalActionButtons.map { it.name },
+            preset.roles.getValue(playerRole).actionButtons.map { it.name }
         ).createView(AnkoContext.Companion.create(ctx, this))
     }
 
@@ -272,8 +269,8 @@ class PlayerGameScreenFragment : Fragment() {
         privateParametersAdapter.notifyDataSetChanged()
     }
 
-    fun performScript(script: Script) {
-        (act as GameHolder).performScript(playerName, playerRole, script)
+    fun performScript(actionButton: ActionButton) {
+        (act as GameHolder).performScript(playerName, playerRole, actionButton)
         globalParametersAdapter.notifyDataSetChanged()
         sharedParametersAdapter.notifyDataSetChanged()
         privateParametersAdapter.notifyDataSetChanged()
@@ -352,7 +349,7 @@ class PlayerGameScreenAdapter(fm: FragmentManager, val getState: () -> GameState
 interface GameHolder {
     fun performGlobalScript(player: String, role: String, index: Int): Unit
     fun performScript(player: String, role: String, index: Int): Unit
-    fun performScript(player: String, role: String, script: Script): Unit
+    fun performScript(player: String, role: String, actionButton: ActionButton): Unit
     val getState: () -> GameState
     val getPreset: () -> Preset
 }

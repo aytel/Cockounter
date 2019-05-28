@@ -8,7 +8,7 @@ import com.example.cockounter.core.*
 import org.jetbrains.anko.*
 import org.jetbrains.anko.sdk27.coroutines.onClick
 
-class GameStateAdapter(val getState: () -> GameState, val extract: (GameState) -> List<Pair<GameParameter, Parameter>>, val callback: (Script) -> Unit) : BaseAdapter() {
+class GameStateAdapter(val getState: () -> GameState, val extract: (GameState) -> List<Pair<GameParameter, Parameter>>, val callback: (ActionButton) -> Unit) : BaseAdapter() {
     override fun getView(position: Int, convertView: View?, parent: ViewGroup?): View = with(parent!!.context) {
         linearLayout {
             val (gameParameter, parameter) = extract(getState())[position]
@@ -21,10 +21,10 @@ class GameStateAdapter(val getState: () -> GameState, val extract: (GameState) -
                     text = gameParameter.valueString()
                 }
             }
-            Log.i("AdapterCnt", parameter.attachedScripts.size.toString())
+            Log.i("AdapterCnt", parameter.attachedActionButtons.size.toString())
             horizontalScrollView {
                 linearLayout {
-                    parameter.attachedScripts.forEach { script ->
+                    parameter.attachedActionButtons.forEach { script ->
                         button(script.name) {
                             onClick {
                                 callback(script)

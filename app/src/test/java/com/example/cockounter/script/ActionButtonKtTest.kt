@@ -6,7 +6,7 @@ import com.example.cockounter.core.IntegerGameParameter
 import com.example.cockounter.core.Player
 import org.junit.Test
 
-class ScriptKtTest {
+class ActionButtonKtTest {
 
     @Test
     fun evaluateScript() {
