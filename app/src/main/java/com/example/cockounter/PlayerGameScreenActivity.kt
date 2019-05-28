@@ -45,6 +45,7 @@ class PlayerGameScreenActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        /*
         state = intent.getSerializableExtra("state") as GameState
         val player = intent.getStringExtra("player")!!
         val role = intent.getStringExtra("role")!!
@@ -76,5 +77,6 @@ class PlayerGameScreenActivity : AppCompatActivity() {
                 }
             }
         }
+        */
     }
 }

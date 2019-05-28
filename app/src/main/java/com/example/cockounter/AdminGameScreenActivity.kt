@@ -12,8 +12,10 @@ import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentPagerAdapter
 import androidx.viewpager.widget.PagerAdapter
 import androidx.viewpager.widget.ViewPager
-import com.example.cockounter.adapters.GameStateAdapter
+import com.example.cockounter.adapters.PlayerRepresentationAdapter
 import com.example.cockounter.core.*
+import com.example.cockounter.script.Action
+import com.example.cockounter.script.buildScriptEvaluation
 import com.example.cockounter.storage.Storage
 import com.google.android.material.appbar.AppBarLayout
 import com.google.android.material.tabs.TabLayout
@@ -21,14 +23,14 @@ import org.jetbrains.anko.*
 import org.jetbrains.anko.design.appBarLayout
 import org.jetbrains.anko.design.coordinatorLayout
 import org.jetbrains.anko.design.themedTabLayout
-import org.jetbrains.anko.sdk27.coroutines.onClick
 import org.jetbrains.anko.support.v4.act
 import org.jetbrains.anko.support.v4.ctx
+import org.jetbrains.anko.support.v4.find
 import org.jetbrains.anko.support.v4.viewPager
 import java.util.*
 
 
-class AdminGameScreenActivity : AppCompatActivity(), GameHolder {
+class AdminGameScreenActivity : AppCompatActivity(), GameHolder, ActionPerformer {
 
     companion object {
         const val MODE = "MODE"
@@ -46,40 +48,8 @@ class AdminGameScreenActivity : AppCompatActivity(), GameHolder {
         alert(message)
     }
 
-    override fun performGlobalScript(player: String, role: String, index: Int) {
-        com.example.cockounter.script.performScript(
-            state = state,
-            player = PlayerDescription(player, role),
-            script = preset.globalActionButtons[index].script,
-            scriptContext = preset.globalActionButtons[index].context,
-            context = this
-        ).fold({
-            scriptFailure(it.message ?: "Failed when performing actionButton")
-        }, {
-            stack.push(state)
-            state = it
-        })
-        pagerAdapter.notifyDataSetChanged()
-    }
-
-    override fun performScript(player: String, role: String, index: Int) {
-        com.example.cockounter.script.performScript(
-            state = state,
-            player = PlayerDescription(player, role),
-            script = preset.roles.getValue(role).actionButtons[index].script,
-            scriptContext = preset.roles.getValue(role).actionButtons[index].context,
-            context = this
-        ).fold({
-            scriptFailure(it.message ?: "Failed when performing actionButton")
-        }, {
-            stack.push(state)
-            state = it
-        })
-        pagerAdapter.notifyDataSetChanged()
-    }
-
-    override fun performScript(player: String, role: String, actionButton: ActionButton) {
-        com.example.cockounter.script.performScript(state, PlayerDescription(player, role), actionButton.script, actionButton.context, this).fold({
+    override fun performAction(action: Action) {
+        evaluator(action).flatMap { it(state) }.fold({
             scriptFailure(it.message ?: "Failed when performing actionButton")
         }, {
             stack.push(state)
@@ -117,8 +87,10 @@ class AdminGameScreenActivity : AppCompatActivity(), GameHolder {
     private lateinit var state: GameState
     private lateinit var preset: Preset
     private lateinit var players: List<PlayerDescription>
-    private val pagerAdapter by lazy { PlayerGameScreenAdapter(supportFragmentManager, getState, preset) }
+    private val pagerAdapter by lazy { PlayerGameScreenAdapter(supportFragmentManager, getState, representation) }
     private val stack: Stack<GameState> = Stack()
+    private val evaluator by lazy { buildScriptEvaluation(preset, players)(this) }
+    override val representation by lazy { buildByPlayerRepresentation(preset, players) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -187,104 +159,58 @@ class AdminGameScreenActivity : AppCompatActivity(), GameHolder {
     }
 
     override val getState = { state }
-    override val getPreset = { preset }
 }
 
-class PlayerGameScreenFragment : Fragment() {
+class PlayerGameScreenFragment : Fragment(), ActionPerformer {
     companion object {
-        const val ARG_NAME = "ARG_NAME"
-        const val ARG_ROLE = "ARG_ROLE"
-        fun newInstance(playerName: String, playerRole: String): PlayerGameScreenFragment {
-            val args = bundleOf(ARG_NAME to playerName, ARG_ROLE to playerRole)
+        const val ARG_INDEX = "ARG_INDEX"
+        fun newInstance(index: Int): PlayerGameScreenFragment {
+            val args = bundleOf(ARG_INDEX to index)
             val fragment = PlayerGameScreenFragment()
             fragment.arguments = args
             return fragment
         }
     }
 
-    private var playerName = ""
-    private var playerRole = ""
-
-    lateinit var globalParametersAdapter: GameStateAdapter
-    lateinit var sharedParametersAdapter: GameStateAdapter
-    lateinit var privateParametersAdapter: GameStateAdapter
+    var index: Int = -1
+    lateinit var playerAdapter: PlayerRepresentationAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        playerName = arguments!!.getString(ARG_NAME) ?: ""
-        playerRole = arguments!!.getString(ARG_ROLE) ?: ""
+        index = arguments?.getInt(ARG_INDEX) ?: -1
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        val state = getState()
-        val preset = getPreset()
-        globalParametersAdapter = GameStateAdapter(
-            getState = { state },
-            extract = { it.globalParameters.values.toList().zip(preset.globalParameters.values) },
-            callback = this::performScript
-        )
-        sharedParametersAdapter = GameStateAdapter(
-            getState = { state },
-            extract = { it[playerRole].sharedParameters.values.toList().zip(preset.roles.getValue(playerRole).sharedParameters.values) },
-            callback = this::performScript
-        )
-        privateParametersAdapter = GameStateAdapter(
-                getState = { state },
-                extract = { it[playerRole][playerName].privateParameters.values.toList().zip(preset.roles.getValue(playerRole).privateParameters.values) },
-                callback = this::performScript
-        )
-        return PlayerGameScreenUI(
-            globalParametersAdapter,
-            sharedParametersAdapter,
-            privateParametersAdapter,
-            preset.globalActionButtons.map { it.name },
-            preset.roles.getValue(playerRole).actionButtons.map { it.name }
-        ).createView(AnkoContext.Companion.create(ctx, this))
+        if(index != -1) {
+            playerAdapter = PlayerRepresentationAdapter((act as GameHolder).representation.players[index], ::getState)
+            return PlayerGameScreenUI(playerAdapter).createView(AnkoContext.Companion.create(ctx, this))
+        } else {
+            //FIXME
+            return find(0)
+        }
     }
 
     fun getState() = (act as AdminGameScreenActivity).getState()
-    fun getPreset() = (act as AdminGameScreenActivity).getPreset()
 
-    fun performScript(index: Int) {
-        (act as GameHolder).performScript(playerName, playerRole, index)
+    override fun performAction(action: Action) {
+        (act as ActionPerformer).performAction(action)
         /*
         alert {
             message = getState().toString()
         }.show()
         */
-        globalParametersAdapter.notifyDataSetChanged()
-        sharedParametersAdapter.notifyDataSetChanged()
-        privateParametersAdapter.notifyDataSetChanged()
-    }
-
-    fun performGlobalScript(index: Int) {
-        (act as GameHolder).performGlobalScript(playerName, playerRole, index)
-        /*
-        alert {
-            message = getState().toString()
-        }.show()
-        */
-        globalParametersAdapter.notifyDataSetChanged()
-        sharedParametersAdapter.notifyDataSetChanged()
-        privateParametersAdapter.notifyDataSetChanged()
-    }
-
-    fun performScript(actionButton: ActionButton) {
-        (act as GameHolder).performScript(playerName, playerRole, actionButton)
-        globalParametersAdapter.notifyDataSetChanged()
-        sharedParametersAdapter.notifyDataSetChanged()
-        privateParametersAdapter.notifyDataSetChanged()
+        playerAdapter.notifyDataSetChanged()
     }
 }
 
-class PlayerGameScreenUI(
-    val globalParametersAdapter: GameStateAdapter,
-    val sharedParametersAdapter: GameStateAdapter,
-    val privateParametersAdapter: GameStateAdapter,
-    val globalScripts: List<String>,
-    val scripts: List<String>
-) : AnkoComponent<PlayerGameScreenFragment> {
+class PlayerGameScreenUI(val playerAdapter: PlayerRepresentationAdapter) : AnkoComponent<PlayerGameScreenFragment> {
     override fun createView(ui: AnkoContext<PlayerGameScreenFragment>): View = with(ui) {
+        verticalLayout {
+            listView {
+                adapter = playerAdapter
+            }
+        }
+        /*
         scrollView {
             verticalLayout {
                 textView("Global counters")
@@ -315,6 +241,7 @@ class PlayerGameScreenUI(
                 }
             }
         }
+        */
 
     }
 
@@ -331,25 +258,23 @@ private class RoleGameScreenUI : AnkoComponent<RoleGameScreenFragment> {
 
 }
 
-class PlayerGameScreenAdapter(fm: FragmentManager, val getState: () -> GameState, val preset: Preset) :
+class PlayerGameScreenAdapter(fm: FragmentManager, val getState: () -> GameState, val representation: ByPlayerRepresentation) :
     FragmentPagerAdapter(fm) {
-    private val playerNames by lazy { getState().roles.values.flatMap { it.players.values.map { it.name } } }
-    private val playerRoles by lazy { getState().roles.values.flatMap { role -> role.players.values.map { role.name } } }
-
     override fun getItem(position: Int): Fragment =
-        PlayerGameScreenFragment.newInstance(playerNames[position], playerRoles[position])
+        PlayerGameScreenFragment.newInstance(position)
 
-    override fun getCount(): Int = playerNames.size
+    override fun getCount(): Int = representation.players.size
 
-    override fun getPageTitle(position: Int): CharSequence? = playerNames[position]
+    override fun getPageTitle(position: Int): CharSequence? = representation.players[position].name
 
     override fun getItemPosition(`object`: Any): Int = PagerAdapter.POSITION_NONE
 }
 
 interface GameHolder {
-    fun performGlobalScript(player: String, role: String, index: Int): Unit
-    fun performScript(player: String, role: String, index: Int): Unit
-    fun performScript(player: String, role: String, actionButton: ActionButton): Unit
     val getState: () -> GameState
-    val getPreset: () -> Preset
+    val representation: ByPlayerRepresentation
+}
+
+interface ActionPerformer {
+    fun performAction(action: Action): Unit
 }

@@ -69,7 +69,7 @@ private fun addToTable(table: LuaTable, items: Map<String, GameParameter>) {
     }
 }
 
-private fun mapSingleParameter(state: GameState, parameter: ParameterDescription, globals: Globals): Try<Globals> =
+private fun mapSingleParameter(state: GameState, parameter: GameParameterPointer, globals: Globals): Try<Globals> =
     Try {
         globals[Constants.SINGLE_PARAMETER_NAME] = state[parameter]
         globals
@@ -121,7 +121,7 @@ private fun unmapGameState(context: ScriptContext, globals: Globals, oldState: G
 
 private fun unmapSingleParameter(
     oldState: GameState,
-    parameter: ParameterDescription,
+    parameter: GameParameterPointer,
     globals: Globals
 ): Try<GameState> = Try {
     oldState.set(parameter, unpackValue(globals[Constants.SINGLE_PARAMETER_NAME], oldState[parameter]))
@@ -188,18 +188,18 @@ fun buildScriptEvaluation(preset: Preset, players: List<PlayerDescription>): Scr
     }
 }
 
-private fun toFunctionPrefix(parameter: ParameterDescription) = when (parameter) {
-    is ParameterDescription.Global -> "action.global.${parameter.name}."
-    is ParameterDescription.Shared -> "action.${parameter.role}.shared.${parameter.name}."
-    is ParameterDescription.Private -> "action.${parameter.player.role}.private.${parameter.name}"
+private fun toFunctionPrefix(parameter: ParameterPointer) = when (parameter) {
+    is ParameterPointer.Global -> "action.global.${parameter.name}."
+    is ParameterPointer.Shared -> "action.${parameter.rolePointer.role}.shared.${parameter.name}."
+    is ParameterPointer.Private -> "action.${parameter.rolePointer.role}.private.${parameter.name}"
 }
 
-fun buildAction(buttonDescription: ActionButtonDescription, button: ActionButton): Action = when (buttonDescription) {
-    is ActionButtonDescription.Attached -> Action.PlayerScript(
-        button.context,
-        toFunctionPrefix(buttonDescription.parameter) + generateName(button.functionName, buttonDescription.index))
-    is ActionButtonDescription.Global -> Action.PlayerScript(button.context, "action." + generateName(button.functionName, buttonDescription.index))
-    is ActionButtonDescription.Role -> Action.PlayerScript(button.context, "action.${buttonDescription.role}." + generateName(button.functionName, buttonDescription.index))
+fun buildAction(button: ActionButtonModel, context: ScriptContext): Action = when (button) {
+    is ActionButtonModel.Attached -> Action.PlayerScript(
+        context,
+        toFunctionPrefix(button.parameterPointer) + generateName(button.script.functionName, TODO("index")))
+    is ActionButtonModel.Global -> Action.PlayerScript(context, "action." + generateName(button.script.functionName, TODO("index")))
+    is ActionButtonModel.Role -> Action.PlayerScript(context, "action.${button.rolePointer.role}." + generateName(button.script.functionName, TODO("index")))
 }
 
 private fun generateName(string: Option<String>, index: Int) = string.getOrElse { "__func$index" }

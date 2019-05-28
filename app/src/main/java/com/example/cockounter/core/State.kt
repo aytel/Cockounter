@@ -123,10 +123,10 @@ data class BooleanGameParameter(override val name: String, override val visibleN
 
 operator fun GameState.get(role: String) = roles.getValue(role)
 operator fun GameState.get(description: PlayerDescription) = get(description.role)[description.name]
-operator fun GameState.get(parameterDescription: ParameterDescription) = when (parameterDescription) {
-    is ParameterDescription.Global -> globalParameters[parameterDescription.name]!!
-    is ParameterDescription.Shared -> roles[parameterDescription.role]!!.sharedParameters[parameterDescription.name]!!
-    is ParameterDescription.Private -> get(parameterDescription.player).privateParameters[parameterDescription.name]!!
+operator fun GameState.get(gameParameterPointer: GameParameterPointer) = when (gameParameterPointer) {
+    is GameParameterPointer.Global -> globalParameters[gameParameterPointer.name]!!
+    is GameParameterPointer.Shared -> roles[gameParameterPointer.role]!!.sharedParameters[gameParameterPointer.name]!!
+    is GameParameterPointer.Private -> get(gameParameterPointer.player).privateParameters[gameParameterPointer.name]!!
 }
 
 fun <V> ImmutableMap<String, V>.modify(key: String, f: (V) -> V): ImmutableMap<String, V> {
@@ -134,20 +134,20 @@ fun <V> ImmutableMap<String, V>.modify(key: String, f: (V) -> V): ImmutableMap<S
     return put(key, f(oldValue))
 }
 
-operator fun GameState.set(parameterDescription: ParameterDescription, parameter: GameParameter): GameState =
-    when (parameterDescription) {
-        is ParameterDescription.Global -> this.copy(
+operator fun GameState.set(gameParameterPointer: GameParameterPointer, parameter: GameParameter): GameState =
+    when (gameParameterPointer) {
+        is GameParameterPointer.Global -> this.copy(
             globalParameters = globalParameters.toImmutableMap().put(
-                parameterDescription.name,
+                gameParameterPointer.name,
                 parameter
             )
         )
-        is ParameterDescription.Shared -> copy(roles = roles.toImmutableMap().modify(parameterDescription.role) {
-            it.copy(sharedParameters = it.sharedParameters.toImmutableMap().modify(parameterDescription.name) {parameter})
+        is GameParameterPointer.Shared -> copy(roles = roles.toImmutableMap().modify(gameParameterPointer.role) {
+            it.copy(sharedParameters = it.sharedParameters.toImmutableMap().modify(gameParameterPointer.name) {parameter})
         })
-        is ParameterDescription.Private -> copy(roles = roles.toImmutableMap().modify(parameterDescription.player.role) {
-            it.copy(players = it.players.toImmutableMap().modify(parameterDescription.player.name) {
-                it.copy(privateParameters = it.privateParameters.toImmutableMap().modify(parameterDescription.name) { parameter })
+        is GameParameterPointer.Private -> copy(roles = roles.toImmutableMap().modify(gameParameterPointer.player.role) {
+            it.copy(players = it.players.toImmutableMap().modify(gameParameterPointer.player.name) {
+                it.copy(privateParameters = it.privateParameters.toImmutableMap().modify(gameParameterPointer.name) { parameter })
             })
         })
     }
@@ -156,10 +156,10 @@ operator fun GameRole.get(player: String) = players.getValue(player)
 
 data class PlayerDescription(val name: String, val role: String)
 
-sealed class ParameterDescription {
-    data class Global(val name: String) : ParameterDescription()
-    data class Shared(val role: String, val name: String) : ParameterDescription()
-    data class Private(val player: PlayerDescription, val name: String) : ParameterDescription()
+sealed class GameParameterPointer {
+    data class Global(val name: String) : GameParameterPointer()
+    data class Shared(val role: String, val name: String) : GameParameterPointer()
+    data class Private(val player: PlayerDescription, val name: String) : GameParameterPointer()
 }
 
 
@@ -187,15 +187,17 @@ fun buildState(preset: Preset, players: List<PlayerDescription>): GameState {
     return GameState(globalParameters, roles.toImmutableMap())
 }
 
+
+
 sealed class ActionButtonDescription {
-    data class Attached(val parameter: ParameterDescription, val index: Int) : ActionButtonDescription()
+    data class Attached(val parameter: GameParameterPointer, val index: Int) : ActionButtonDescription()
     data class Global(val index: Int) : ActionButtonDescription()
     data class Role(val role: String, val index: Int) : ActionButtonDescription()
 }
 
 sealed class ScriptContext {
     object None : ScriptContext()
-    data class SingleParameter(val parameter: ParameterDescription) : ScriptContext()
+    data class SingleParameter(val parameter: GameParameterPointer) : ScriptContext()
     data class PlayerOnly(val player: PlayerDescription) : ScriptContext()
     data class Full(val player: PlayerDescription) : ScriptContext()
 }

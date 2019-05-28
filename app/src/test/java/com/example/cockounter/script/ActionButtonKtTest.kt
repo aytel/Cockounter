@@ -14,13 +14,6 @@ class ActionButtonKtTest {
 
     @Test
     fun checkId() {
-        val state = GameState(
-            mapOf("x" to IntegerGameParameter("x", 0)),
-            mapOf("role" to GameRole("role", mapOf(), mapOf("player" to Player("player", mapOf()))))
-        )
-        val res = performScriptUsingGameState(state, "player", "global.x = global.x + 1")
-        val newState = mapToGameState(mapFromGameState(state, "player"), state)
-
     }
 
 }

@@ -167,6 +167,11 @@ sealed class ParameterPointer {
 
 data class PresetScript(val visibleName: String, val functionName: Option<String>, val script: String, val context: ScriptContextDescription) : Serializable
 
+fun Preset.globalParameterPointers(): List<ParameterPointer> = globalParameters.values.map { ParameterPointer.Global(it.name) }
+fun Role.sharedParameterPointers(): List<ParameterPointer> = sharedParameters.values.map { ParameterPointer.Shared(RolePointer(name), it.name) }
+fun Role.privateParameterPointers(): List<ParameterPointer> = privateParameters.values.map { ParameterPointer.Shared(RolePointer(name), it.name) }
+
+
 enum class ScriptContextDescription {
     NONE, SINGLE_PARAMETER, PLAYER_ONLY, ALL
 }
