@@ -25,17 +25,20 @@ class MainActivity : AppCompatActivity() {
         startActivity(intentFor<SelectPresetActivity>())
     }
 
+    fun createMultiplayerGame() {
+        startActivity(intentFor<SelectPresetActivity>())
+    }
+
     fun resumeGame() {
         startActivity(intentFor<ResumeGameActivity>())
     }
 
     fun joinGame() {
-        toast("Work in progress")
+        startActivity(intentFor<JoinGameActivity>())
     }
 
     fun editPresets() {
-        toast("Work in progress")
-        //startActivity(intentFor<PlayerGameScreenActivity>())
+        startActivity(intentFor<SelectPresetActivity>())
     }
 }
 
@@ -45,6 +48,11 @@ private class MainUI : AnkoComponent<MainActivity> {
             button("Create game") {
                 onClick {
                     owner.createGame()
+                }
+            }
+            button("Create multiplayer game") {
+                onClick {
+                    owner.createMultiplayerGame()
                 }
             }
             button("Resume game") {
