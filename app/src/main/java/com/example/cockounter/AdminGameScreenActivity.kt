@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.BaseAdapter
 import androidx.appcompat.app.AppCompatActivity
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.os.bundleOf
@@ -12,7 +13,11 @@ import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentPagerAdapter
 import androidx.viewpager.widget.PagerAdapter
 import androidx.viewpager.widget.ViewPager
+import arrow.core.Either
+import arrow.core.Left
+import arrow.core.Right
 import com.example.cockounter.adapters.PlayerRepresentationAdapter
+import com.example.cockounter.adapters.RoleRepresentationAdapter
 import com.example.cockounter.core.*
 import com.example.cockounter.script.Action
 import com.example.cockounter.script.buildScriptEvaluation
@@ -42,6 +47,9 @@ class AdminGameScreenActivity : AppCompatActivity(), GameHolder, ActionPerformer
         const val ARG_PLAYER_NAMES = "ARG_PLAYER_NAMES"
         const val ARG_PLAYER_ROLES = "ARG_PLAYER_ROLES"
         const val ARG_STATE = "ARG_STATE"
+        private enum class LayoutType {
+            BY_PLAYER, BY_ROLE
+        }
     }
 
     private fun scriptFailure(message: String) {
@@ -83,14 +91,29 @@ class AdminGameScreenActivity : AppCompatActivity(), GameHolder, ActionPerformer
         }
     }
 
+    fun changeLayout() {
+        when(currentLayout) {
+            Companion.LayoutType.BY_PLAYER -> {
+
+            }
+            Companion.LayoutType.BY_ROLE -> {
+
+            }
+        }
+
+    }
+
 
     private lateinit var state: GameState
     private lateinit var preset: Preset
     private lateinit var players: List<PlayerDescription>
-    private val pagerAdapter by lazy { PlayerGameScreenAdapter(supportFragmentManager, getState, representation) }
+    private val pagerAdapter by lazy { PlayerGameScreenAdapter(supportFragmentManager, getState, {representation}) }
     private val stack: Stack<GameState> = Stack()
     private val evaluator by lazy { buildScriptEvaluation(preset, players)(this) }
-    override val representation by lazy { buildByPlayerRepresentation(preset, players) }
+    override lateinit var representation: GameRepresentation
+    private lateinit var myTabLayout: TabLayout
+    private lateinit var myViewPager: ViewPager
+    private var currentLayout = LayoutType.BY_PLAYER
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -106,6 +129,7 @@ class AdminGameScreenActivity : AppCompatActivity(), GameHolder, ActionPerformer
                 val roles = intent.getStringArrayExtra(ARG_PLAYER_ROLES)
                 players = names.zip(roles, ::PlayerDescription)
                 state = buildState(preset, players)
+                representation = buildByPlayerRepresentation(preset, players)
             }
             MODE_USE_STATE -> {
                 preset = intent.getSerializableExtra(ARG_PRESET) as Preset
@@ -115,8 +139,6 @@ class AdminGameScreenActivity : AppCompatActivity(), GameHolder, ActionPerformer
                 state = intent.getSerializableExtra(ARG_STATE) as GameState
             }
         }
-        lateinit var myTabLayout: TabLayout
-        lateinit var myViewPager: ViewPager
         coordinatorLayout {
             lparams(matchParent, matchParent)
 
@@ -138,6 +160,12 @@ class AdminGameScreenActivity : AppCompatActivity(), GameHolder, ActionPerformer
                         add("Undo").apply {
                             setOnMenuItemClickListener {
                                 undo()
+                                true
+                            }
+                        }
+                        add("Change layout").apply {
+                            setOnMenuItemClickListener {
+                                changeLayout()
                                 true
                             }
                         }
@@ -173,7 +201,7 @@ class PlayerGameScreenFragment : Fragment(), ActionPerformer {
     }
 
     var index: Int = -1
-    lateinit var playerAdapter: PlayerRepresentationAdapter
+    lateinit var gameAdapter: BaseAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -182,8 +210,16 @@ class PlayerGameScreenFragment : Fragment(), ActionPerformer {
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         if(index != -1) {
-            playerAdapter = PlayerRepresentationAdapter((act as GameHolder).representation.players[index], ::getState)
-            return PlayerGameScreenUI(playerAdapter).createView(AnkoContext.Companion.create(ctx, this))
+            val representation = (act as GameHolder).representation
+            when(representation) {
+                is ByPlayerRepresentation -> {
+                    gameAdapter = PlayerRepresentationAdapter(representation.players[index], ::getState)
+                }
+                is ByRoleRepresentation -> {
+                    gameAdapter = RoleRepresentationAdapter(representation.roles[index], ::getState)
+                }
+            }
+            return PlayerGameScreenUI(gameAdapter).createView(AnkoContext.Companion.create(ctx, this))
         } else {
             //FIXME
             return find(0)
@@ -199,11 +235,11 @@ class PlayerGameScreenFragment : Fragment(), ActionPerformer {
             message = getState().toString()
         }.show()
         */
-        playerAdapter.notifyDataSetChanged()
+        gameAdapter.notifyDataSetChanged()
     }
 }
 
-class PlayerGameScreenUI(val playerAdapter: PlayerRepresentationAdapter) : AnkoComponent<PlayerGameScreenFragment> {
+class PlayerGameScreenUI(val playerAdapter: BaseAdapter) : AnkoComponent<PlayerGameScreenFragment> {
     override fun createView(ui: AnkoContext<PlayerGameScreenFragment>): View = with(ui) {
         verticalLayout {
             listView {
@@ -258,21 +294,33 @@ private class RoleGameScreenUI : AnkoComponent<RoleGameScreenFragment> {
 
 }
 
-class PlayerGameScreenAdapter(fm: FragmentManager, val getState: () -> GameState, val representation: ByPlayerRepresentation) :
+class PlayerGameScreenAdapter(fm: FragmentManager, val getState: () -> GameState, val getRepresentation: () -> GameRepresentation) :
     FragmentPagerAdapter(fm) {
     override fun getItem(position: Int): Fragment =
         PlayerGameScreenFragment.newInstance(position)
 
-    override fun getCount(): Int = representation.players.size
+    override fun getCount(): Int {
+        val representation = getRepresentation()
+        return when(representation) {
+            is ByPlayerRepresentation -> representation.players.size
+            is ByRoleRepresentation -> representation.roles.size
+        }
+    }
 
-    override fun getPageTitle(position: Int): CharSequence? = representation.players[position].name
+    override fun getPageTitle(position: Int): CharSequence? {
+        val representation = getRepresentation()
+        return when(representation) {
+            is ByPlayerRepresentation -> representation.players[position].name
+            is ByRoleRepresentation -> representation.roles[position].role
+        }
+    }
 
     override fun getItemPosition(`object`: Any): Int = PagerAdapter.POSITION_NONE
 }
 
 interface GameHolder {
     val getState: () -> GameState
-    val representation: ByPlayerRepresentation
+    var representation: GameRepresentation
 }
 
 interface ActionPerformer {

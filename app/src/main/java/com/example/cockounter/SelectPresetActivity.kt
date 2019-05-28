@@ -6,6 +6,9 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.View
 import androidx.room.TypeConverter
+import arrow.core.None
+import arrow.core.Some
+import arrow.core.extensions.option.foldable.fold
 import com.example.cockounter.adapters.PresetAdapter
 import com.example.cockounter.core.PresetConverter
 import com.example.cockounter.core.PresetInfo
@@ -29,9 +32,22 @@ private const val SAVE_FILE = 4;
 
 class SelectPresetActivity : AppCompatActivity() {
 
+    companion object {
+        const val REQUEST = "REQUEST"
+        const val REQUEST_SINGLE_PLAYER_GAME = 0
+        const val REQUEST_MULTIPLAYER_GAME = 1
+        private enum class GameType {
+            SINGLE, MULTI
+        }
+    }
     private val presetsList = mutableListOf<PresetInfo>()
     private val presetsAdapter: PresetAdapter by lazy { PresetAdapter(this, 0, presetsList) }
     private var presetToSave: PresetInfo? = null
+    private val gameType by lazy { when(intent.getIntExtra(REQUEST, -1)) {
+        REQUEST_SINGLE_PLAYER_GAME -> Some(GameType.SINGLE)
+        REQUEST_MULTIPLAYER_GAME -> Some(GameType.MULTI)
+        else -> None
+    }}
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         if(data == null) {
@@ -110,7 +126,22 @@ class SelectPresetActivity : AppCompatActivity() {
 
     fun startGame(index: Int) {
         val roleNames = presetsList[index].preset.roles.keys.toTypedArray()
-        startActivityForResult(intentFor<StartSinglePlayerGameActivity>("roles" to roleNames, "position" to index), START_GAME)
+        when(gameType) {
+            None -> toast("Error")
+            is Some -> when((gameType as Some<GameType>).t) {
+                Companion.GameType.SINGLE -> {
+                    startActivityForResult(
+                        intentFor<StartSinglePlayerGameActivity>(
+                            "roles" to roleNames,
+                            "position" to index
+                        ), START_GAME
+                    )
+                }
+                Companion.GameType.MULTI -> {
+                    startActivityForResult(intentFor<StartSinglePlayerGameActivity>("roles" to roleNames, "position" to index), START_GAME)
+                }
+            }
+        }
     }
 
     fun createPreset() {

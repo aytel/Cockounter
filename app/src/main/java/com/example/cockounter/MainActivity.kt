@@ -1,8 +1,8 @@
 package com.example.cockounter
 
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.View
+import androidx.appcompat.app.AppCompatActivity
 import androidx.room.Room
 import com.example.cockounter.storage.Storage
 import org.jetbrains.anko.*
@@ -10,7 +10,8 @@ import org.jetbrains.anko.sdk27.coroutines.onClick
 
 class MainActivity : AppCompatActivity() {
     fun initDatabase() {
-        Storage.database = Room.databaseBuilder(this, Storage::class.java, "storage").fallbackToDestructiveMigration().build()
+        Storage.database =
+            Room.databaseBuilder(this, Storage::class.java, "storage").fallbackToDestructiveMigration().build()
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -22,11 +23,11 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun createGame() {
-        startActivity(intentFor<SelectPresetActivity>())
+        startActivity(intentFor<SelectPresetActivity>(SelectPresetActivity.REQUEST to SelectPresetActivity.REQUEST_SINGLE_PLAYER_GAME))
     }
 
     fun createMultiplayerGame() {
-        startActivity(intentFor<SelectPresetActivity>())
+        startActivity(intentFor<SelectPresetActivity>(SelectPresetActivity.REQUEST to SelectPresetActivity.REQUEST_MULTIPLAYER_GAME))
     }
 
     fun resumeGame() {
