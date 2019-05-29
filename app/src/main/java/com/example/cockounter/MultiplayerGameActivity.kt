@@ -24,9 +24,13 @@ class MultiplayerGameActivity : AppCompatActivity(), GameHolder, ActionPerformer
         const val MODE = "MODE"
         const val MODE_ERROR = -1
         const val MODE_CONNECT = 0
-        const val MODE_CONTINUE_GAME = 1
+        const val MODE_CREATE_GAME = 1
+        const val MODE_CONTINUE_GAME = 2
 
         const val ARG_NAME = "ARG_NAME"
+        const val ARG_PRESET = "ARG_PRESET"
+        const val ARG_PLAYER_NAMES = "ARG_PLAYER_NAMES"
+        const val ARG_PLAYER_ROLES = "ARG_PLAYER_ROLES"
         const val ARG_UUID = "ARG_UUID"
 
         private enum class LayoutType {
@@ -50,22 +54,38 @@ class MultiplayerGameActivity : AppCompatActivity(), GameHolder, ActionPerformer
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val name = intent.getStringExtra(ARG_NAME)
-        val uuid = intent.getStringExtra(ARG_UUID)
-        if(name == null || uuid == null) {
+        if(name == null) {
             finish()
+        }
+        when(intent.getIntExtra(MODE, MODE_ERROR)) {
+            MODE_CREATE_GAME -> {
+                val names = intent.getStringArrayExtra(ARG_PLAYER_NAMES)
+                val roles = intent.getStringArrayExtra(ARG_PLAYER_ROLES)
+                players = names.zip(roles) {a, b -> PlayerDescription(a, b)}
+                preset = intent.getSerializableExtra(ARG_PRESET) as Preset
+                state = buildState(preset, players)
+                uuid = UUID.randomUUID()
+                val stateCapture = StateCapture("", state, preset, players, Date(0), uuid)
+                if(!NetworkHandler.createGame(stateCapture)) {
+                    toast("Error")
+                    finish()
+                }
+            }
+            MODE_CONNECT -> {
+                uuid = UUID.fromString(intent.getStringExtra(ARG_UUID))
+                val stateCapture = NetworkHandler.connectToGame(uuid)
+                state = stateCapture.state
+                preset = stateCapture.preset
+                players = stateCapture.players
+                val temp = players.find { it.name == name }
+                if(temp == null) {
+                    finish()
+                }
+                player = temp!!
+                this.name = name
+            }
         }
 
-        val stateCapture = NetworkHandler.connectToGame(UUID.fromString(uuid))
-        state = stateCapture.state
-        preset = stateCapture.preset
-        players = stateCapture.players
-        val temp = players.find { it.name == name }
-        if(temp == null) {
-            finish()
-        }
-        player = temp!!
-        this.name = name
-        this.uuid = UUID.fromString(uuid)
 
         coordinatorLayout {
             lparams(matchParent, matchParent)
@@ -113,7 +133,7 @@ class MultiplayerGameActivity : AppCompatActivity(), GameHolder, ActionPerformer
             evaluator(action).flatMap { it(state) }.fold({
                 scriptFailure(it.message ?: "Failed when performing actionButton")
             }, {
-                state = NetworkHandler.updateGameState(uuid, it.copy(version = it.version + 1))
+                state = NetworkHandler.updateGameState(uuid, state)
             })
             pagerAdapter.notifyDataSetChanged()
         } catch (e: Exception) {

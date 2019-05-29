@@ -1,6 +1,7 @@
 package com.example.cockounter
 
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -75,6 +76,7 @@ class AdminGameScreenActivity : AppCompatActivity(), GameHolder, ActionPerformer
                 }
                 yesButton {
                     //FIXME
+                    Log.i("Kek", StateCaptureConverter.gson.toJson(StateCapture(stateName.text.toString(), state, preset, players, Calendar.getInstance().time, UUID(1, 1))))
                     Storage.insertGameState(StateCapture(stateName.text.toString(), state, preset, players, Calendar.getInstance().time, UUID(1, 1)))
                 }
                 noButton {

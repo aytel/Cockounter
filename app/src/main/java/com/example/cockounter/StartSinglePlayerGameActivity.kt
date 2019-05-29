@@ -12,7 +12,7 @@ import org.jetbrains.anko.*
 import org.jetbrains.anko.sdk27.coroutines.onClick
 
 open class StartSinglePlayerGameActivity : AppCompatActivity() {
-    protected val players = mutableListOf<PlayerDescription>()
+    private val players = mutableListOf<PlayerDescription>()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         StartSinglePlayerGameUI(PlayersAdapter(players)).setContentView(this)

@@ -4,14 +4,17 @@ import android.app.Activity
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import androidx.room.TypeConverter
 import arrow.core.None
 import arrow.core.Some
 import arrow.core.extensions.option.foldable.fold
 import com.example.cockounter.adapters.PresetAdapter
+import com.example.cockounter.core.PlayerDescription
 import com.example.cockounter.core.PresetConverter
 import com.example.cockounter.core.PresetInfo
+import com.example.cockounter.core.StateCapture
 import com.example.cockounter.network.NetworkHandler
 import com.example.cockounter.storage.Storage
 import com.example.cockounter.storage.loadPreset
@@ -84,8 +87,9 @@ class SelectPresetActivity : AppCompatActivity() {
             }
             START_MULTI_PLAYER_GAME -> if(resultCode == Activity.RESULT_OK) {
                 val position = data.getIntExtra("position", -1)
-                val uuid = NetworkHandler.createGame(presetsList[position].preset)
-                startActivity(intentFor<MultiplayerGameActivity>())
+                val names = data.getStringArrayExtra("names")!!
+                val roles = data.getStringArrayExtra("roles")!!
+                Log.i("Multi", "Start game")
                 alert {
                     customView {
                         val name = editText {
@@ -94,13 +98,17 @@ class SelectPresetActivity : AppCompatActivity() {
                         yesButton {
                             startActivity(
                                 intentFor<MultiplayerGameActivity>(
+                                    MultiplayerGameActivity.MODE to MultiplayerGameActivity.MODE_CREATE_GAME,
                                     MultiplayerGameActivity.ARG_NAME to name.text.toString(),
-                                    MultiplayerGameActivity.ARG_UUID to uuid
+                                    MultiplayerGameActivity.ARG_PRESET to presetsList[position].preset,
+                                    MultiplayerGameActivity.ARG_PLAYER_NAMES to names,
+                                    MultiplayerGameActivity.ARG_PLAYER_ROLES to roles
+                                    //MultiplayerGameActivity.ARG_UUID to uuid
                                 )
                             )
                         }
                     }
-                }
+                }.show()
 
             }
             LOAD_FILE -> if (resultCode == Activity.RESULT_OK){
