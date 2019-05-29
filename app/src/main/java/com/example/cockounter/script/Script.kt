@@ -1,10 +1,8 @@
 package com.example.cockounter.script
 
 import android.content.Context
-import arrow.core.Option
-import arrow.core.Try
-import arrow.core.Tuple2
-import arrow.core.getOrElse
+import arrow.core.*
+import arrow.core.extensions.`try`.monad.binding
 import com.example.cockounter.core.*
 import com.github.andrewoma.dexx.kollection.toImmutableMap
 import org.luaj.vm2.Globals
@@ -12,10 +10,12 @@ import org.luaj.vm2.LuaFunction
 import org.luaj.vm2.LuaTable
 import org.luaj.vm2.LuaValue
 import org.luaj.vm2.lib.jse.JsePlatform
+import kotlin.random.Random
 
 private object Constants {
     const val GLOBAL_PARAMETERS = "gl"
     const val SHARED_PARAMETERS = "sh"
+    const val SAVED_STATE = "saved"
     const val PLAYER = "pl"
     const val SINGLE_PARAMETER_NAME = "x"
     const val META_NAME = "__name"
@@ -162,9 +162,25 @@ private fun unmapAll(oldState: GameState, player: PlayerDescription, globals: Gl
 typealias ScriptEvaluation = (Context) -> ((Action) -> Try<Evaluation>)
 typealias Evaluation = (GameState) -> Try<GameState>
 
-private fun evalFunction(globals: Globals, function: String): Try<Globals> = Try {
-    globals[function].call()
-    globals
+private fun evalFunction(table: LuaTable, function: FunctionDescriptor): Try<LuaTable> = binding {
+    if(function.args.size == 1) {
+        table[function.args[0]].call()
+        table
+    } else {
+        val (result) = evalFunction(table[function.args[0]].checktable(), FunctionDescriptor(function.args.drop(1)))
+        result
+    }
+}
+
+private fun putFunction(globals: Globals, table: LuaTable, descriptor: FunctionDescriptor, function: String): Try<Unit> = binding {
+    if(descriptor.args.size == 1) {
+        table[descriptor.args[0]] = globals.load(function)
+        Unit
+    } else {
+        table[descriptor.begin] = LuaValue.tableOf()
+        putFunction(globals, table[descriptor.begin].checktable(), descriptor.tail(), function)
+        Unit
+    }
 }
 
 private fun performAction(globals: Globals, action: Action): (GameState) -> Try<GameState> = { state ->
@@ -179,9 +195,17 @@ fun buildScriptEvaluation(preset: Preset, players: List<PlayerDescription>): Scr
     val globals = JsePlatform.standardGlobals()
     return { context: Context ->
         mapFunctions(globals, buildInteractionFunctionsWithContext(context));
-        //TODO load libraries
-        //TODO init saved state
+        //FIXME load libraries
+        preset.libraries.forEach {
+            globals.load(it.script)
+        };
+        //FIXME init saved state
+        //TODO initialization
         //TODO load actions
+        preset.actionButtons.forEach {
+            val descriptor = buildFunctionDescriptor(it)
+            putFunction(globals, globals, descriptor, it.script.script)
+        };
         { action: Action ->
             Try { performAction(globals, action) }
         }
@@ -189,17 +213,23 @@ fun buildScriptEvaluation(preset: Preset, players: List<PlayerDescription>): Scr
 }
 
 private fun toFunctionPrefix(parameter: ParameterPointer) = when (parameter) {
-    is ParameterPointer.Global -> "action.global.${parameter.name}."
-    is ParameterPointer.Shared -> "action.${parameter.rolePointer.role}.shared.${parameter.name}."
-    is ParameterPointer.Private -> "action.${parameter.rolePointer.role}.private.${parameter.name}"
+    is ParameterPointer.Global -> FunctionDescriptor(listOf("action", "global", parameter.name))
+    is ParameterPointer.Shared -> FunctionDescriptor(listOf("action", parameter.rolePointer.role, "shared", parameter.name))
+    is ParameterPointer.Private -> FunctionDescriptor(listOf("action", parameter.rolePointer.role, "private", parameter.name))
 }
 
+//FIXME remove random
 fun buildAction(button: ActionButtonModel, context: ScriptContext): Action = when (button) {
-    is ActionButtonModel.Attached -> Action.PlayerScript(
-        context,
-        toFunctionPrefix(button.parameterPointer) + generateName(button.script.functionName, TODO("index")))
-    is ActionButtonModel.Global -> Action.PlayerScript(context, "action." + generateName(button.script.functionName, TODO("index")))
-    is ActionButtonModel.Role -> Action.PlayerScript(context, "action.${button.rolePointer.role}." + generateName(button.script.functionName, TODO("index")))
+    is ActionButtonModel.Attached -> Action.PlayerScript(context, buildFunctionDescriptor(button))
+    is ActionButtonModel.Global -> Action.PlayerScript(context, buildFunctionDescriptor(button))
+    is ActionButtonModel.Role -> Action.PlayerScript(context, buildFunctionDescriptor(button))
 }
 
-private fun generateName(string: Option<String>, index: Int) = string.getOrElse { "__func$index" }
+fun buildFunctionDescriptor(button: ActionButtonModel): FunctionDescriptor = when (button) {
+    is ActionButtonModel.Attached -> FunctionDescriptor(toFunctionPrefix(button.parameterPointer).args + listOf(generateName(button.script.functionName, Random.nextInt())))
+    is ActionButtonModel.Global -> FunctionDescriptor(listOf("action") + generateName(button.script.functionName, Random.nextInt()))
+    is ActionButtonModel.Role -> FunctionDescriptor(listOf("action", button.rolePointer.role) + generateName(button.script.functionName, Random.nextInt()))
+}
+
+private fun generateName(string: String?, index: Int) = string.toOption().getOrElse { "__func$index" }
+

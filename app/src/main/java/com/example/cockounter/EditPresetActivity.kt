@@ -16,11 +16,11 @@ import org.jetbrains.anko.sdk27.coroutines.onItemLongClick
 
 
 class EditPresetActivity : AppCompatActivity() {
-    val globalParametersList = mutableListOf<Parameter>()
-    val rolesList = mutableListOf<Role>()
-    val scriptsList = mutableListOf<PresetScript>()
-    val librariesList = mutableListOf<Library>()
-    val globalParametersAdapter by lazy {
+    private val globalParametersList = mutableListOf<Parameter>()
+    private val rolesList = mutableListOf<Role>()
+    private val scriptsList = mutableListOf<PresetScript>()
+    private val librariesList = mutableListOf<Library>()
+    private val globalParametersAdapter by lazy {
         ParameterAdapter(
             this,
             android.R.layout.simple_list_item_1,
@@ -28,10 +28,9 @@ class EditPresetActivity : AppCompatActivity() {
         )
     }
     //TODO make adapter
-    val rolesAdapter by lazy { ArrayAdapter<Role>(this, android.R.layout.simple_list_item_1, rolesList) }
-    val scriptsAdapter by lazy { PresetScriptAdapter(scriptsList) }
-    val actionButtons = mutableListOf<ActionButtonModel>()
-    val librariesAdapter by lazy { ArrayAdapter<Library>(this, android.R.layout.simple_list_item_1, librariesList) }
+    private val rolesAdapter by lazy { ArrayAdapter<Role>(this, android.R.layout.simple_list_item_1, rolesList) }
+    private val scriptsAdapter by lazy { PresetScriptAdapter(scriptsList) }
+    private val librariesAdapter by lazy { ArrayAdapter<Library>(this, android.R.layout.simple_list_item_1, librariesList) }
 
     companion object {
         const val ARG_POSITION = "ARG_POSITION"
@@ -54,19 +53,7 @@ class EditPresetActivity : AppCompatActivity() {
         if (presetInfo != null) {
             globalParametersList.addAll(presetInfo.preset.globalParameters.values)
             rolesList.addAll(presetInfo.preset.roles.values)
-            actionButtons.addAll(presetInfo.preset.actionButtons)
-            scriptsList.addAll(actionButtons.flatMap {
-                when (it) {
-                    is ActionButtonModel.Global -> listOf(it.script)
-                    else -> listOf()
-                }
-            })
-            actionButtons.removeAll {
-                when (it) {
-                    is ActionButtonModel.Global -> true
-                    else -> false
-                }
-            }
+            scriptsList.addAll(presetInfo.preset.actionsStubs)
             globalParametersAdapter.notifyDataSetChanged()
             rolesAdapter.notifyDataSetChanged()
             scriptsAdapter.notifyDataSetChanged()
@@ -81,37 +68,29 @@ class EditPresetActivity : AppCompatActivity() {
         when (requestCode) {
             CODE_SHARED_PARAMETER_ADDED -> if (resultCode == Activity.RESULT_OK) {
                 globalParametersList.add(data.getSerializableExtra(EditParameterActivity.RETURN_PARAMETER) as Parameter)
-                actionButtons.clear()
-                actionButtons.addAll(data.getSerializableExtra(EditParameterActivity.RETURN_ATTACHED_ACTIONS) as List<ActionButtonModel>)
                 globalParametersAdapter.notifyDataSetChanged()
             }
             CODE_ROLE_ADDED -> if (resultCode == Activity.RESULT_OK) {
                 rolesList.add(data.getSerializableExtra(EditRoleActivity.RETURN_ROLE) as Role)
-                actionButtons.clear()
-                actionButtons.addAll(data.getSerializableExtra(EditRoleActivity.RETURN_ACTIONS) as List<ActionButtonModel>)
                 rolesAdapter.notifyDataSetChanged()
             }
             CODE_SHARED_PARAMETER_CHANGED -> if (resultCode == Activity.RESULT_OK) {
                 val index = data.getIntExtra(EditParameterActivity.RETURN_POSITION, -1)
-                actionButtons.clear()
-                actionButtons.addAll(data.getSerializableExtra(EditParameterActivity.RETURN_ATTACHED_ACTIONS) as List<ActionButtonModel>)
                 globalParametersList[index] = data.getSerializableExtra(EditParameterActivity.RETURN_PARAMETER) as Parameter
                 globalParametersAdapter.notifyDataSetChanged()
             }
             CODE_ROLE_CHANGED -> if (resultCode == Activity.RESULT_OK) {
                 val index = data.getIntExtra(EditRoleActivity.RETURN_POSITION, -1)
-                actionButtons.clear()
-                actionButtons.addAll(data.getSerializableExtra(EditRoleActivity.RETURN_ACTIONS) as List<ActionButtonModel>)
                 rolesList[index] = data.getSerializableExtra(EditRoleActivity.RETURN_ROLE) as Role
                 rolesAdapter.notifyDataSetChanged()
             }
             CODE_SCRIPT_ADDED -> if (resultCode == Activity.RESULT_OK) {
-                scriptsList.add(data.getSerializableExtra(EditButtonDescriptionActivity.RETURN_PRESET_SCRIPT) as PresetScript)
+                scriptsList.add(data.getSerializableExtra(EditPresetScriptActivity.RETURN_PRESET_SCRIPT) as PresetScript)
                 scriptsAdapter.notifyDataSetChanged()
             }
             CODE_SCRIPT_CHANGED -> if (resultCode == Activity.RESULT_OK) {
-                val index = data.getIntExtra(EditButtonDescriptionActivity.RETURN_POSITION, -1)
-                scriptsList[index] = data.getSerializableExtra(EditButtonDescriptionActivity.RETURN_PRESET_SCRIPT) as PresetScript
+                val index = data.getIntExtra(EditPresetScriptActivity.RETURN_POSITION, -1)
+                scriptsList[index] = data.getSerializableExtra(EditPresetScriptActivity.RETURN_PRESET_SCRIPT) as PresetScript
                 scriptsAdapter.notifyDataSetChanged()
             }
             CODE_LOAD_LIBRARY -> if (resultCode == Activity.RESULT_OK) {
@@ -136,8 +115,6 @@ class EditPresetActivity : AppCompatActivity() {
         startActivityForResult(
             intentFor<EditParameterActivity>(
                 EditParameterActivity.ARG_PARAMETER to globalParametersList[index],
-                EditParameterActivity.ARG_ACTIONS to actionButtons.toList(),
-                EditParameterActivity.ARG_PARAMETER_POINTER to ParameterPointer.Global(globalParametersList[index].name),
                 EditParameterActivity.ARG_POSITION to index
             ), CODE_SHARED_PARAMETER_CHANGED
         )
@@ -151,8 +128,7 @@ class EditPresetActivity : AppCompatActivity() {
     fun addParameter() {
         startActivityForResult(
             intentFor<EditParameterActivity>(
-                EditParameterActivity.ARG_PARAMETER to null,
-                EditParameterActivity.ARG_ACTIONS to actionButtons.toList()
+                EditParameterActivity.ARG_PARAMETER to null
             ),
             CODE_SHARED_PARAMETER_ADDED
         )
@@ -162,7 +138,6 @@ class EditPresetActivity : AppCompatActivity() {
         startActivityForResult(
             intentFor<EditRoleActivity>(
                 EditRoleActivity.ARG_ROLE to rolesList[index],
-                EditRoleActivity.ARG_ACTIONS to actionButtons.toList(),
                 EditRoleActivity.ARG_POSITION to index
             ), CODE_ROLE_CHANGED
         )
@@ -176,17 +151,16 @@ class EditPresetActivity : AppCompatActivity() {
     fun addRole() {
         startActivityForResult(
             intentFor<EditRoleActivity>(
-                EditRoleActivity.ARG_ROLE to null,
-                EditRoleActivity.ARG_ACTIONS to actionButtons.toList()
+                EditRoleActivity.ARG_ROLE to null
             ), CODE_ROLE_ADDED
         )
     }
 
     fun editScript(index: Int) {
         startActivityForResult(
-            intentFor<EditButtonDescriptionActivity>(
-                EditButtonDescriptionActivity.ARG_ACTION_BUTTON to ActionButtonModel.Global(scriptsList[index]),
-                EditButtonDescriptionActivity.ARG_POSITION to index
+            intentFor<EditPresetScriptActivity>(
+                EditPresetScriptActivity.ARG_PRESET_SCRIPT to scriptsList[index],
+                EditPresetScriptActivity.ARG_POSITION to index
             ), CODE_SCRIPT_CHANGED
         )
     }
@@ -198,7 +172,7 @@ class EditPresetActivity : AppCompatActivity() {
 
     fun addScript() {
         startActivityForResult(
-            intentFor<EditButtonDescriptionActivity>(EditButtonDescriptionActivity.ARG_ACTION_BUTTON to null),
+            intentFor<EditPresetScriptActivity>(EditPresetScriptActivity.ARG_PRESET_SCRIPT to null),
             CODE_SCRIPT_ADDED
         )
     }
@@ -214,8 +188,8 @@ class EditPresetActivity : AppCompatActivity() {
                     preset = Preset(
                         globalParameters = globalParametersList.map { Pair(it.name, it) }.toMap(),
                         roles = rolesList.map { Pair(it.name, it) }.toMap(),
-                        actionButtons = actionButtons + scriptsList.map{ ActionButtonModel.Global(it) },
-                        libraries = librariesList.toList()
+                        libraries = librariesList.toList(),
+                        actionsStubs = scriptsList.toList()
                     )
                 )
             )

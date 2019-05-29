@@ -71,18 +71,13 @@ fun buildGameParameterPointer(parameterPointer: ParameterPointer, player: Player
 
 fun buildAttachedButtons(
     parameterPointer: ParameterPointer,
-    actionButtons: List<ActionButtonModel>,
+    presetScripts: List<PresetScript>,
     player: PlayerDescription
 ): List<ActionButtonRepresentation> =
-    actionButtons.flatMap {
-        when (it) {
-            is ActionButtonModel.Attached -> if (it == parameterPointer) {
-                val gameParameterPointer = buildGameParameterPointer(it.parameterPointer, player)
-                val context = buildContext(it.script.context, gameParameterPointer, player)
-                listOf(ActionButtonRepresentation(it.script.visibleName, buildAction(it, context)))
-            } else listOf()
-            else -> listOf()
-        }
+    presetScripts.map {
+        val gameParameterPointer = buildGameParameterPointer(parameterPointer, player)
+        val context = buildContext(it.context, gameParameterPointer, player)
+        ActionButtonRepresentation(it.visibleName, buildAction(ActionButtonModel.Attached(parameterPointer, it), context))
     }
 
 fun buildFreeButtons(buttons: List<ActionButtonModel>, player: PlayerDescription): List<ActionButtonRepresentation> =
@@ -109,7 +104,7 @@ fun buildPlayerRepresentation(preset: Preset, player: PlayerDescription): Player
         ParameterRepresentation(
             preset[it].visibleName,
             buildGameParameterPointer(it, player),
-            buildAttachedButtons(it, preset.actionButtons, player)
+            buildAttachedButtons(it, preset[it].actionsStubs, player)
         )
     }
     //TODO make role pointer creation
@@ -118,14 +113,14 @@ fun buildPlayerRepresentation(preset: Preset, player: PlayerDescription): Player
         ParameterRepresentation(
             preset[it].visibleName,
             buildGameParameterPointer(it, player),
-            buildAttachedButtons(it, preset.actionButtons, player)
+            buildAttachedButtons(it, preset[it].actionsStubs, player)
         )
     }
     val privateParameters = preset[rolePointer].privateParameterPointers().map {
         ParameterRepresentation(
             preset[it].visibleName,
             buildGameParameterPointer(it, player),
-            buildAttachedButtons(it, preset.actionButtons, player)
+            buildAttachedButtons(it, preset[it].actionsStubs, player)
         )
     }
     val freeButtons = buildFreeButtons(preset.actionButtons, player)
@@ -148,7 +143,7 @@ fun buildRoleRepresentation(preset: Preset, roleName: String, players: List<Play
         ParameterRepresentation(
             preset[it].visibleName,
             buildGameParameterPointer(it, players[0]),
-            buildAttachedButtons(it, preset.actionButtons, players[0])
+            buildAttachedButtons(it, preset[it].actionsStubs, players[0])
         )
     }
     //TODO make role pointer creation
@@ -157,7 +152,7 @@ fun buildRoleRepresentation(preset: Preset, roleName: String, players: List<Play
         ParameterRepresentation(
             preset[it].visibleName,
             buildGameParameterPointer(it, players[0]),
-            buildAttachedButtons(it, preset.actionButtons, players[0])
+            buildAttachedButtons(it, preset[it].actionsStubs, players[0])
         )
     }
     val groupedPrivateParameters = players.flatMap { player ->
@@ -166,7 +161,7 @@ fun buildRoleRepresentation(preset: Preset, roleName: String, players: List<Play
                 player.name, ParameterRepresentation(
                     preset[it].visibleName,
                     buildGameParameterPointer(it, player),
-                    buildAttachedButtons(it, preset.actionButtons, player)
+                    buildAttachedButtons(it, preset[it].actionsStubs, player)
                 )
             )
         }
