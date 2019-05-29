@@ -15,17 +15,17 @@ import java.util.*
 class NetworkHandler {
     companion object {
         private const val BASE_URL = "aytel-cockounterserver.herokuapp.com"
-        private const val CREATE_SESSION = "$BASE_URL/create"
+        private const val CREATE_SESSION = "$BASE_URL/create/%s"
         private const val UPDATE_GAME_STATE = "$BASE_URL/update_gs/%s"
         private const val CONNECT_TO_SESSION = "$BASE_URL/connect/%s"
-        private const val GET_GAME_SESSION = "$BASE_URL/get/%z"
+        private const val GET_GAME_SESSION = "$BASE_URL/get/%s"
 
         val client = HttpClient()
 
-        fun createGame(preset: Preset): String {
-            return runBlocking(Dispatchers.IO) {
-                client.get<String>(CREATE_SESSION)
-            }
+        fun createGame(preset: Preset): UUID {
+            return UUID.fromString(runBlocking(Dispatchers.IO) {
+                client.get<String>(CREATE_SESSION.format(StateCaptureConverter.gson.toJson(preset)))
+            })
         }
 
         fun connectToGame(uuid: UUID): StateCapture {
