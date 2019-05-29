@@ -12,6 +12,7 @@ import arrow.core.extensions.option.foldable.fold
 import com.example.cockounter.adapters.PresetAdapter
 import com.example.cockounter.core.PresetConverter
 import com.example.cockounter.core.PresetInfo
+import com.example.cockounter.network.NetworkHandler
 import com.example.cockounter.storage.Storage
 import com.example.cockounter.storage.loadPreset
 import com.example.cockounter.storage.savePreset
@@ -26,8 +27,9 @@ import java.nio.charset.Charset
 private const val PRESET_ADDED = 0
 private const val PRESET_CHANGED = 1
 private const val START_GAME = 2
-private const val LOAD_FILE = 3;
-private const val SAVE_FILE = 4;
+private const val START_MULTI_PLAYER_GAME = 3
+private const val LOAD_FILE = 4;
+private const val SAVE_FILE = 5;
 
 
 class SelectPresetActivity : AppCompatActivity() {
@@ -35,7 +37,7 @@ class SelectPresetActivity : AppCompatActivity() {
     companion object {
         const val REQUEST = "REQUEST"
         const val REQUEST_SINGLE_PLAYER_GAME = 0
-        const val REQUEST_MULTIPLAYER_GAME = 1
+        const val REQUEST_MULTI_PLAYER_GAME = 1
         private enum class GameType {
             SINGLE, MULTI
         }
@@ -45,7 +47,7 @@ class SelectPresetActivity : AppCompatActivity() {
     private var presetToSave: PresetInfo? = null
     private val gameType by lazy { when(intent.getIntExtra(REQUEST, -1)) {
         REQUEST_SINGLE_PLAYER_GAME -> Some(GameType.SINGLE)
-        REQUEST_MULTIPLAYER_GAME -> Some(GameType.MULTI)
+        REQUEST_MULTI_PLAYER_GAME -> Some(GameType.MULTI)
         else -> None
     }}
 
@@ -79,6 +81,27 @@ class SelectPresetActivity : AppCompatActivity() {
                     AdminGameScreenActivity.ARG_PRESET to presetsList[position].preset)
                 )
                 finish()
+            }
+            START_MULTI_PLAYER_GAME -> if(resultCode == Activity.RESULT_OK) {
+                val position = data.getIntExtra("position", -1)
+                val uuid = NetworkHandler.createGame(presetsList[position].preset)
+                startActivity(intentFor<MultiplayerGameActivity>())
+                alert {
+                    customView {
+                        val name = editText {
+                            hint = "Your in-game name"
+                        }
+                        yesButton {
+                            startActivity(
+                                intentFor<MultiplayerGameActivity>(
+                                    MultiplayerGameActivity.ARG_NAME to name.text.toString(),
+                                    MultiplayerGameActivity.ARG_UUID to uuid
+                                )
+                            )
+                        }
+                    }
+                }
+
             }
             LOAD_FILE -> if (resultCode == Activity.RESULT_OK){
                 val uri = data.data!!
@@ -138,7 +161,7 @@ class SelectPresetActivity : AppCompatActivity() {
                     )
                 }
                 Companion.GameType.MULTI -> {
-                    startActivityForResult(intentFor<StartSinglePlayerGameActivity>("roles" to roleNames, "position" to index), START_GAME)
+                    startActivityForResult(intentFor<StartMultiPlayerGameActivity>("roles" to roleNames, "position" to index), START_MULTI_PLAYER_GAME)
                 }
             }
         }

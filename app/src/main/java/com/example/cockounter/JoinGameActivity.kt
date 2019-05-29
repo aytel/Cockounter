@@ -3,12 +3,10 @@ package com.example.cockounter
 import android.Manifest
 import android.app.Activity
 import android.content.Intent
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.View
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
-import com.google.zxing.Result
-import me.dm7.barcodescanner.zxing.ZXingScannerView
 import org.jetbrains.anko.*
 import org.jetbrains.anko.sdk27.coroutines.onClick
 
@@ -16,6 +14,7 @@ class JoinGameActivity : AppCompatActivity() {
     companion object {
         private const val CODE_SCAN_QR_CODE = 0
     }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         JoinGameUI().setContentView(this)
@@ -33,19 +32,41 @@ class JoinGameActivity : AppCompatActivity() {
                     hint = "Code"
                 }
                 yesButton {
-
+                    askName(code.text.toString())
                 }
             }
         }
     }
 
+    fun askName(uuid: String) {
+        alert {
+            customView {
+                val name = editText {
+                    hint = "Your in-game name"
+                }
+                yesButton {
+                    joinGame(name.text.toString(), uuid)
+                }
+            }
+        }
+    }
+
+    fun joinGame(name: String, uuid: String) {
+        startActivity(
+            intentFor<MultiplayerGameActivity>(
+                MultiplayerGameActivity.ARG_NAME to name,
+                MultiplayerGameActivity.ARG_UUID to uuid
+            )
+        )
+    }
+
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-        if(data == null) {
+        if (data == null) {
             return
         }
-        when(requestCode) {
-            CODE_SCAN_QR_CODE -> if(resultCode == Activity.RESULT_OK) {
+        when (requestCode) {
+            CODE_SCAN_QR_CODE -> if (resultCode == Activity.RESULT_OK) {
                 val message = data.getSerializableExtra(QRCodeScannerActivity.RESULT_SCANNED_MESSAGE) as String
                 toast(message)
             }
@@ -61,7 +82,7 @@ private class JoinGameUI : AnkoComponent<JoinGameActivity> {
                     owner.scanQRCode()
                 }
             }
-            button("Enter manualy") {
+            button("Enter manually") {
                 onClick {
                     owner.enterCode()
                 }

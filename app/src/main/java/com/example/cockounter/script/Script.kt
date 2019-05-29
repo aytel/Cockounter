@@ -204,6 +204,7 @@ fun buildScriptEvaluation(preset: Preset, players: List<PlayerDescription>): Scr
             globals.load(it.script)
         };
         //FIXME init saved state
+        globals[Constants.SAVED_STATE] = LuaValue.tableOf()
         //TODO initialization
         //TODO load actions
         preset.actionButtons.forEach {

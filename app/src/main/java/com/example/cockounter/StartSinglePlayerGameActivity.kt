@@ -11,8 +11,8 @@ import com.example.cockounter.core.PlayerDescription
 import org.jetbrains.anko.*
 import org.jetbrains.anko.sdk27.coroutines.onClick
 
-class StartSinglePlayerGameActivity : AppCompatActivity() {
-    private val players = mutableListOf<PlayerDescription>()
+open class StartSinglePlayerGameActivity : AppCompatActivity() {
+    protected val players = mutableListOf<PlayerDescription>()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         StartSinglePlayerGameUI(PlayersAdapter(players)).setContentView(this)
@@ -52,7 +52,7 @@ class StartSinglePlayerGameActivity : AppCompatActivity() {
         }.show()
     }
 
-    fun startGame() {
+    open fun startGame() {
         val result = Intent();
         result.putExtra("names", players.map { it.name }.toTypedArray())
         result.putExtra("roles", players.map { it.role }.toTypedArray())
@@ -80,6 +80,5 @@ class StartSinglePlayerGameUI(val playersAdapter: PlayersAdapter) : AnkoComponen
             }
         }
     }
-
 }
 

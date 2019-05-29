@@ -13,9 +13,6 @@ import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentPagerAdapter
 import androidx.viewpager.widget.PagerAdapter
 import androidx.viewpager.widget.ViewPager
-import arrow.core.Either
-import arrow.core.Left
-import arrow.core.Right
 import com.example.cockounter.adapters.PlayerRepresentationAdapter
 import com.example.cockounter.adapters.RoleRepresentationAdapter
 import com.example.cockounter.core.*
@@ -32,7 +29,6 @@ import org.jetbrains.anko.support.v4.act
 import org.jetbrains.anko.support.v4.ctx
 import org.jetbrains.anko.support.v4.find
 import org.jetbrains.anko.support.v4.viewPager
-import java.lang.Exception
 import java.util.*
 
 
@@ -100,10 +96,14 @@ class AdminGameScreenActivity : AppCompatActivity(), GameHolder, ActionPerformer
     fun changeLayout() {
         when(currentLayout) {
             Companion.LayoutType.BY_PLAYER -> {
-
+                representation = buildByRoleRepresentation(preset, players)
+                currentLayout = Companion.LayoutType.BY_ROLE
+                pagerAdapter.notifyDataSetChanged()
             }
             Companion.LayoutType.BY_ROLE -> {
-
+                representation = buildByPlayerRepresentation(preset, players)
+                currentLayout = Companion.LayoutType.BY_PLAYER
+                pagerAdapter.notifyDataSetChanged()
             }
         }
 
@@ -143,6 +143,7 @@ class AdminGameScreenActivity : AppCompatActivity(), GameHolder, ActionPerformer
                 val roles = intent.getStringArrayExtra(ARG_PLAYER_ROLES)
                 players = names.zip(roles, ::PlayerDescription)
                 state = intent.getSerializableExtra(ARG_STATE) as GameState
+                representation = buildByPlayerRepresentation(preset, players)
             }
         }
         coordinatorLayout {

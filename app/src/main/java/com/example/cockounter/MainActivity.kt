@@ -27,7 +27,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun createMultiplayerGame() {
-        startActivity(intentFor<SelectPresetActivity>(SelectPresetActivity.REQUEST to SelectPresetActivity.REQUEST_MULTIPLAYER_GAME))
+        startActivity(intentFor<SelectPresetActivity>(SelectPresetActivity.REQUEST to SelectPresetActivity.REQUEST_MULTI_PLAYER_GAME))
     }
 
     fun resumeGame() {
