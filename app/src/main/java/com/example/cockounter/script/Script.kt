@@ -1,6 +1,7 @@
 package com.example.cockounter.script
 
 import android.content.Context
+import android.util.Log
 import arrow.core.*
 import arrow.core.extensions.`try`.monad.binding
 import com.example.cockounter.core.*
@@ -163,6 +164,7 @@ typealias ScriptEvaluation = (Context) -> ((Action) -> Try<Evaluation>)
 typealias Evaluation = (GameState) -> Try<GameState>
 
 private fun evalFunction(table: LuaTable, function: FunctionDescriptor): Try<LuaTable> = binding {
+    Log.d("Script", "Trying to eval: $function")
     if(function.args.size == 1) {
         table[function.args[0]].call()
         table
@@ -177,7 +179,9 @@ private fun putFunction(globals: Globals, table: LuaTable, descriptor: FunctionD
         table[descriptor.args[0]] = globals.load(function)
         Unit
     } else {
-        table[descriptor.begin] = LuaValue.tableOf()
+        if(!table[descriptor.begin].istable()) {
+            table[descriptor.begin] = LuaValue.tableOf()
+        }
         putFunction(globals, table[descriptor.begin].checktable(), descriptor.tail(), function)
         Unit
     }
@@ -204,6 +208,7 @@ fun buildScriptEvaluation(preset: Preset, players: List<PlayerDescription>): Scr
         //TODO load actions
         preset.actionButtons.forEach {
             val descriptor = buildFunctionDescriptor(it)
+            Log.d("Script", "Init: $descriptor")
             putFunction(globals, globals, descriptor, it.script.script)
         };
         { action: Action ->
