@@ -18,13 +18,13 @@ data class StateCapture(
     val preset: Preset,
     val players: List<PlayerDescription>,
     val date: Date,
-    val uuid: UUID,
-    val version: Int = 0
+    val uuid: UUID
 )
 
 data class GameState(
     val globalParameters: Map<String, GameParameter>,
-    val roles: Map<String, GameRole>
+    val roles: Map<String, GameRole>,
+    val version: Int = 0
 ) :
     Serializable {
     companion object

@@ -16,7 +16,7 @@ class NetworkHandler {
     companion object {
         private const val BASE_URL = "aytel-cockounterserver.herokuapp.com"
         private const val CREATE_SESSION = "$BASE_URL/create/%s"
-        private const val UPDATE_GAME_STATE = "$BASE_URL/update_gs/%s"
+        private const val UPDATE_GAME_STATE = "$BASE_URL/update_gs"
         private const val CONNECT_TO_SESSION = "$BASE_URL/connect/%s"
         private const val GET_GAME_SESSION = "$BASE_URL/get/%s"
 
@@ -40,10 +40,11 @@ class NetworkHandler {
             }, GameState::class.java )
         }
 
-        fun updateGameState(uuid: UUID, version: Int, gameState: GameState): GameState {
+        fun updateGameState(uuid: UUID, gameState: GameState): GameState {
             return StateCaptureConverter.gson.fromJson(runBlocking(Dispatchers.IO) {
-                client.post<String>(UPDATE_GAME_STATE.format(uuid.toString())) {
-                    parameter("version", version.toString())
+                client.post<String>(UPDATE_GAME_STATE) {
+                    parameter("uuid", uuid.toString())
+                    parameter("version", gameState.version.toString())
                     parameter("data", StateCaptureConverter.gson.toJson(gameState))
                 }
             }, GameState::class.java)
