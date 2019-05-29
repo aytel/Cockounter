@@ -7,7 +7,7 @@ import java.util.concurrent.Callable
 import java.util.concurrent.Executors
 
 
-@Database(entities = [StateCapture::class, PresetInfo::class], version = 9)
+@Database(entities = [StateCapture::class, PresetInfo::class], version = 10)
 abstract class Storage : RoomDatabase() {
     companion object {
         lateinit var database: Storage

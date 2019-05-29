@@ -45,10 +45,11 @@ class PlayerGameScreenActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        /*
         state = intent.getSerializableExtra("state") as GameState
         val player = intent.getStringExtra("player")!!
         val role = intent.getStringExtra("role")!!
-        val scripts = intent.getSerializableExtra("scripts") as List<Script>
+        val scripts = intent.getSerializableExtra("actionButtons") as List<ActionButton>
         updateAdapters(role, player)
 
         scrollView {
@@ -70,11 +71,12 @@ class PlayerGameScreenActivity : AppCompatActivity() {
                 button(script.name) {
                     onClick {
                         //FIXME
-                        //state = performScriptUsingGameState(state, player, script.script)
+                        //state = performScriptUsingGameState(state, player, actionButton.actionButton)
                         updateAdapters(role, player)
                     }
                 }
             }
         }
+        */
     }
 }

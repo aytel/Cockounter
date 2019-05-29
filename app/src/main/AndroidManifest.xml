@@ -2,6 +2,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
           package="com.example.cockounter">
 
+    <uses-permission android:name="android.permission.CAMERA"/>
+
     <application
             android:allowBackup="true"
             android:icon="@mipmap/ic_launcher"
@@ -9,6 +11,12 @@
             android:roundIcon="@mipmap/ic_launcher_round"
             android:supportsRtl="true"
             android:theme="@style/AppTheme">
+        <activity android:name=".EditLibraryActivity">
+        </activity>
+        <activity android:name=".QRCodeScannerActivity">
+        </activity>
+        <activity android:name=".JoinGameActivity">
+        </activity>
         <activity android:name=".ResumeGameActivity">
         </activity>
         <activity android:name=".StartSinglePlayerGameActivity">
@@ -17,7 +25,7 @@
         </activity>
         <activity android:name=".PlayerGameScreenActivity">
         </activity>
-        <activity android:name=".EditScriptActivity">
+        <activity android:name=".EditButtonDescriptionActivity">
         </activity>
         <activity android:name=".EditRoleActivity">
         </activity>

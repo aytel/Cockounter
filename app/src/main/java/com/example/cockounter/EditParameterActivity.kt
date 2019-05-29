@@ -1,76 +1,86 @@
 package com.example.cockounter
 
+import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import android.widget.ArrayAdapter
 import androidx.appcompat.app.AppCompatActivity
-import com.example.cockounter.adapters.ScriptAdapter
-import com.example.cockounter.core.Parameter
-import com.example.cockounter.core.Script
-import com.example.cockounter.core.toParameter
+import com.example.cockounter.adapters.PresetActionButtonAdapter
+import com.example.cockounter.core.*
 import org.jetbrains.anko.*
 import org.jetbrains.anko.sdk27.coroutines.onClick
 import org.jetbrains.anko.sdk27.coroutines.onItemLongClick
+import java.io.Serializable
 
 class EditParameterActivity : AppCompatActivity() {
 
     companion object {
-        const val INIT_FLAG = "INIT_FLAG"
-        const val FLAG_ERROR = -1
-        const val FLAG_NEW_PARAMETER = 0
-        const val ARG_PARAMETER = "parameter"
-        const val ARG_POSITION = "position"
-        const val RESULT_PARAMETER = "newParameter"
-        const val RESULT_POSITION = "position"
-        const val RESULT_OK = 0
+        const val REQUEST = "INIT_FLAG"
+        const val REQUEST_ERROR = -1
+        const val REQUEST_NEW_PARAMETER = 0
+        const val ARG_PARAMETER = "ARG_PARAMETER"
+        const val ARG_PARAMETER_POINTER = "ARG_PARAMETER_POINTER"
+        const val ARG_POSITION = "ARG_POSITION"
+        const val ARG_ACTIONS = "ARG_ACTIONS"
+        const val RETURN_PARAMETER = "RETURN_PARAMETER"
+        const val RETURN_ATTACHED_ACTIONS = "RETURN_ATTACHED_ACTIONS"
+        const val RETURN_POSITION = "RETURN_POSITION"
         const val CODE_NEW_SCRIPT_ADDED = 0
         const val CODE_SCRIPT_CHANGED = 1
     }
 
-    val scripts: MutableList<Script> = mutableListOf()
-    val scriptsAdapter: ScriptAdapter by lazy { ScriptAdapter(this, 0, scripts) }
+    val actionButtons: MutableList<ActionButtonModel> = mutableListOf()
+    val scriptsAdapter: PresetActionButtonAdapter by lazy { PresetActionButtonAdapter(actionButtons) {when(it) {
+        is ActionButtonModel.Attached -> it.parameterPointer == parameterPointer
+        else -> false
+    }} }
+    val parameterPointer by lazy { intent.getSerializableExtra(ARG_PARAMETER_POINTER) as ParameterPointer? }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val parameter = intent.getSerializableExtra(ARG_PARAMETER) as Parameter?
-        if (parameter != null) {
-            scripts.addAll(parameter.attachedScripts)
+        val attachedActions = intent.getSerializableExtra(ARG_ACTIONS) as List<ActionButtonModel>?
+        if (attachedActions != null) {
+            actionButtons.addAll(attachedActions)
         }
         EditParameterUI(parameter, scriptsAdapter).setContentView(this)
     }
 
     fun save(type: String, name: String, visibleName: String, defaultValue: String) {
-        toParameter(type, name, visibleName, defaultValue, scripts).fold(
+        toParameter(type, name, visibleName, defaultValue).fold(
             { errorMessage ->
                 alert(errorMessage).show()
             },
             { parameter ->
                 val result = Intent()
                 result.apply {
-                    putExtra(RESULT_PARAMETER, parameter)
-                    putExtra(RESULT_POSITION, intent.getIntExtra(ARG_POSITION, -1))
+                    putExtra(RETURN_PARAMETER, parameter)
+                    putExtra(RETURN_ATTACHED_ACTIONS, actionButtons.toList() as Serializable)
+                    putExtra(RETURN_POSITION, intent.getIntExtra(ARG_POSITION, -1))
                 }
-                setResult(RESULT_OK, result)
+                setResult(Activity.RESULT_OK, result)
                 finish()
             }
         )
     }
 
     fun addScript() {
-        startActivityForResult(intentFor<EditScriptActivity>(), CODE_NEW_SCRIPT_ADDED)
+        startActivityForResult(intentFor<EditButtonDescriptionActivity>(), CODE_NEW_SCRIPT_ADDED)
     }
 
     fun deleteScript(index: Int) {
-        scripts.removeAt(index)
+        //TODO do not delete inside adapter
+        scriptsAdapter.removeAt(index)
         scriptsAdapter.notifyDataSetChanged()
     }
 
     fun changeScript(index: Int) {
+        //TODO
         startActivityForResult(
-            intentFor<EditScriptActivity>(
-                EditScriptActivity.ARG_POSITION to index,
-                EditScriptActivity.ARG_SCRIPT to scripts[index]
+            intentFor<EditButtonDescriptionActivity>(
+                EditButtonDescriptionActivity.ARG_POSITION to index,
+                EditButtonDescriptionActivity.ARG_ACTION_BUTTON to actionButtons[index]
             ), CODE_SCRIPT_CHANGED
         )
     }
@@ -80,22 +90,24 @@ class EditParameterActivity : AppCompatActivity() {
             return
         }
         when (requestCode) {
-            CODE_NEW_SCRIPT_ADDED -> if (resultCode == EditScriptActivity.RESULT_OK) {
-                val script = data.getSerializableExtra(EditScriptActivity.RESULT_SCRIPT) as Script
-                scripts.add(script)
+            CODE_NEW_SCRIPT_ADDED -> if (resultCode == Activity.RESULT_OK) {
+                val script = data.getSerializableExtra(EditButtonDescriptionActivity.RETURN_PRESET_SCRIPT) as PresetScript
+                //TODO total function
+                actionButtons.add(ActionButtonModel.Attached(parameterPointer!!, script))
                 scriptsAdapter.notifyDataSetChanged()
             }
-            CODE_SCRIPT_CHANGED -> if (resultCode == EditScriptActivity.RESULT_OK) {
-                val script = data.getSerializableExtra(EditScriptActivity.RESULT_SCRIPT) as Script
-                val position = data.getIntExtra(EditScriptActivity.RESULT_POSITION, -1)
-                scripts[position] = script
+            CODE_SCRIPT_CHANGED -> if (resultCode == Activity.RESULT_OK) {
+                val script = data.getSerializableExtra(EditButtonDescriptionActivity.RETURN_PRESET_SCRIPT) as PresetScript
+                val position = data.getIntExtra(EditButtonDescriptionActivity.RETURN_POSITION, -1)
+                //TODO total function
+                scriptsAdapter.setAt(position, ActionButtonModel.Attached(parameterPointer!!, script))
                 scriptsAdapter.notifyDataSetChanged()
             }
         }
     }
 }
 
-class EditParameterUI(val parameter: Parameter?, val scriptsAdapter: ScriptAdapter) :
+class EditParameterUI(val parameter: Parameter?, val scriptsAdapter: PresetActionButtonAdapter) :
     AnkoComponent<EditParameterActivity> {
     override fun createView(ui: AnkoContext<EditParameterActivity>): View = with(ui) {
         verticalLayout {
@@ -123,7 +135,7 @@ class EditParameterUI(val parameter: Parameter?, val scriptsAdapter: ScriptAdapt
                     }
                 }
             }
-            button("Add script") {
+            button("Add actionButton") {
                 onClick {
                     owner.addScript()
                 }
@@ -140,6 +152,5 @@ class EditParameterUI(val parameter: Parameter?, val scriptsAdapter: ScriptAdapt
             }
         }
     }
-
 }
 
