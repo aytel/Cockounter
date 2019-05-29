@@ -213,7 +213,7 @@ class PlayerGameScreenFragment : Fragment(), ActionPerformer {
             val representation = (act as GameHolder).representation
             when(representation) {
                 is ByPlayerRepresentation -> {
-                    gameAdapter = PlayerRepresentationAdapter(representation.players[index], ::getState)
+                    gameAdapter = PlayerRepresentationAdapter(representation.players[index], ::getState, ::performAction)
                 }
                 is ByRoleRepresentation -> {
                     gameAdapter = RoleRepresentationAdapter(representation.roles[index], ::getState)

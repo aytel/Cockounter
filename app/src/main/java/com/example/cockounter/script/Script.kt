@@ -1,10 +1,7 @@
 package com.example.cockounter.script
 
 import android.content.Context
-import arrow.core.Option
-import arrow.core.Try
-import arrow.core.Tuple2
-import arrow.core.getOrElse
+import arrow.core.*
 import com.example.cockounter.core.*
 import com.github.andrewoma.dexx.kollection.toImmutableMap
 import org.luaj.vm2.Globals
@@ -12,10 +9,12 @@ import org.luaj.vm2.LuaFunction
 import org.luaj.vm2.LuaTable
 import org.luaj.vm2.LuaValue
 import org.luaj.vm2.lib.jse.JsePlatform
+import kotlin.random.Random
 
 private object Constants {
     const val GLOBAL_PARAMETERS = "gl"
     const val SHARED_PARAMETERS = "sh"
+    const val SAVED_STATE = "saved"
     const val PLAYER = "pl"
     const val SINGLE_PARAMETER_NAME = "x"
     const val META_NAME = "__name"
@@ -179,8 +178,12 @@ fun buildScriptEvaluation(preset: Preset, players: List<PlayerDescription>): Scr
     val globals = JsePlatform.standardGlobals()
     return { context: Context ->
         mapFunctions(globals, buildInteractionFunctionsWithContext(context));
-        //TODO load libraries
-        //TODO init saved state
+        //FIXME load libraries
+        preset.libraries.forEach {
+            globals.load(it.script)
+        };
+        //FIXME init saved state
+        //TODO initialization
         //TODO load actions
         { action: Action ->
             Try { performAction(globals, action) }
@@ -194,12 +197,13 @@ private fun toFunctionPrefix(parameter: ParameterPointer) = when (parameter) {
     is ParameterPointer.Private -> "action.${parameter.rolePointer.role}.private.${parameter.name}"
 }
 
+//FIXME remove random
 fun buildAction(button: ActionButtonModel, context: ScriptContext): Action = when (button) {
     is ActionButtonModel.Attached -> Action.PlayerScript(
         context,
-        toFunctionPrefix(button.parameterPointer) + generateName(button.script.functionName, TODO("index")))
-    is ActionButtonModel.Global -> Action.PlayerScript(context, "action." + generateName(button.script.functionName, TODO("index")))
-    is ActionButtonModel.Role -> Action.PlayerScript(context, "action.${button.rolePointer.role}." + generateName(button.script.functionName, TODO("index")))
+        toFunctionPrefix(button.parameterPointer) + generateName(button.script.functionName, Random.nextInt()))
+    is ActionButtonModel.Global -> Action.PlayerScript(context, "action." + generateName(button.script.functionName, Random.nextInt()))
+    is ActionButtonModel.Role -> Action.PlayerScript(context, "action.${button.rolePointer.role}." + generateName(button.script.functionName, Random.nextInt()))
 }
 
-private fun generateName(string: Option<String>, index: Int) = string.getOrElse { "__func$index" }
+private fun generateName(string: String?, index: Int) = string.toOption().getOrElse { "__func$index" }

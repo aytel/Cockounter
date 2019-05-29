@@ -6,8 +6,6 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.View
 import android.widget.ArrayAdapter
-import arrow.core.None
-import arrow.core.Some
 import arrow.core.getOrElse
 import com.example.cockounter.core.ActionButton
 import com.example.cockounter.core.PresetScript
@@ -15,17 +13,17 @@ import com.example.cockounter.core.ScriptContextDescription
 import org.jetbrains.anko.*
 import org.jetbrains.anko.sdk27.coroutines.onClick
 
-class EditButtonDescriptionActivity : AppCompatActivity() {
+class EditPresetScriptActivity : AppCompatActivity() {
 
     companion object {
-        const val ARG_ACTION_BUTTON = "ARG_ACTION_BUTTON"
+        const val ARG_PRESET_SCRIPT = "ARG_PRESET_SCRIPT"
         const val ARG_POSITION = "ARG_POSITION"
         const val RETURN_POSITION = "RETURN_POSITION"
         const val RETURN_PRESET_SCRIPT = "RETURN_PRESET_SCRIPT"
     }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val actionButton = intent.getSerializableExtra(ARG_ACTION_BUTTON) as ActionButton?
+        val actionButton = intent.getSerializableExtra(ARG_PRESET_SCRIPT) as PresetScript?
         val contextAdapter = ArrayAdapter(this, android.R.layout.simple_list_item_1, ScriptContextDescription.values())
         EditButtonDescriptionUI(actionButton, contextAdapter).setContentView(this)
     }
@@ -39,7 +37,7 @@ class EditButtonDescriptionActivity : AppCompatActivity() {
         val result = Intent()
         result.run {
             putExtra(RETURN_PRESET_SCRIPT, PresetScript(visibleName = visibleName,
-                functionName = if (functionName.isNotBlank()) Some(functionName) else None,
+                functionName = if (functionName.isNotBlank()) functionName else null,
                 script = script,
                 context = context))
             putExtra(RETURN_POSITION, intent.getIntExtra(ARG_POSITION, -1))
@@ -49,20 +47,20 @@ class EditButtonDescriptionActivity : AppCompatActivity() {
     }
 }
 
-class EditButtonDescriptionUI(val actionButton: ActionButton?, val contextAdapter: ArrayAdapter<ScriptContextDescription>) : AnkoComponent<EditButtonDescriptionActivity> {
-    override fun createView(ui: AnkoContext<EditButtonDescriptionActivity>): View = with(ui) {
+class EditButtonDescriptionUI(val presetScript: PresetScript?, val contextAdapter: ArrayAdapter<ScriptContextDescription>) : AnkoComponent<EditPresetScriptActivity> {
+    override fun createView(ui: AnkoContext<EditPresetScriptActivity>): View = with(ui) {
          scrollView {
             verticalLayout {
-                val scriptName = editText(actionButton?.visibleName ?: "") {
+                val scriptName = editText(presetScript?.visibleName ?: "") {
                     hint = "Name"
                 }
-                val functionName = editText(actionButton?.functionName?.getOrElse { "" } ?: "") {
+                val functionName = editText(presetScript?.functionName ?: "") {
                     hint = "Function name"
                 }
                 val spinner = spinner {
                     adapter = contextAdapter
                 }
-                val scriptSource = editText(actionButton?.script ?: "") {
+                val scriptSource = editText(presetScript?.script ?: "") {
                     hint = "script"
                 }
                 button("Run") {
