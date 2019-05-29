@@ -15,7 +15,7 @@ import java.util.*
 class NetworkHandler {
     companion object {
         private const val BASE_URL = "aytel-cockounterserver.herokuapp.com"
-        private const val CREATE_SESSION = "$BASE_URL/create/%s"
+        private const val CREATE_SESSION = "$BASE_URL/create"
         private const val UPDATE_GAME_STATE = "$BASE_URL/update_gs"
         private const val CONNECT_TO_SESSION = "$BASE_URL/connect/%s"
         private const val GET_GAME_SESSION = "$BASE_URL/get/%s"
@@ -24,7 +24,9 @@ class NetworkHandler {
 
         fun createGame(stateCapture: StateCapture): Boolean {
             return runBlocking(Dispatchers.IO) {
-                client.get<String>(CREATE_SESSION.format(StateCaptureConverter.gson.toJson(stateCapture)))
+                client.post<String>(CREATE_SESSION) {
+                    parameter("capture", StateCaptureConverter.gson.toJson(stateCapture))
+                }
             }.toBoolean()
         }
 
