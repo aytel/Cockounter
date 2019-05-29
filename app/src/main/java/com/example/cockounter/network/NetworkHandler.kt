@@ -22,10 +22,10 @@ class NetworkHandler {
 
         val client = HttpClient()
 
-        fun createGame(preset: Preset): UUID {
-            return UUID.fromString(runBlocking(Dispatchers.IO) {
-                client.get<String>(CREATE_SESSION.format(StateCaptureConverter.gson.toJson(preset)))
-            })
+        fun createGame(stateCapture: StateCapture): Boolean {
+            return runBlocking(Dispatchers.IO) {
+                client.get<String>(CREATE_SESSION.format(StateCaptureConverter.gson.toJson(stateCapture)))
+            }.toBoolean()
         }
 
         fun connectToGame(uuid: UUID): StateCapture {
@@ -40,10 +40,10 @@ class NetworkHandler {
             }, GameState::class.java )
         }
 
-        fun updateGameState(uuid: UUID, gameState: GameState): GameState {
+        fun updateGameState(uuid: UUID, version: Int, gameState: GameState): GameState {
             return StateCaptureConverter.gson.fromJson(runBlocking(Dispatchers.IO) {
                 client.post<String>(UPDATE_GAME_STATE.format(uuid.toString())) {
-                    parameter("version", gameState.version.toString())
+                    parameter("version", version.toString())
                     parameter("data", StateCaptureConverter.gson.toJson(gameState))
                 }
             }, GameState::class.java)
