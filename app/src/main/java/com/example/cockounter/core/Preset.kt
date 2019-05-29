@@ -200,9 +200,10 @@ enum class ScriptContextDescription : Serializable {
 }
 
 sealed class ActionButtonModel : Serializable {
-    data class Global(val script: PresetScript) : ActionButtonModel()
-    data class Role(val rolePointer: RolePointer, val script: PresetScript) : ActionButtonModel()
-    data class Attached(val parameterPointer: ParameterPointer, val script: PresetScript) : ActionButtonModel()
+    abstract val script: PresetScript
+    data class Global(override val script: PresetScript) : ActionButtonModel()
+    data class Role(val rolePointer: RolePointer, override val script: PresetScript) : ActionButtonModel()
+    data class Attached(val parameterPointer: ParameterPointer, override val script: PresetScript) : ActionButtonModel()
 }
 
 fun Preset.buildActionButtons(): List<ActionButtonModel> {

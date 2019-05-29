@@ -23,20 +23,22 @@ class PlayerRepresentationAdapter(private val representation: PlayerRepresentati
                 }
             }
             is ParameterRepresentation -> {
-                linearLayout {
-                    verticalLayout {
-                        textView(item.name)
-                        textView(state[item.parameter].valueString())
-                    }
-                    item.attachedButtons.forEach {
-                        val action = it.action
-                        button(it.text) {
-                            onClick {
-                                perform(action)
+                scrollView {
+                    linearLayout {
+                        verticalLayout {
+                            textView(item.name)
+                            textView(state[item.parameter].valueString())
+                        }
+                        item.attachedButtons.forEach {
+                            val action = it.action
+                            button(it.text) {
+                                onClick {
+                                    perform(action)
+                                }
                             }
                         }
+                        //button("test")
                     }
-                    button("test")
                 }
             }
             is ActionButtonRepresentation -> {
@@ -73,6 +75,6 @@ class PlayerRepresentationAdapter(private val representation: PlayerRepresentati
 
     override fun getCount(): Int = 4 + representation.globalParameters.size + representation.sharedParameters.size + representation.privateParameters.size + representation.freeButtons.size
 
+    private data class Border(val text: String)
 }
 
-private data class Border(val text: String)

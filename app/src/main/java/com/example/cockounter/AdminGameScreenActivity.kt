@@ -32,6 +32,7 @@ import org.jetbrains.anko.support.v4.act
 import org.jetbrains.anko.support.v4.ctx
 import org.jetbrains.anko.support.v4.find
 import org.jetbrains.anko.support.v4.viewPager
+import java.lang.Exception
 import java.util.*
 
 
@@ -53,17 +54,21 @@ class AdminGameScreenActivity : AppCompatActivity(), GameHolder, ActionPerformer
     }
 
     private fun scriptFailure(message: String) {
-        alert(message)
+        alert(message).show()
     }
 
     override fun performAction(action: Action) {
-        evaluator(action).flatMap { it(state) }.fold({
-            scriptFailure(it.message ?: "Failed when performing actionButton")
-        }, {
-            stack.push(state)
-            state = it
-        })
-        pagerAdapter.notifyDataSetChanged()
+        try {
+            evaluator(action).flatMap { it(state) }.fold({
+                scriptFailure(it.message ?: "Failed when performing actionButton")
+            }, {
+                stack.push(state)
+                state = it
+            })
+            pagerAdapter.notifyDataSetChanged()
+        } catch (e: Exception) {
+            scriptFailure(e.message.toString())
+        }
     }
 
     fun saveState() {
@@ -73,7 +78,8 @@ class AdminGameScreenActivity : AppCompatActivity(), GameHolder, ActionPerformer
                     hint = "Name"
                 }
                 yesButton {
-                    Storage.insertGameState(StateCapture(stateName.text.toString(), state, preset, players, Calendar.getInstance().time))
+                    //FIXME
+                    Storage.insertGameState(StateCapture(stateName.text.toString(), state, preset, players, Calendar.getInstance().time, UUID(1, 1)))
                 }
                 noButton {
 
@@ -216,7 +222,7 @@ class PlayerGameScreenFragment : Fragment(), ActionPerformer {
                     gameAdapter = PlayerRepresentationAdapter(representation.players[index], ::getState, ::performAction)
                 }
                 is ByRoleRepresentation -> {
-                    gameAdapter = RoleRepresentationAdapter(representation.roles[index], ::getState)
+                    gameAdapter = RoleRepresentationAdapter(representation.roles[index], ::getState, ::performAction)
                 }
             }
             return PlayerGameScreenUI(gameAdapter).createView(AnkoContext.Companion.create(ctx, this))

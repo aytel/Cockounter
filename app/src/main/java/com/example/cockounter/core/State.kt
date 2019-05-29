@@ -67,6 +67,10 @@ class StateCaptureConverter {
         gson.toJson(date)
 
     @TypeConverter
+    fun fromUUID(uuid: UUID): String =
+        gson.toJson(uuid)
+
+    @TypeConverter
     fun toGameState(data: String): GameState =
         gson.fromJson(data, GameState::class.java)
 
@@ -81,6 +85,10 @@ class StateCaptureConverter {
     @TypeConverter
     fun toDate(data: String): Date =
         gson.fromJson(data, Date::class.java)
+
+    @TypeConverter
+    fun toUUID(data: String): UUID =
+        gson.fromJson(data, UUID::class.java)
 }
 
 val dummyState = GameState(immutableMapOf(), immutableMapOf())
