@@ -18,3 +18,8 @@ fun loadPreset(context: Context, uri: Uri): Try<PresetInfo> = Try {
 fun savePreset(context: Context, uri: Uri, presetInfo: PresetInfo): Try<Unit> = Try {
     context.contentResolver.openOutputStream(uri)!!.write(PresetConverter().fromPresetInfo(presetInfo).toByteArray())
 }
+
+fun loadLibrary(context: Context, uri: Uri): Try<String> = Try {
+    context.contentResolver.openInputStream(uri)!!.readBytes().toString(Charset.defaultCharset())
+}
+

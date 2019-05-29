@@ -147,7 +147,7 @@ data class BooleanParameter(
 }
 
 //TODO sealed class maybe
-data class Library(val script: String)
+data class Library(val name: String, val script: String)
 
 operator fun Preset.get(rolePointer: RolePointer): Role = roles.getValue(rolePointer.role)
 
