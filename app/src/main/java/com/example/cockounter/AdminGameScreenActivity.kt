@@ -55,16 +55,26 @@ class AdminGameScreenActivity : AppCompatActivity(), GameHolder, ActionPerformer
     }
 
     override fun performAction(action: Action) {
-        try {
-            evaluator(action).flatMap { it(state) }.fold({
-                scriptFailure(it.message ?: "Failed when performing actionButton")
-            }, {
-                stack.push(state)
-                state = it
-            })
-            pagerAdapter.notifyDataSetChanged()
-        } catch (e: Exception) {
-            scriptFailure(e.message.toString())
+        doAsync {
+            try {
+                evaluator(action).flatMap { it(state) }.fold({
+                    runOnUiThread {
+                        scriptFailure(it.message ?: "Failed when performing actionButton")
+                    }
+                }, {
+                    runOnUiThread {
+                        stack.push(state)
+                        state = it
+                    }
+                })
+                runOnUiThread {
+                    pagerAdapter.notifyDataSetChanged()
+                }
+            } catch (e: Exception) {
+                runOnUiThread {
+                    scriptFailure(e.toString())
+                }
+            }
         }
     }
 
