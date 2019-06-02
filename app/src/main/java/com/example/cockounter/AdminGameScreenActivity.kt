@@ -201,6 +201,7 @@ class AdminGameScreenActivity : AppCompatActivity(), GameHolder, ActionPerformer
                 //}
 
                 myTabLayout = themedTabLayout(R.style.ThemeOverlay_AppCompat_Dark) {
+                    tabMode = TabLayout.MODE_SCROLLABLE
                     lparams(matchParent, wrapContent) {
                         tabGravity = TabLayout.GRAVITY_FILL
                         tabMode = TabLayout.MODE_FIXED

@@ -137,8 +137,12 @@ class SelectPresetActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        presetsList.addAll(Storage.getAllPresetInfos().get())
-        SelectPresetUI(presetsAdapter).setContentView(this)
+        doAsync {
+            presetsList.addAll(Storage.getAllPresetInfos().get())
+            runOnUiThread {
+                SelectPresetUI(presetsAdapter).setContentView(this@SelectPresetActivity)
+            }
+        }
     }
 
     fun editPreset(index: Int) {

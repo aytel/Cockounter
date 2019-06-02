@@ -21,7 +21,9 @@ class MainActivity : AppCompatActivity() {
         MainUI().setContentView(this)
         ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.INTERNET), 1)
 
-        initDatabase()
+        doAsync {
+            initDatabase()
+        }
         //Storage.nukePresets()
     }
 

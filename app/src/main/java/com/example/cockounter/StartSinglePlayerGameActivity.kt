@@ -13,9 +13,10 @@ import org.jetbrains.anko.sdk27.coroutines.onClick
 
 open class StartSinglePlayerGameActivity : AppCompatActivity() {
     private val players = mutableListOf<PlayerDescription>()
+    private val playersAdapter by lazy { PlayersAdapter(players) }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        StartSinglePlayerGameUI(PlayersAdapter(players)).setContentView(this)
+        StartSinglePlayerGameUI(playersAdapter).setContentView(this)
     }
 
     fun addNewPlayer() {
@@ -42,7 +43,7 @@ open class StartSinglePlayerGameActivity : AppCompatActivity() {
                                          roleSpinner.selectedItem.toString()
                                      )
                                  )
-                                 roleAdapter.notifyDataSetChanged()
+                                 playersAdapter.notifyDataSetChanged()
                              }
                          }
                      }
@@ -62,7 +63,7 @@ open class StartSinglePlayerGameActivity : AppCompatActivity() {
     }
 }
 
-class StartSinglePlayerGameUI(val playersAdapter: PlayersAdapter) : AnkoComponent<StartSinglePlayerGameActivity> {
+class StartSinglePlayerGameUI(private val playersAdapter: PlayersAdapter) : AnkoComponent<StartSinglePlayerGameActivity> {
     override fun createView(ui: AnkoContext<StartSinglePlayerGameActivity>): View = with(ui) {
         verticalLayout {
             listView {
