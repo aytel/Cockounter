@@ -3,14 +3,21 @@ package com.example.cockounter
 import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
+import android.view.Gravity
+import android.view.MenuItem
 import android.view.View
 import android.widget.ArrayAdapter
+import android.widget.EditText
 import androidx.appcompat.app.AppCompatActivity
 import com.example.cockounter.adapters.ParameterAdapter
 import com.example.cockounter.adapters.PresetScriptAdapter
 import com.example.cockounter.core.*
 import com.example.cockounter.storage.loadLibrary
+import com.google.android.material.appbar.AppBarLayout
 import org.jetbrains.anko.*
+import org.jetbrains.anko.design.appBarLayout
+import org.jetbrains.anko.design.coordinatorLayout
+import org.jetbrains.anko.design.floatingActionButton
 import org.jetbrains.anko.sdk27.coroutines.onClick
 import org.jetbrains.anko.sdk27.coroutines.onItemLongClick
 
@@ -217,82 +224,100 @@ private class EditPresetUI(
     val scriptsAdapter: PresetScriptAdapter,
     val librariesAdapter: ArrayAdapter<Library>
 ) : AnkoComponent<EditPresetActivity> {
+    private lateinit var presetName: EditText
+    private lateinit var presetDescription: EditText
     override fun createView(ui: AnkoContext<EditPresetActivity>): View = with(ui) {
-        scrollView {
-            verticalLayout {
-                val presetName = editText(presetInfo?.name ?: "") {
-                    hint = "Name"
+        coordinatorLayout {
+            appBarLayout {
+                lparams(matchParent, wrapContent) {
+
                 }
-                val presetDescription = editText(presetInfo?.description ?: "") {
-                    hint = "Description"
-                }
-                textView("Global counters")
-                listView {
-                    adapter = globalParametersAdapter
-                    onItemLongClick { _, _, index, _ ->
-                        selector(null, listOf("Edit", "Delete")) { _, i ->
-                            when (i) {
-                                0 -> owner.editParameter(index)
-                                1 -> owner.deleteParameter(index)
+                toolbar {
+                    //owner.setSupportActionBar(this.toolbar())
+                    title = "Edit preset"
+                    menu.apply {
+                        add("Save").apply {
+                            setIcon(R.drawable.ic_done_black_24dp)
+                            setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS)
+                            setOnMenuItemClickListener {
+                                owner.save(presetName.text.toString(), presetDescription.text.toString())
+                                true
                             }
                         }
                     }
+                }.lparams(width = matchParent, height = wrapContent) {
+                    scrollFlags = 0
                 }
-                button("Add new counter") {
-                    onClick {
-                        owner.addParameter()
+
+            }
+            scrollView {
+                verticalLayout {
+                    presetName = editText(presetInfo?.name ?: "") {
+                        hint = "Name"
                     }
-                }
-                listView {
-                    adapter = rolesAdapter
-                    onItemLongClick { _, _, index, _ ->
-                        selector(null, listOf("Edit", "Delete")) { _, i ->
-                            when (i) {
-                                0 -> owner.editRole(index)
-                                1 -> owner.deleteRole(index)
+                    presetDescription = editText(presetInfo?.description ?: "") {
+                        hint = "Description"
+                    }
+                    textView("Global counters")
+                    listView {
+                        adapter = globalParametersAdapter
+                        onItemLongClick { _, _, index, _ ->
+                            selector(null, listOf("Edit", "Delete")) { _, i ->
+                                when (i) {
+                                    0 -> owner.editParameter(index)
+                                    1 -> owner.deleteParameter(index)
+                                }
                             }
                         }
                     }
-                }
-                button("Add new role") {
-                    onClick {
-                        owner.addRole()
-                    }
-                }
-                listView {
-                    adapter = scriptsAdapter
-                    onItemLongClick { _, _, index, _ ->
-                        selector(null, listOf("Edit", "Delete")) { _, i ->
-                            when (i) {
-                                0 -> owner.editScript(index)
-                                1 -> owner.deleteScript(index)
+                    listView {
+                        adapter = rolesAdapter
+                        onItemLongClick { _, _, index, _ ->
+                            selector(null, listOf("Edit", "Delete")) { _, i ->
+                                when (i) {
+                                    0 -> owner.editRole(index)
+                                    1 -> owner.deleteRole(index)
+                                }
                             }
                         }
                     }
-                }
-                button("Add new actionButton") {
-                    onClick {
-                        owner.addScript()
+                    listView {
+                        adapter = scriptsAdapter
+                        onItemLongClick { _, _, index, _ ->
+                            selector(null, listOf("Edit", "Delete")) { _, i ->
+                                when (i) {
+                                    0 -> owner.editScript(index)
+                                    1 -> owner.deleteScript(index)
+                                }
+                            }
+                        }
+                    }
+                    listView {
+                        adapter = librariesAdapter
                     }
                 }
-                listView {
-                    adapter = librariesAdapter
+                expandableListView {
+
                 }
-                button("Create library") {
-                    onClick {
-                        owner.createLibrary()
+            }.lparams() {
+                behavior = AppBarLayout.ScrollingViewBehavior()
+            }
+            floatingActionButton {
+                onClick {
+                    selector("", listOf("Counter", "Role", "Action", "Library", "Import library")) { _, i ->
+                        when(i) {
+                            0 -> owner.addParameter()
+                            1 -> owner.addRole()
+                            2 -> owner.addScript()
+                            3 -> owner.createLibrary()
+                            4 -> owner.loadLibraryFromFile()
+                        }
                     }
                 }
-                button("Load library") {
-                    onClick {
-                        owner.loadLibraryFromFile()
-                    }
-                }
-                button("Save") {
-                    onClick {
-                        owner.save(presetName.text.toString(), presetDescription.text.toString())
-                    }
-                }
+                imageResource = R.drawable.ic_add_white_24dp
+            }.lparams(width = wrapContent, height = wrapContent) {
+                gravity = Gravity.BOTTOM + Gravity.END
+                margin = dip(16)
             }
         }
     }

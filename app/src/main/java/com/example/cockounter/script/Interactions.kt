@@ -6,14 +6,18 @@ import org.jetbrains.anko.*
 import org.luaj.vm2.LuaValue
 import org.luaj.vm2.Varargs
 import org.luaj.vm2.lib.OneArgFunction
-import org.luaj.vm2.lib.TwoArgFunction
 import org.luaj.vm2.lib.VarArgFunction
 
-val interactionFunctionsWithoutContext = listOf("toast" toT ::LuaToastShort, "askstr" toT ::LuaAskString, "select" toT ::LuaSelect, "confirm" toT ::LuaConfirm)
+private val interactionFunctionsWithoutContext = listOf(
+    "toast" toT ::LuaToastShort,
+    "askstr" toT ::LuaAskString,
+    "select" toT ::LuaSelect,
+    "confirm" toT ::LuaConfirm
+)
 
 fun buildInteractionFunctionsWithContext(context: Context) = interactionFunctionsWithoutContext.map{ it.map { it(context) }}
 
-class LuaToastShort(val context: Context) : OneArgFunction() {
+private class LuaToastShort(val context: Context) : OneArgFunction() {
     override fun call(arg: LuaValue?): LuaValue {
         val string = arg?.tojstring() ?: ""
         with(context) {
@@ -25,10 +29,10 @@ class LuaToastShort(val context: Context) : OneArgFunction() {
     }
 }
 
-class LuaAskString(val context: Context) : OneArgFunction() {
-    private var result: String? = null;
+private class LuaAskString(val context: Context) : OneArgFunction() {
+    private var result: String? = null
     private var isDone = false
-    fun alert(title: String): String? {
+    private fun alert(title: String): String? {
         with(context) {
             val block = Object()
             synchronized(block) {
@@ -70,7 +74,7 @@ class LuaAskString(val context: Context) : OneArgFunction() {
 }
 
 //FIXME
-class LuaSelect(val context: Context) : VarArgFunction() {
+private class LuaSelect(val context: Context) : VarArgFunction() {
     private var isDone = false
     private fun selector(args: Array<String>): Int {
         var result = -1
@@ -101,9 +105,9 @@ class LuaSelect(val context: Context) : VarArgFunction() {
     }
 }
 
-class LuaConfirm(val context: Context) : OneArgFunction() {
+private class LuaConfirm(val context: Context) : OneArgFunction() {
     private fun ask(text: String): Int {
-        var isDone = false
+        var isDone: Boolean
         var result = -1
         val block = Object()
         synchronized(block) {

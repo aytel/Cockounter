@@ -2,30 +2,31 @@ package com.example.cockounter
 
 import android.app.Activity
 import android.content.Intent
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
+import android.view.Gravity
+import android.view.Menu
+import android.view.MenuItem
 import android.view.View
-import androidx.room.TypeConverter
+import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.Toolbar
 import arrow.core.None
 import arrow.core.Some
-import arrow.core.extensions.option.foldable.fold
 import com.example.cockounter.adapters.PresetAdapter
-import com.example.cockounter.core.PlayerDescription
-import com.example.cockounter.core.PresetConverter
 import com.example.cockounter.core.PresetInfo
-import com.example.cockounter.core.StateCapture
-import com.example.cockounter.network.NetworkHandler
 import com.example.cockounter.storage.Storage
 import com.example.cockounter.storage.loadPreset
 import com.example.cockounter.storage.savePreset
+import com.google.android.material.appbar.AppBarLayout
 import org.jetbrains.anko.*
+import org.jetbrains.anko.appcompat.v7.toolbar
+import org.jetbrains.anko.design.appBarLayout
+import org.jetbrains.anko.design.coordinatorLayout
+import org.jetbrains.anko.design.floatingActionButton
+import org.jetbrains.anko.design.themedAppBarLayout
 import org.jetbrains.anko.sdk27.coroutines.onClick
 import org.jetbrains.anko.sdk27.coroutines.onItemClick
 import org.jetbrains.anko.sdk27.coroutines.onItemLongClick
-import java.io.File
-import java.lang.Exception
-import java.nio.charset.Charset
 
 private const val PRESET_ADDED = 0
 private const val PRESET_CHANGED = 1
@@ -113,7 +114,7 @@ class SelectPresetActivity : AppCompatActivity() {
             }
             LOAD_FILE -> if (resultCode == Activity.RESULT_OK){
                 val uri = data.data!!
-                val preset = loadPreset(this, uri).fold({
+                loadPreset(this, uri).fold({
                     alert(it.message!!).show()
                 }, {
                     presetsList.add(it)
@@ -195,9 +196,31 @@ class SelectPresetActivity : AppCompatActivity() {
 
 private class SelectPresetUI(val presetsAdapter: PresetAdapter) : AnkoComponent<SelectPresetActivity> {
     override fun createView(ui: AnkoContext<SelectPresetActivity>): View = with(ui) {
-        scrollView {
-            verticalLayout {
-                val listView = listView {
+        coordinatorLayout {
+            appBarLayout {
+                lparams(matchParent, wrapContent) {
+
+                }
+                toolbar {
+                    //owner.setSupportActionBar(this.toolbar())
+                    title = "Select preset"
+                    menu.apply {
+                        add("Import preset").apply {
+                            setIcon(R.drawable.ic_folder_open_black_24dp)
+                            setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS)
+                            setOnMenuItemClickListener {
+                                owner.loadPresetFromFile()
+                                true
+                            }
+                        }
+                    }
+                }.lparams(width = matchParent, height = wrapContent) {
+                    scrollFlags = 0
+                }
+
+            }
+            //verticalLayout {
+                listView {
                     adapter = presetsAdapter
                     onItemLongClick { _, _, index, _ ->
                         selector(null, listOf("Edit", "Delete", "Export")) { _, i ->
@@ -211,17 +234,25 @@ private class SelectPresetUI(val presetsAdapter: PresetAdapter) : AnkoComponent<
                     onItemClick { p0, p1, index, p3 ->
                         owner.startGame(index)
                     }
+                }.lparams(width = matchParent, height = wrapContent) {
+                    behavior = AppBarLayout.ScrollingViewBehavior()
                 }
-                button("New preset") {
-                    onClick {
-                        owner.createPreset()
+            //}
+            floatingActionButton {
+                onClick {
+                    selector(null, listOf("Create preset", "Import preset")) { _, i ->
+                        when(i) {
+                            0 -> owner.createPreset()
+                            1 -> owner.loadPresetFromFile()
+                        }
                     }
                 }
-                button("Load preset") {
-                    onClick {
-                        owner.loadPresetFromFile()
-                    }
-                }
+                imageResource = R.drawable.ic_add_white_24dp
+            }.lparams {
+                width = wrapContent
+                height = wrapContent
+                margin = dip(16)
+                gravity = Gravity.BOTTOM or Gravity.END
             }
         }
     }

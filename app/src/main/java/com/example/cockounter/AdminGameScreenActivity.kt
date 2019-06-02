@@ -25,6 +25,7 @@ import com.google.android.material.tabs.TabLayout
 import org.jetbrains.anko.*
 import org.jetbrains.anko.design.appBarLayout
 import org.jetbrains.anko.design.coordinatorLayout
+import org.jetbrains.anko.design.tabItem
 import org.jetbrains.anko.design.themedTabLayout
 import org.jetbrains.anko.support.v4.act
 import org.jetbrains.anko.support.v4.ctx
@@ -169,6 +170,9 @@ class AdminGameScreenActivity : AppCompatActivity(), GameHolder, ActionPerformer
                 lparams(matchParent, wrapContent)
 
                 toolbar {
+                    tabItem {
+
+                    }
                     menu.apply {
                         add("Save state").apply {
                             setOnMenuItemClickListener {
@@ -191,10 +195,13 @@ class AdminGameScreenActivity : AppCompatActivity(), GameHolder, ActionPerformer
                     }
 
                 }
+                //viewPager {
+                //    adapter = pagerAdapter
+                //    id = R.id.container
+                //}
 
                 myTabLayout = themedTabLayout(R.style.ThemeOverlay_AppCompat_Dark) {
-                    lparams(matchParent, wrapContent)
-                    {
+                    lparams(matchParent, wrapContent) {
                         tabGravity = TabLayout.GRAVITY_FILL
                         tabMode = TabLayout.MODE_FIXED
                     }
