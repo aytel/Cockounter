@@ -6,6 +6,8 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.BaseAdapter
+import android.widget.BaseExpandableListAdapter
+import android.widget.ExpandableListAdapter
 import androidx.appcompat.app.AppCompatActivity
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.os.bundleOf
@@ -14,6 +16,7 @@ import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentPagerAdapter
 import androidx.viewpager.widget.PagerAdapter
 import androidx.viewpager.widget.ViewPager
+import com.example.cockounter.adapters.ExpandablePlayerRepresentationAdapter
 import com.example.cockounter.adapters.PlayerRepresentationAdapter
 import com.example.cockounter.adapters.RoleRepresentationAdapter
 import com.example.cockounter.core.*
@@ -228,7 +231,7 @@ class PlayerGameScreenFragment : Fragment(), ActionPerformer {
     }
 
     var index: Int = -1
-    lateinit var gameAdapter: BaseAdapter
+    lateinit var gameAdapter: BaseExpandableListAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -240,10 +243,10 @@ class PlayerGameScreenFragment : Fragment(), ActionPerformer {
             val representation = (act as GameHolder).representation
             when(representation) {
                 is ByPlayerRepresentation -> {
-                    gameAdapter = PlayerRepresentationAdapter(representation.players[index], ::getState, ::performAction)
+                    gameAdapter = ExpandablePlayerRepresentationAdapter(representation.players[index], ::getState, ::performAction)
                 }
                 is ByRoleRepresentation -> {
-                    gameAdapter = RoleRepresentationAdapter(representation.roles[index], ::getState, ::performAction)
+                    //gameAdapter = RoleRepresentationAdapter(representation.roles[index], ::getState, ::performAction)
                 }
             }
             return PlayerGameScreenUI(gameAdapter).createView(AnkoContext.Companion.create(ctx, this))
@@ -266,11 +269,11 @@ class PlayerGameScreenFragment : Fragment(), ActionPerformer {
     }
 }
 
-class PlayerGameScreenUI(val playerAdapter: BaseAdapter) : AnkoComponent<PlayerGameScreenFragment> {
+class PlayerGameScreenUI(val playerAdapter: ExpandableListAdapter) : AnkoComponent<PlayerGameScreenFragment> {
     override fun createView(ui: AnkoContext<PlayerGameScreenFragment>): View = with(ui) {
         verticalLayout {
-            listView {
-                adapter = playerAdapter
+            expandableListView {
+                setAdapter(playerAdapter)
             }
         }
         /*
