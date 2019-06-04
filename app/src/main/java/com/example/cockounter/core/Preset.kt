@@ -1,5 +1,6 @@
 package com.example.cockounter.core
 
+import androidx.lifecycle.LiveData
 import androidx.room.*
 import arrow.core.Either
 import arrow.core.Left
@@ -32,7 +33,7 @@ data class Preset(
 @Dao
 interface PresetInfoDao {
     @Query("SELECT * FROM presetInfo")
-    fun getAll(): List<PresetInfo>
+    fun getAll(): LiveData<List<PresetInfo>>
 
     @Query("SELECT * FROM presetInfo WHERE id = :id")
     fun getById(id: Int): PresetInfo

@@ -1,6 +1,7 @@
 package com.example.cockounter
 
 import android.Manifest
+import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
@@ -62,18 +63,47 @@ class MainActivity : AppCompatActivity() {
             return
         }
         when (requestCode) {
-            CODE_START_SINGLE_PLAYER_GAME -> {
+            CODE_START_SINGLE_PLAYER_GAME -> if(resultCode == Activity.RESULT_OK){
                 selectedId = data.getIntExtra(SelectPresetActivity.RETURN_PRESET_ID, 0)
-                startActivityForResult(intentFor<StartSinglePlayerGameActivity>(), CODE_RUN_SINGLE_PLAYER_GAME)
+                assert(selectedId != 0)
+                doAsync {
+                    val roles = Storage.getPresetInfoById(selectedId).preset.roles.keys.toTypedArray()
+                    runOnUiThread {
+                        startActivityForResult(intentFor<StartSinglePlayerGameActivity>(StartSinglePlayerGameActivity.ARG_ROLES to roles), CODE_RUN_SINGLE_PLAYER_GAME)
+                    }
+                }
             }
             CODE_RUN_SINGLE_PLAYER_GAME -> {
                 val names = data.getStringArrayExtra(StartSinglePlayerGameActivity.RETURN_NAMES)!!
                 val roles = data.getStringArrayExtra(StartSinglePlayerGameActivity.RETURN_ROLES)!!
                 startActivity(
                     intentFor<AdminGameScreenActivity>(
+                        AdminGameScreenActivity.MODE to AdminGameScreenActivity.MODE_BUILD_NEW_STATE,
                         AdminGameScreenActivity.ARG_PRESET_ID to selectedId,
                         AdminGameScreenActivity.ARG_PLAYER_NAMES to names,
                         AdminGameScreenActivity.ARG_PLAYER_ROLES to roles
+                    )
+                )
+            }
+            CODE_START_MULTI_PLAYER_GAME -> {
+                selectedId = data.getIntExtra(SelectPresetActivity.RETURN_PRESET_ID, 0)
+                assert(selectedId != 0)
+                doAsync {
+                    val roles = Storage.getPresetInfoById(selectedId).preset.roles.keys.toTypedArray()
+                    runOnUiThread {
+                        startActivityForResult(intentFor<StartSinglePlayerGameActivity>(StartSinglePlayerGameActivity.ARG_ROLES to roles), CODE_RUN_MULTI_PLAYER_GAME)
+                    }
+                }
+            }
+            CODE_RUN_MULTI_PLAYER_GAME -> {
+                val names = data.getStringArrayExtra(StartSinglePlayerGameActivity.RETURN_NAMES)!!
+                val roles = data.getStringArrayExtra(StartSinglePlayerGameActivity.RETURN_ROLES)!!
+                startActivity(
+                    intentFor<MultiplayerGameActivity>(
+                        MultiplayerGameActivity.MODE to MultiplayerGameActivity.MODE_CREATE_GAME,
+                        MultiplayerGameActivity.ARG_PRESET_ID to selectedId,
+                        MultiplayerGameActivity.ARG_PLAYER_NAMES to names,
+                        MultiplayerGameActivity.ARG_PLAYER_ROLES to roles
                     )
                 )
             }

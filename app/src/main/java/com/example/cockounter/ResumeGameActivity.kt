@@ -11,7 +11,7 @@ import org.jetbrains.anko.sdk27.coroutines.onItemClick
 
 class ResumeGameActivity : AppCompatActivity() {
 
-    val states by lazy { Storage.getAllGameStates().get().toMutableList() }
+    val states by lazy { doAsyncResult { Storage.getAllGameStates().value!!.toMutableList() }.get()}
     val captureAdapter by lazy {StateCaptureAdapter(states)}
     
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -22,10 +22,8 @@ class ResumeGameActivity : AppCompatActivity() {
     fun resumeGame(index: Int) {
         startActivity(intentFor<AdminGameScreenActivity>(
             AdminGameScreenActivity.MODE to AdminGameScreenActivity.MODE_USE_STATE,
-            AdminGameScreenActivity.ARG_PRESET to states[index].preset,
-            AdminGameScreenActivity.ARG_STATE to states[index].state,
-            AdminGameScreenActivity.ARG_PLAYER_ROLES to (states[index].players.map { it.role }.toTypedArray()),
-            AdminGameScreenActivity.ARG_PLAYER_NAMES to states[index].players.map { it.name }.toTypedArray()))
+            AdminGameScreenActivity.ARG_STATE_ID to states[index].id
+        ))
         finish()
     }
 }

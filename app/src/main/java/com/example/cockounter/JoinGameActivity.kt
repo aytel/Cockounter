@@ -54,7 +54,7 @@ class JoinGameActivity : AppCompatActivity() {
     fun joinGame(name: String, uuid: String) {
         startActivity(
             intentFor<MultiplayerGameActivity>(
-                MultiplayerGameActivity.ARG_NAME to name,
+                MultiplayerGameActivity.MODE to MultiplayerGameActivity.MODE_JOIN_GAME,
                 MultiplayerGameActivity.ARG_UUID to uuid
             )
         )

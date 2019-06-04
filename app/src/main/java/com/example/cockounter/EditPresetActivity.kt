@@ -57,7 +57,7 @@ class EditPresetActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         if (id != 0) {
             doAsync {
-                val presetInfo = Storage.getPresetInfoById(id).get()
+                val presetInfo = Storage.getPresetInfoById(id)
                 globalParametersList.addAll(presetInfo.preset.globalParameters.values)
                 rolesList.addAll(presetInfo.preset.roles.values)
                 scriptsList.addAll(presetInfo.preset.actionsStubs)

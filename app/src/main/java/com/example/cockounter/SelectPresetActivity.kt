@@ -8,6 +8,7 @@ import android.view.Gravity
 import android.view.MenuItem
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.cockounter.adapters.PresetInfoAdapter
@@ -132,12 +133,16 @@ class SelectPresetActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        doAsync {
-            presetsList.addAll(Storage.getAllPresetInfos().get())
-            runOnUiThread {
-                SelectPresetUI(presetsAdapter).setContentView(this@SelectPresetActivity)
+        val data = Storage.getAllPresetInfos()
+        data.observe(this, Observer { list ->
+            run {
+                presetsList.clear()
+                presetsList.addAll(list)
+                presetsAdapter.notifyDataSetChanged()
             }
-        }
+        })
+
+        SelectPresetUI(presetsAdapter).setContentView(this@SelectPresetActivity)
     }
 
     fun editPreset(index: Int) {

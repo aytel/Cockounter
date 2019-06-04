@@ -1,5 +1,6 @@
 package com.example.cockounter.core
 
+import androidx.lifecycle.LiveData
 import androidx.room.*
 import arrow.core.Option
 import com.github.andrewoma.dexx.kollection.ImmutableMap
@@ -34,7 +35,7 @@ data class GameState(
 @Dao
 interface StateCaptureDao {
     @Query("SELECT * from stateCapture")
-    fun getAll(): List<StateCapture>
+    fun getAll(): LiveData<List<StateCapture>>
 
     @Query("SELECT * from stateCapture WHERE id = :id")
     fun getById(id: Int): StateCapture
