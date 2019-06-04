@@ -12,6 +12,12 @@ import org.jetbrains.anko.*
 import org.jetbrains.anko.sdk27.coroutines.onClick
 
 open class StartSinglePlayerGameActivity : AppCompatActivity() {
+    companion object {
+        const val ARG_PRESET_ID = "ARG_PRESET_ID"
+        const val RETURN_NAMES = "RETURN_NAMES"
+        const val RETURN_ROLES = "RETURN_ROLES"
+        const val RETURN_PRESET_ID = "RETURN_PRESET_ID"
+    }
     private val players = mutableListOf<PlayerDescription>()
     private val playersAdapter by lazy { PlayersAdapter(players) }
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -55,9 +61,8 @@ open class StartSinglePlayerGameActivity : AppCompatActivity() {
 
     open fun startGame() {
         val result = Intent();
-        result.putExtra("names", players.map { it.name }.toTypedArray())
-        result.putExtra("roles", players.map { it.role }.toTypedArray())
-        result.putExtra("position", intent.getIntExtra("position", -1))
+        result.putExtra(RETURN_NAMES, players.map { it.name }.toTypedArray())
+        result.putExtra(RETURN_ROLES, players.map { it.role }.toTypedArray())
         setResult(Activity.RESULT_OK, result)
         finish()
     }

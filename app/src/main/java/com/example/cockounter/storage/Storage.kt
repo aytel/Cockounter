@@ -7,20 +7,21 @@ import java.util.concurrent.Callable
 import java.util.concurrent.Executors
 
 
-@Database(entities = [StateCapture::class, PresetInfo::class], version = 12)
+@Database(entities = [StateCapture::class, PresetInfo::class], version = 13)
 abstract class Storage : RoomDatabase() {
     companion object {
         lateinit var database: Storage
-        private val databaseWorker = Executors.newSingleThreadExecutor()
 
-        fun getAllPresetInfos() = databaseWorker.submit(Callable<List<PresetInfo>> { database.presetInfoDao().getAll() })
-        fun insertPreset(presetInfo: PresetInfo) = databaseWorker.submit { database.presetInfoDao().insert(presetInfo) }
-        fun deletePreset(presetInfo: PresetInfo) = databaseWorker.submit { database.presetInfoDao().delete(presetInfo) }
-        fun nukePresets() = databaseWorker.submit { database.presetInfoDao().nukeTable() }
+        fun getAllPresetInfos() = database.presetInfoDao().getAll()
+        fun getPresetInfoById(id: Int) = database.presetInfoDao().getById(id)
+        fun insertPreset(presetInfo: PresetInfo) = database.presetInfoDao().insert(presetInfo)
+        fun deletePreset(presetInfo: PresetInfo) = database.presetInfoDao().delete(presetInfo)
+        fun nukePresets() = database.presetInfoDao().nukeTable()
 
-        fun getAllGameStates() = databaseWorker.submit(Callable<List<StateCapture>> { database.stateCaptureDao().getAll() })
-        fun insertGameState(stateCapture: StateCapture) = databaseWorker.submit { database.stateCaptureDao().insert(stateCapture) }
-        fun deleteGameState(stateCapture: StateCapture) = databaseWorker.submit { database.stateCaptureDao().delete(stateCapture) }
+        fun getGameStateById(id: Int) = database.stateCaptureDao().getById(id)
+        fun getAllGameStates() = database.stateCaptureDao().getAll()
+        fun insertGameState(stateCapture: StateCapture) = database.stateCaptureDao().insert(stateCapture)
+        fun deleteGameState(stateCapture: StateCapture) = database.stateCaptureDao().delete(stateCapture)
     }
 
     abstract fun stateCaptureDao(): StateCaptureDao

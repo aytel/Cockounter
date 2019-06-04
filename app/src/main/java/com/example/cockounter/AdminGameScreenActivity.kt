@@ -45,7 +45,7 @@ class AdminGameScreenActivity : AppCompatActivity(), GameHolder, ActionPerformer
         const val MODE_BUILD_NEW_STATE = 0
         const val MODE_USE_STATE = 1
 
-        const val ARG_PRESET = "ARG_PRESET"
+        const val ARG_PRESET_ID = "ARG_PRESET_ID"
         const val ARG_PLAYER_NAMES = "ARG_PLAYER_NAMES"
         const val ARG_PLAYER_ROLES = "ARG_PLAYER_ROLES"
         const val ARG_STATE = "ARG_STATE"
@@ -146,13 +146,24 @@ class AdminGameScreenActivity : AppCompatActivity(), GameHolder, ActionPerformer
                 finish()
             }
             MODE_BUILD_NEW_STATE -> {
-                preset = intent.getSerializableExtra(ARG_PRESET) as Preset
-                val names = intent.getStringArrayExtra(ARG_PLAYER_NAMES)
-                val roles = intent.getStringArrayExtra(ARG_PLAYER_ROLES)
-                players = names.zip(roles, ::PlayerDescription)
-                state = buildState(preset, players)
-                representation = buildByPlayerRepresentation(preset, players)
+                val id = intent.getIntExtra(ARG_PRESET_ID, 0)
+                if(id == 0) {
+                    toast("Error while loading preset")
+                    finish()
+                }
+                doAsync {
+                    val presetInfo = Storage.getPresetInfoById(id).get()
+                    val names = intent.getStringArrayExtra(ARG_PLAYER_NAMES)
+                    val roles = intent.getStringArrayExtra(ARG_PLAYER_ROLES)
+                    players = names.zip(roles, ::PlayerDescription)
+                    preset = presetInfo.preset
+                    state = buildState(preset, players)
+                    representation = buildByPlayerRepresentation(preset, players)
+                }
+
             }
+            //TODO
+            /*
             MODE_USE_STATE -> {
                 preset = intent.getSerializableExtra(ARG_PRESET) as Preset
                 val names = intent.getStringArrayExtra(ARG_PLAYER_NAMES)
@@ -161,6 +172,7 @@ class AdminGameScreenActivity : AppCompatActivity(), GameHolder, ActionPerformer
                 state = intent.getSerializableExtra(ARG_STATE) as GameState
                 representation = buildByPlayerRepresentation(preset, players)
             }
+            */
         }
         coordinatorLayout {
             lparams(matchParent, matchParent)

@@ -12,7 +12,8 @@ import java.util.*
 @Entity
 @TypeConverters(StateCaptureConverter::class)
 data class StateCapture(
-    @PrimaryKey
+    @PrimaryKey(autoGenerate = true)
+    val id: Int,
     val name: String,
     val state: GameState,
     val preset: Preset,
@@ -34,6 +35,9 @@ data class GameState(
 interface StateCaptureDao {
     @Query("SELECT * from stateCapture")
     fun getAll(): List<StateCapture>
+
+    @Query("SELECT * from stateCapture WHERE id = :id")
+    fun getById(id: Int): StateCapture
 
     @Insert
     fun insert(stateCapture: StateCapture)

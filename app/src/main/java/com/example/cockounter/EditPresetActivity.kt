@@ -12,6 +12,7 @@ import androidx.appcompat.app.AppCompatActivity
 import com.example.cockounter.adapters.ParameterAdapter
 import com.example.cockounter.adapters.PresetScriptAdapter
 import com.example.cockounter.core.*
+import com.example.cockounter.storage.Storage
 import com.example.cockounter.storage.loadLibrary
 import com.google.android.material.appbar.AppBarLayout
 import org.jetbrains.anko.*
@@ -38,12 +39,10 @@ class EditPresetActivity : AppCompatActivity() {
     private val rolesAdapter by lazy { ArrayAdapter<Role>(this, android.R.layout.simple_list_item_1, rolesList) }
     private val scriptsAdapter by lazy { PresetScriptAdapter(scriptsList) }
     private val librariesAdapter by lazy { ArrayAdapter<Library>(this, android.R.layout.simple_list_item_1, librariesList) }
+    private val id by lazy { intent.getIntExtra(ARG_PRESET_ID, 0) }
 
     companion object {
-        const val ARG_POSITION = "ARG_POSITION"
-        const val ARG_PRESET_INFO = "ARG_PRESET_INFO"
-        const val RETURN_PRESET_INFO = "RETURN_PRESET_INFO"
-        const val RETURN_POSITION = "RETURN_POSITION"
+        const val ARG_PRESET_ID = "ARG_PRESET_ID"
         private const val CODE_SHARED_PARAMETER_ADDED = 0
         private const val CODE_ROLE_ADDED = 1
         private const val CODE_SHARED_PARAMETER_CHANGED = 2
@@ -56,16 +55,22 @@ class EditPresetActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val presetInfo = intent.getSerializableExtra(ARG_PRESET_INFO) as PresetInfo?
-        if (presetInfo != null) {
-            globalParametersList.addAll(presetInfo.preset.globalParameters.values)
-            rolesList.addAll(presetInfo.preset.roles.values)
-            scriptsList.addAll(presetInfo.preset.actionsStubs)
-            globalParametersAdapter.notifyDataSetChanged()
-            rolesAdapter.notifyDataSetChanged()
-            scriptsAdapter.notifyDataSetChanged()
+        if (id != 0) {
+            doAsync {
+                val presetInfo = Storage.getPresetInfoById(id).get()
+                globalParametersList.addAll(presetInfo.preset.globalParameters.values)
+                rolesList.addAll(presetInfo.preset.roles.values)
+                scriptsList.addAll(presetInfo.preset.actionsStubs)
+                runOnUiThread {
+                    globalParametersAdapter.notifyDataSetChanged()
+                    rolesAdapter.notifyDataSetChanged()
+                    scriptsAdapter.notifyDataSetChanged()
+                    EditPresetUI(presetInfo, globalParametersAdapter, rolesAdapter, scriptsAdapter, librariesAdapter).setContentView(this@EditPresetActivity)
+                }
+            }
+        } else {
+            EditPresetUI(null, globalParametersAdapter, rolesAdapter, scriptsAdapter, librariesAdapter).setContentView(this@EditPresetActivity)
         }
-        EditPresetUI(presetInfo, globalParametersAdapter, rolesAdapter, scriptsAdapter, librariesAdapter).setContentView(this)
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -185,24 +190,21 @@ class EditPresetActivity : AppCompatActivity() {
     }
 
     fun save(name: String, description: String) {
-        val result = Intent()
-        result.run {
-            putExtra(
-                RETURN_PRESET_INFO,
-                PresetInfo(
-                    name = name,
-                    description = description,
-                    preset = Preset(
-                        globalParameters = globalParametersList.map { Pair(it.name, it) }.toMap(),
-                        roles = rolesList.map { Pair(it.name, it) }.toMap(),
-                        libraries = librariesList.toList(),
-                        actionsStubs = scriptsList.toList()
-                    )
+        val presetInfo = PresetInfo(
+                id = id,
+                name = name,
+                description = description,
+                preset = Preset(
+                    globalParameters = globalParametersList.map { Pair(it.name, it) }.toMap(),
+                    roles = rolesList.map { Pair(it.name, it) }.toMap(),
+                    libraries = librariesList.toList(),
+                    actionsStubs = scriptsList.toList()
                 )
             )
-            putExtra(RETURN_POSITION, intent.getIntExtra(ARG_POSITION, -1))
+        doAsync {
+            Storage.insertPreset(presetInfo);
         }
-        setResult(Activity.RESULT_OK, result)
+        setResult(Activity.RESULT_OK)
         finish()
     }
 

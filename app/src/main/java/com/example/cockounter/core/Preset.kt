@@ -12,7 +12,8 @@ import java.lang.reflect.Type
 @Entity
 @TypeConverters(PresetConverter::class)
 data class PresetInfo(
-    @PrimaryKey
+    @PrimaryKey(autoGenerate = true)
+    val id: Int,
     val name: String,
     val description: String,
     val preset: Preset
@@ -30,8 +31,11 @@ data class Preset(
 
 @Dao
 interface PresetInfoDao {
-    @Query("SELECT * from presetInfo")
+    @Query("SELECT * FROM presetInfo")
     fun getAll(): List<PresetInfo>
+
+    @Query("SELECT * FROM presetInfo WHERE id = :id")
+    fun getById(id: Int): PresetInfo
 
     @Insert
     fun insert(preset: PresetInfo)
