@@ -4,7 +4,6 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.View
 import com.example.cockounter.adapters.StateCaptureAdapter
-import com.example.cockounter.core.StateCapture
 import com.example.cockounter.storage.Storage
 import org.jetbrains.anko.*
 import org.jetbrains.anko.sdk27.coroutines.onItemClick
@@ -20,9 +19,9 @@ class ResumeGameActivity : AppCompatActivity() {
     }
 
     fun resumeGame(index: Int) {
-        startActivity(intentFor<AdminGameScreenActivity>(
-            AdminGameScreenActivity.MODE to AdminGameScreenActivity.MODE_USE_STATE,
-            AdminGameScreenActivity.ARG_STATE_ID to states[index].id
+        startActivity(intentFor<SinglePlayerGameScreenActivity>(
+            SinglePlayerGameScreenActivity.MODE to SinglePlayerGameScreenActivity.MODE_USE_STATE,
+            SinglePlayerGameScreenActivity.ARG_STATE_ID to states[index].id
         ))
         finish()
     }

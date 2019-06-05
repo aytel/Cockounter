@@ -90,7 +90,9 @@ data class Role(
     val sharedParameters: Map<String, Parameter>,
     val privateParameters: Map<String, Parameter>,
     val actionsStubs: List<PresetScript>
-) : Serializable
+) : Serializable {
+    companion object
+}
 
 sealed class Parameter : Serializable {
     abstract val name: String
@@ -98,6 +100,7 @@ sealed class Parameter : Serializable {
     abstract fun initialValueString(): String
     abstract fun typeString(): String
     abstract val actionsStubs: List<PresetScript>
+    companion object
 }
 
 data class IntegerParameter(
@@ -164,8 +167,9 @@ data class BooleanParameter(
     override fun initialValueString(): String = initialValue.toString()
 }
 
-//TODO sealed class maybe
-data class Library(val name: String, val script: String) : Serializable
+data class Library(val name: String, val script: String) : Serializable {
+   companion object
+}
 
 operator fun Preset.get(rolePointer: RolePointer): Role = roles.getValue(rolePointer.role)
 
@@ -188,7 +192,9 @@ data class PresetScript(
     val functionName: String?,
     val script: String,
     val context: ScriptContextDescription
-) : Serializable
+) : Serializable {
+    companion object
+}
 
 fun Preset.globalParameterPointers(): List<ParameterPointer> =
     globalParameters.values.map { ParameterPointer.Global(it.name) }

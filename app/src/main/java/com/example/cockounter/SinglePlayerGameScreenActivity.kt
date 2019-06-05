@@ -1,7 +1,6 @@
 package com.example.cockounter
 
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -41,9 +40,8 @@ import org.jetbrains.anko.support.v4.ctx
 import org.jetbrains.anko.support.v4.find
 import org.jetbrains.anko.support.v4.viewPager
 import java.util.*
-import kotlin.properties.Delegates
 
-private class AdminGameScreenViewModel() : ViewModel() {
+private class SinglePlayerGameScreenViewModel() : ViewModel() {
     lateinit var state: MutableLiveData<GameState>
     lateinit var preset: Preset
     lateinit var players: List<PlayerDescription>
@@ -120,7 +118,7 @@ private class AdminGameScreenViewModel() : ViewModel() {
 }
 
 
-class AdminGameScreenActivity : AppCompatActivity(), GameHolder, ActionPerformer {
+class SinglePlayerGameScreenActivity : AppCompatActivity(), GameHolder, ActionPerformer {
 
     companion object {
         const val MODE = "MODE"
@@ -180,7 +178,7 @@ class AdminGameScreenActivity : AppCompatActivity(), GameHolder, ActionPerformer
     private val pagerAdapter by lazy { PlayerGameScreenAdapter(supportFragmentManager, getState, {viewModel.representation.value!!}) }
     private lateinit var myTabLayout: TabLayout
     private lateinit var myViewPager: ViewPager
-    private lateinit var viewModel: AdminGameScreenViewModel
+    private lateinit var viewModel: SinglePlayerGameScreenViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -195,19 +193,19 @@ class AdminGameScreenActivity : AppCompatActivity(), GameHolder, ActionPerformer
                         val id = intent.getIntExtra(ARG_PRESET_ID, 0)
                         val names = intent.getStringArrayExtra(ARG_PLAYER_NAMES)
                         val roles = intent.getStringArrayExtra(ARG_PLAYER_ROLES)
-                        return AdminGameScreenViewModel(id, names, roles) as T
+                        return SinglePlayerGameScreenViewModel(id, names, roles) as T
                     }
 
-                }).get(AdminGameScreenViewModel::class.java)
+                }).get(SinglePlayerGameScreenViewModel::class.java)
             }
             MODE_USE_STATE -> {
                 viewModel = ViewModelProviders.of(this, object : ViewModelProvider.Factory {
                     override fun <T : ViewModel?> create(modelClass: Class<T>): T {
                         val id = intent.getIntExtra(ARG_STATE_ID, 0)
-                        return AdminGameScreenViewModel(id) as T
+                        return SinglePlayerGameScreenViewModel(id) as T
                     }
 
-                }).get(AdminGameScreenViewModel::class.java)
+                }).get(SinglePlayerGameScreenViewModel::class.java)
             }
         }
         viewModel.state.observe(this, androidx.lifecycle.Observer { _ -> pagerAdapter.notifyDataSetChanged() })
@@ -307,14 +305,14 @@ class PlayerGameScreenFragment : Fragment(), ActionPerformer {
         }
     }
 
-    fun getState() = (act as AdminGameScreenActivity).getState()
+    fun getState() = (act as SinglePlayerGameScreenActivity).getState()
 
     override fun performAction(action: Action) {
         (act as ActionPerformer).performAction(action)
         /*
         alert {
             message = getState().toString()
-        }.show()
+        }.listElementShow()
         */
         gameAdapter.notifyDataSetChanged()
     }
@@ -360,17 +358,6 @@ class PlayerGameScreenUI(val playerAdapter: ExpandableListAdapter) : AnkoCompone
         }
         */
 
-    }
-
-}
-
-private class RoleGameScreenFragment : Fragment() {
-    //TODO
-}
-
-private class RoleGameScreenUI : AnkoComponent<RoleGameScreenFragment> {
-    override fun createView(ui: AnkoContext<RoleGameScreenFragment>): View {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
 }

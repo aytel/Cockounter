@@ -1,45 +1,178 @@
 package com.example.cockounter
 
 import android.app.Activity
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.view.Gravity
 import android.view.MenuItem
 import android.view.View
 import android.widget.ArrayAdapter
+import android.widget.BaseExpandableListAdapter
 import android.widget.EditText
 import androidx.appcompat.app.AppCompatActivity
-import com.example.cockounter.adapters.ParameterAdapter
-import com.example.cockounter.adapters.PresetScriptAdapter
+import androidx.lifecycle.*
+import arrow.extension
+import com.example.cockounter.adapters.*
+import com.example.cockounter.adapters.library.listElementShow.listElementShow
+import com.example.cockounter.adapters.parameter.listElementShow.listElementShow
+import com.example.cockounter.adapters.presetscript.listElementShow.listElementShow
+import com.example.cockounter.adapters.role.listElementShow.listElementShow
+import com.example.cockounter.adapters.simpleheader.listHeaderShow.listHeaderShow
 import com.example.cockounter.core.*
+import com.example.cockounter.elementviewer.listElementShow.listElementShow
+import com.example.cockounter.headerviewer.listHeaderShow.listHeaderShow
 import com.example.cockounter.storage.Storage
 import com.example.cockounter.storage.loadLibrary
-import com.google.android.material.appbar.AppBarLayout
+import io.ktor.http.HeaderValueWithParameters
 import org.jetbrains.anko.*
 import org.jetbrains.anko.design.appBarLayout
 import org.jetbrains.anko.design.coordinatorLayout
 import org.jetbrains.anko.design.floatingActionButton
 import org.jetbrains.anko.sdk27.coroutines.onClick
-import org.jetbrains.anko.sdk27.coroutines.onItemLongClick
+import org.jetbrains.anko.sdk27.coroutines.textChangedListener
 
+fun <T> MutableLiveData<T>.notify() {
+    this.postValue(this.value)
+}
+
+private class EditPresetViewModel() : ViewModel() {
+    val globalParametersList = MutableLiveData<MutableList<Parameter>>()
+    val rolesList = MutableLiveData<MutableList<Role>>()
+    val scriptsList = MutableLiveData<MutableList<PresetScript>>()
+    val librariesList = MutableLiveData<MutableList<Library>>()
+    var name = ""
+    var description = ""
+    var id: Int
+
+    init {
+        id = 0
+        globalParametersList.value = mutableListOf()
+        rolesList.value = mutableListOf()
+        scriptsList.value = mutableListOf()
+        librariesList.value = mutableListOf()
+    }
+
+    constructor(id: Int) : this() {
+        this.id = id
+        val presetInfo = doAsyncResult { Storage.getPresetInfoById(id) }.get()
+        name = presetInfo.name
+        description = presetInfo.description
+        globalParametersList.value = presetInfo.preset.globalParameters.values.toMutableList()
+        rolesList.value = presetInfo.preset.roles.values.toMutableList()
+        scriptsList.value = presetInfo.preset.actionsStubs.toMutableList()
+        librariesList.value = presetInfo.preset.libraries.toMutableList()
+    }
+
+    fun addGlobalParameter(parameter: Parameter) {
+        globalParametersList.value?.add(parameter)
+        globalParametersList.notify()
+    }
+
+    fun addRole(role: Role) {
+        rolesList.value!!.add(role)
+    }
+
+    fun addScript(script: PresetScript) {
+        scriptsList.value!!.add(script)
+    }
+
+    fun addLibrary(library: Library) {
+        librariesList.value!!.add(library)
+    }
+
+    fun changeGlobalParameter(index: Int, parameter: Parameter) {
+        globalParametersList.value!![index] = parameter
+    }
+
+    fun changeRole(index: Int, role: Role) {
+        rolesList.value!![index] = role
+    }
+
+    fun changeScript(index: Int, script: PresetScript) {
+        scriptsList.value!![index] = script
+    }
+
+    fun changeLibrary(index: Int, library: Library) {
+        librariesList.value!![index] = library
+    }
+
+    fun deleteGlobalParameter(index: Int) {
+        globalParametersList.value!!.removeAt(index)
+    }
+
+    fun deleteRole(index: Int) {
+        rolesList.value!!.removeAt(index)
+    }
+
+    fun deleteScript(index: Int) {
+        scriptsList.value!!.removeAt(index)
+    }
+
+    fun deleteLibrary(index: Int) {
+        librariesList.value!!.removeAt(index)
+    }
+
+    fun save(name: String, description: String) {
+        val presetInfo = PresetInfo(
+            id = id,
+            name = name,
+            description = description,
+            preset = Preset(
+                globalParameters = globalParametersList.value!!.map { Pair(it.name, it) }.toMap(),
+                roles = rolesList.value!!.map { Pair(it.name, it) }.toMap(),
+                libraries = librariesList.value!!.toList(),
+                actionsStubs = scriptsList.value!!.toList()
+            )
+        )
+        doAsync {
+            Storage.insertPreset(presetInfo)
+        }
+    }
+}
+
+sealed class ElementViewer {
+    data class Parameter(val parameter: com.example.cockounter.core.Parameter) : ElementViewer()
+    data class Role(val role: com.example.cockounter.core.Role) : ElementViewer()
+    data class PresetScript(val script: com.example.cockounter.core.PresetScript) : ElementViewer()
+    data class Library(val library: com.example.cockounter.core.Library) : ElementViewer()
+    companion object
+}
+
+sealed class HeaderViewer {
+    object Parameter : HeaderViewer()
+    object Role : HeaderViewer()
+    object PresetScript : HeaderViewer()
+    object Library : HeaderViewer()
+    companion object
+}
+
+
+
+@extension
+interface HeaderListHeaderShow : ListHeaderShow<HeaderViewer> {
+    override fun HeaderViewer.buildView(context: Context, isSelected: Boolean): View = when(this) {
+        HeaderViewer.Parameter -> SimpleHeader.listHeaderShow().run { SimpleHeader("Global parameters").buildView(context, isSelected) }
+        HeaderViewer.Role -> SimpleHeader.listHeaderShow().run { SimpleHeader("Roles").buildView(context, isSelected) }
+        HeaderViewer.PresetScript -> SimpleHeader.listHeaderShow().run { SimpleHeader("Actions").buildView(context, isSelected) }
+        HeaderViewer.Library -> SimpleHeader.listHeaderShow().run { SimpleHeader("Libraries").buildView(context, isSelected) }
+    }
+}
+
+@extension
+interface ViewerListElementShow : ListElementShow<ElementViewer> {
+    override fun ElementViewer.buildView(context: Context): View = when(this) {
+        is ElementViewer.Parameter -> Parameter.listElementShow().run { this@buildView.parameter.buildView(context) }
+        is ElementViewer.Role -> Role.listElementShow().run { this@buildView.role.buildView(context) }
+        is ElementViewer.PresetScript -> PresetScript.listElementShow().run { this@buildView.script.buildView(context) }
+        is ElementViewer.Library -> Library.listElementShow().run { this@buildView.library.buildView(context) }
+    }
+}
 
 class EditPresetActivity : AppCompatActivity() {
-    private val globalParametersList = mutableListOf<Parameter>()
-    private val rolesList = mutableListOf<Role>()
-    private val scriptsList = mutableListOf<PresetScript>()
-    private val librariesList = mutableListOf<Library>()
-    private val globalParametersAdapter by lazy {
-        ParameterAdapter(
-            this,
-            android.R.layout.simple_list_item_1,
-            globalParametersList
-        )
-    }
-    //TODO make adapter
-    private val rolesAdapter by lazy { ArrayAdapter<Role>(this, android.R.layout.simple_list_item_1, rolesList) }
-    private val scriptsAdapter by lazy { PresetScriptAdapter(scriptsList) }
-    private val librariesAdapter by lazy { ArrayAdapter<Library>(this, android.R.layout.simple_list_item_1, librariesList) }
-    private val id by lazy { intent.getIntExtra(ARG_PRESET_ID, 0) }
+    private lateinit var viewModel: EditPresetViewModel
+    private lateinit var adapter: EditPresetAdapter<HeaderViewer, ElementViewer>
 
     companion object {
         const val ARG_PRESET_ID = "ARG_PRESET_ID"
@@ -55,22 +188,28 @@ class EditPresetActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        val id = intent.getIntExtra(ARG_PRESET_ID, 0)
+        adapter = EditPresetAdapter(listOf(HeaderViewer.Parameter, HeaderViewer.Role, HeaderViewer.PresetScript, HeaderViewer.Library),
+            ElementViewer.listElementShow(), HeaderViewer.listHeaderShow())
+        val ui: EditPresetUI
         if (id != 0) {
-            doAsync {
-                val presetInfo = Storage.getPresetInfoById(id)
-                globalParametersList.addAll(presetInfo.preset.globalParameters.values)
-                rolesList.addAll(presetInfo.preset.roles.values)
-                scriptsList.addAll(presetInfo.preset.actionsStubs)
-                runOnUiThread {
-                    globalParametersAdapter.notifyDataSetChanged()
-                    rolesAdapter.notifyDataSetChanged()
-                    scriptsAdapter.notifyDataSetChanged()
-                    EditPresetUI(presetInfo, globalParametersAdapter, rolesAdapter, scriptsAdapter, librariesAdapter).setContentView(this@EditPresetActivity)
+            viewModel = ViewModelProviders.of(this, object : ViewModelProvider.Factory {
+                override fun <T : ViewModel?> create(modelClass: Class<T>): T {
+                    return EditPresetViewModel(id) as T
                 }
-            }
+            }).get(EditPresetViewModel::class.java)
+            //EditPresetUI(presetInfo, globalParametersAdapter, rolesAdapter, scriptsAdapter, librariesAdapter).setContentView(this@EditPresetActivity)
+            ui = EditPresetUI(viewModel.name, viewModel.description, adapter)
         } else {
-            EditPresetUI(null, globalParametersAdapter, rolesAdapter, scriptsAdapter, librariesAdapter).setContentView(this@EditPresetActivity)
+            viewModel = ViewModelProviders.of(this).get(EditPresetViewModel::class.java)
+            //EditPresetUI(null, globalParametersAdapter, rolesAdapter, scriptsAdapter, librariesAdapter).setContentView(this@EditPresetActivity)
+            ui = EditPresetUI(viewModel.name, viewModel.description, adapter)
         }
+        ui.setContentView(this)
+        viewModel.globalParametersList.observe(this, Observer { list -> Log.i("s", "ss"); adapter.update(0, list.map{ElementViewer.Parameter(it)}) })
+        viewModel.rolesList.observe(this, Observer { list -> adapter.update(1, list.map { ElementViewer.Role(it) }) })
+        viewModel.scriptsList.observe(this, Observer { list -> adapter.update(2, list.map { ElementViewer.PresetScript(it) }) })
+        viewModel.librariesList.observe(this, Observer { list -> adapter.update(3, list.map { ElementViewer.Library(it) }) })
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -79,46 +218,38 @@ class EditPresetActivity : AppCompatActivity() {
         }
         when (requestCode) {
             CODE_SHARED_PARAMETER_ADDED -> if (resultCode == Activity.RESULT_OK) {
-                globalParametersList.add(data.getSerializableExtra(EditParameterActivity.RETURN_PARAMETER) as Parameter)
-                globalParametersAdapter.notifyDataSetChanged()
+                viewModel.addGlobalParameter(data.getSerializableExtra(EditParameterActivity.RETURN_PARAMETER) as Parameter)
             }
             CODE_ROLE_ADDED -> if (resultCode == Activity.RESULT_OK) {
-                rolesList.add(data.getSerializableExtra(EditRoleActivity.RETURN_ROLE) as Role)
-                rolesAdapter.notifyDataSetChanged()
+                viewModel.addRole(data.getSerializableExtra(EditRoleActivity.RETURN_ROLE) as Role)
             }
             CODE_SHARED_PARAMETER_CHANGED -> if (resultCode == Activity.RESULT_OK) {
                 val index = data.getIntExtra(EditParameterActivity.RETURN_POSITION, -1)
-                globalParametersList[index] = data.getSerializableExtra(EditParameterActivity.RETURN_PARAMETER) as Parameter
-                globalParametersAdapter.notifyDataSetChanged()
+                viewModel.changeGlobalParameter(index, data.getSerializableExtra(EditParameterActivity.RETURN_PARAMETER) as Parameter)
             }
             CODE_ROLE_CHANGED -> if (resultCode == Activity.RESULT_OK) {
                 val index = data.getIntExtra(EditRoleActivity.RETURN_POSITION, -1)
-                rolesList[index] = data.getSerializableExtra(EditRoleActivity.RETURN_ROLE) as Role
-                rolesAdapter.notifyDataSetChanged()
+                viewModel.changeRole(index, data.getSerializableExtra(EditRoleActivity.RETURN_ROLE) as Role)
             }
             CODE_SCRIPT_ADDED -> if (resultCode == Activity.RESULT_OK) {
-                scriptsList.add(data.getSerializableExtra(EditPresetScriptActivity.RETURN_PRESET_SCRIPT) as PresetScript)
-                scriptsAdapter.notifyDataSetChanged()
+                viewModel.addScript(data.getSerializableExtra(EditPresetScriptActivity.RETURN_PRESET_SCRIPT) as PresetScript)
             }
             CODE_SCRIPT_CHANGED -> if (resultCode == Activity.RESULT_OK) {
                 val index = data.getIntExtra(EditPresetScriptActivity.RETURN_POSITION, -1)
-                scriptsList[index] = data.getSerializableExtra(EditPresetScriptActivity.RETURN_PRESET_SCRIPT) as PresetScript
-                scriptsAdapter.notifyDataSetChanged()
+                viewModel.changeScript(index, data.getSerializableExtra(EditPresetScriptActivity.RETURN_PRESET_SCRIPT) as PresetScript)
             }
             CODE_LOAD_LIBRARY -> if (resultCode == Activity.RESULT_OK) {
                 val uri = data.data!!
                 loadLibrary(this, uri).fold({
                     alert(it.message!!).show()
                 }, {
-                    librariesList.add(Library("lib", it))
-                    librariesAdapter.notifyDataSetChanged()
+                    viewModel.addLibrary(Library("lib", it))
                 })
             }
             CODE_ADD_LIBRARY -> if (resultCode == Activity.RESULT_OK) {
                 val name = data.getStringExtra(EditLibraryActivity.RETURN_NAME)
                 val source = data.getStringExtra(EditLibraryActivity.RETURN_SOURCE)
-                librariesList.add(Library(name, source))
-                librariesAdapter.notifyDataSetChanged()
+                viewModel.addLibrary(Library(name, source))
             }
         }
     }
@@ -126,15 +257,14 @@ class EditPresetActivity : AppCompatActivity() {
     fun editParameter(index: Int) {
         startActivityForResult(
             intentFor<EditParameterActivity>(
-                EditParameterActivity.ARG_PARAMETER to globalParametersList[index],
+                EditParameterActivity.ARG_PARAMETER to viewModel.globalParametersList.value!![index],
                 EditParameterActivity.ARG_POSITION to index
             ), CODE_SHARED_PARAMETER_CHANGED
         )
     }
 
     fun deleteParameter(index: Int) {
-        globalParametersList.removeAt(index)
-        globalParametersAdapter.notifyDataSetChanged()
+        viewModel.deleteGlobalParameter(index)
     }
 
     fun addParameter() {
@@ -149,15 +279,14 @@ class EditPresetActivity : AppCompatActivity() {
     fun editRole(index: Int) {
         startActivityForResult(
             intentFor<EditRoleActivity>(
-                EditRoleActivity.ARG_ROLE to rolesList[index],
+                EditRoleActivity.ARG_ROLE to viewModel.rolesList.value!![index],
                 EditRoleActivity.ARG_POSITION to index
             ), CODE_ROLE_CHANGED
         )
     }
 
     fun deleteRole(index: Int) {
-        rolesList.removeAt(index)
-        rolesAdapter.notifyDataSetChanged()
+        viewModel.deleteRole(index)
     }
 
     fun addRole() {
@@ -171,15 +300,14 @@ class EditPresetActivity : AppCompatActivity() {
     fun editScript(index: Int) {
         startActivityForResult(
             intentFor<EditPresetScriptActivity>(
-                EditPresetScriptActivity.ARG_PRESET_SCRIPT to scriptsList[index],
+                EditPresetScriptActivity.ARG_PRESET_SCRIPT to viewModel.scriptsList.value!![index],
                 EditPresetScriptActivity.ARG_POSITION to index
             ), CODE_SCRIPT_CHANGED
         )
     }
 
     fun deleteScript(index: Int) {
-        scriptsList.removeAt(index)
-        scriptsAdapter.notifyDataSetChanged()
+        viewModel.deleteScript(index)
     }
 
     fun addScript() {
@@ -190,20 +318,7 @@ class EditPresetActivity : AppCompatActivity() {
     }
 
     fun save(name: String, description: String) {
-        val presetInfo = PresetInfo(
-                id = id,
-                name = name,
-                description = description,
-                preset = Preset(
-                    globalParameters = globalParametersList.map { Pair(it.name, it) }.toMap(),
-                    roles = rolesList.map { Pair(it.name, it) }.toMap(),
-                    libraries = librariesList.toList(),
-                    actionsStubs = scriptsList.toList()
-                )
-            )
-        doAsync {
-            Storage.insertPreset(presetInfo);
-        }
+        viewModel.save(name, description)
         setResult(Activity.RESULT_OK)
         finish()
     }
@@ -217,14 +332,26 @@ class EditPresetActivity : AppCompatActivity() {
     fun createLibrary() {
         startActivityForResult(intentFor<EditLibraryActivity>(), CODE_ADD_LIBRARY)
     }
+
+    fun updateName(name: String) {
+        viewModel.name = name
+    }
+
+    fun updateDescription(description: String) {
+        viewModel.description = description
+    }
 }
 
 private class EditPresetUI(
-    val presetInfo: PresetInfo?,
+    val name: String,
+    val description: String,
+    /*
     val globalParametersAdapter: ParameterAdapter,
     val rolesAdapter: ArrayAdapter<Role>,
     val scriptsAdapter: PresetScriptAdapter,
     val librariesAdapter: ArrayAdapter<Library>
+    */
+    val expandableAdapter: BaseExpandableListAdapter
 ) : AnkoComponent<EditPresetActivity> {
     private lateinit var presetName: EditText
     private lateinit var presetDescription: EditText
@@ -250,8 +377,7 @@ private class EditPresetUI(
                 }.lparams(width = matchParent, height = wrapContent) {
                     scrollFlags = 0
                 }
-
-            }
+            /*
             scrollView {
                 verticalLayout {
                     presetName = editText(presetInfo?.name ?: "") {
@@ -303,6 +429,25 @@ private class EditPresetUI(
                 //}
             }.lparams() {
                 behavior = AppBarLayout.ScrollingViewBehavior()
+            }
+            */
+            }
+            verticalLayout {
+                presetName = editText(name) {
+                    hint = "name"
+                    textChangedListener {
+                        owner.updateName(text.toString())
+                    }
+                }
+                presetDescription = editText(description) {
+                    hint = "Description"
+                    textChangedListener {
+                        owner.updateDescription(text.toString())
+                    }
+                }
+                expandableListView {
+                    setAdapter(expandableAdapter)
+                }
             }
             floatingActionButton {
                 onClick {

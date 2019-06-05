@@ -15,7 +15,7 @@ class ExpandablePlayerRepresentationAdapter(
     private val perform: (Action) -> Unit
 ) : BaseExpandableListAdapter() {
 
-    override fun getGroup(groupPosition: Int): Any =when(groupPosition) {
+    override fun getGroup(groupPosition: Int): Any = when(groupPosition) {
             0 -> representation.globalParameters
             1 -> representation.sharedParameters
             2 -> representation.privateParameters

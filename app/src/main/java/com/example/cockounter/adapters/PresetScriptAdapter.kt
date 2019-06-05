@@ -7,7 +7,7 @@ import com.example.cockounter.core.PresetScript
 import org.jetbrains.anko.textView
 import org.jetbrains.anko.verticalLayout
 
-class PresetScriptAdapter(private val items: MutableList<PresetScript>) : BaseAdapter() {
+class PresetScriptAdapter(private var items: MutableList<PresetScript>) : BaseAdapter() {
     override fun getItem(position: Int): Any = items[position]
     override fun getItemId(position: Int): Long = position.toLong()
 
@@ -20,5 +20,10 @@ class PresetScriptAdapter(private val items: MutableList<PresetScript>) : BaseAd
                 text = (item as PresetScript).visibleName
             }
         }
+    }
+
+    fun update(list: MutableList<PresetScript>) {
+        items = list
+        notifyDataSetChanged()
     }
 }

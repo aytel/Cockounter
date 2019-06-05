@@ -70,11 +70,11 @@ class SelectPresetActivity : AppCompatActivity() {
                 val names = data.getStringArrayExtra("names")!!
                 val roles = data.getStringArrayExtra("roles")!!
                 startActivity(
-                    intentFor<AdminGameScreenActivity>(
-                        AdminGameScreenActivity.MODE to AdminGameScreenActivity.MODE_BUILD_NEW_STATE,
-                        AdminGameScreenActivity.ARG_PLAYER_NAMES to names,
-                        AdminGameScreenActivity.ARG_PLAYER_ROLES to roles,
-                        AdminGameScreenActivity.ARG_PRESET to presetsList[position].preset
+                    intentFor<SinglePlayerGameScreenActivity>(
+                        SinglePlayerGameScreenActivity.MODE to SinglePlayerGameScreenActivity.MODE_BUILD_NEW_STATE,
+                        SinglePlayerGameScreenActivity.ARG_PLAYER_NAMES to names,
+                        SinglePlayerGameScreenActivity.ARG_PLAYER_ROLES to roles,
+                        SinglePlayerGameScreenActivity.ARG_PRESET to presetsList[position].preset
                     )
                 )
                 finish()
@@ -102,7 +102,7 @@ class SelectPresetActivity : AppCompatActivity() {
                             )
                         }
                     }
-                }.show()
+                }.listElementShow()
 
             }
             */

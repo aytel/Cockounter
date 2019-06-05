@@ -26,7 +26,7 @@
         </activity>
         <activity android:name=".StartSinglePlayerGameActivity">
         </activity>
-        <activity android:name=".AdminGameScreenActivity">
+        <activity android:name=".SinglePlayerGameScreenActivity">
         </activity>
         <activity android:name=".PlayerGameScreenActivity">
         </activity>

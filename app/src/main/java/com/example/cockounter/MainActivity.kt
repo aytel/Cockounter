@@ -77,11 +77,11 @@ class MainActivity : AppCompatActivity() {
                 val names = data.getStringArrayExtra(StartSinglePlayerGameActivity.RETURN_NAMES)!!
                 val roles = data.getStringArrayExtra(StartSinglePlayerGameActivity.RETURN_ROLES)!!
                 startActivity(
-                    intentFor<AdminGameScreenActivity>(
-                        AdminGameScreenActivity.MODE to AdminGameScreenActivity.MODE_BUILD_NEW_STATE,
-                        AdminGameScreenActivity.ARG_PRESET_ID to selectedId,
-                        AdminGameScreenActivity.ARG_PLAYER_NAMES to names,
-                        AdminGameScreenActivity.ARG_PLAYER_ROLES to roles
+                    intentFor<SinglePlayerGameScreenActivity>(
+                        SinglePlayerGameScreenActivity.MODE to SinglePlayerGameScreenActivity.MODE_BUILD_NEW_STATE,
+                        SinglePlayerGameScreenActivity.ARG_PRESET_ID to selectedId,
+                        SinglePlayerGameScreenActivity.ARG_PLAYER_NAMES to names,
+                        SinglePlayerGameScreenActivity.ARG_PLAYER_ROLES to roles
                     )
                 )
             }

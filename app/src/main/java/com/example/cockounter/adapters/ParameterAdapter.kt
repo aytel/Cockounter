@@ -32,4 +32,10 @@ class ParameterAdapter(val ctx: Context, val resource: Int, val items: MutableLi
         }
         return view
     }
+
+    fun update(list: MutableList<Parameter>) {
+        items.clear()
+        items.addAll(list);
+        notifyDataSetChanged()
+    }
 }

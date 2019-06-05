@@ -6,6 +6,8 @@ apply plugin: 'kotlin-android-extensions'
 
 apply plugin: 'kotlin-kapt'
 
+apply from: rootProject.file('gradle/generated-kotlin-sources.gradle') //only for Android projects
+
 android {
     compileSdkVersion 28
     defaultConfig {
