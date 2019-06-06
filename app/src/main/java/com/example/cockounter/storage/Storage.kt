@@ -14,13 +14,19 @@ abstract class Storage : RoomDatabase() {
 
         fun getAllPresetInfos() = database.presetInfoDao().getAll()
         fun getPresetInfoById(id: Int) = database.presetInfoDao().getById(id)
-        fun insertPreset(presetInfo: PresetInfo) = database.presetInfoDao().insert(presetInfo)
+        fun insertPreset(presetInfo: PresetInfo) {
+            deletePreset(presetInfo)
+            database.presetInfoDao().insert(presetInfo)
+        }
         fun deletePreset(presetInfo: PresetInfo) = database.presetInfoDao().delete(presetInfo)
         fun nukePresets() = database.presetInfoDao().nukeTable()
 
         fun getGameStateById(id: Int) = database.stateCaptureDao().getById(id)
         fun getAllGameStates() = database.stateCaptureDao().getAll()
-        fun insertGameState(stateCapture: StateCapture) = database.stateCaptureDao().insert(stateCapture)
+        fun insertGameState(stateCapture: StateCapture) {
+            deleteGameState(stateCapture)
+            database.stateCaptureDao().insert(stateCapture)
+        }
         fun deleteGameState(stateCapture: StateCapture) = database.stateCaptureDao().delete(stateCapture)
     }
 
