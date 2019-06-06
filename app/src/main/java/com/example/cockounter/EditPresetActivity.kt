@@ -8,24 +8,23 @@ import android.util.Log
 import android.view.Gravity
 import android.view.MenuItem
 import android.view.View
-import android.widget.ArrayAdapter
 import android.widget.BaseExpandableListAdapter
 import android.widget.EditText
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.*
-import arrow.extension
-import com.example.cockounter.adapters.*
+import com.example.cockounter.adapters.EditPresetAdapter
+import com.example.cockounter.adapters.ListElementShow
+import com.example.cockounter.adapters.ListHeaderShow
+import com.example.cockounter.adapters.SimpleHeader
 import com.example.cockounter.adapters.library.listElementShow.listElementShow
 import com.example.cockounter.adapters.parameter.listElementShow.listElementShow
 import com.example.cockounter.adapters.presetscript.listElementShow.listElementShow
 import com.example.cockounter.adapters.role.listElementShow.listElementShow
 import com.example.cockounter.adapters.simpleheader.listHeaderShow.listHeaderShow
 import com.example.cockounter.core.*
-import com.example.cockounter.elementviewer.listElementShow.listElementShow
-import com.example.cockounter.headerviewer.listHeaderShow.listHeaderShow
 import com.example.cockounter.storage.Storage
 import com.example.cockounter.storage.loadLibrary
-import io.ktor.http.HeaderValueWithParameters
+import com.google.android.material.appbar.AppBarLayout
 import org.jetbrains.anko.*
 import org.jetbrains.anko.design.appBarLayout
 import org.jetbrains.anko.design.coordinatorLayout
@@ -132,47 +131,46 @@ private class EditPresetViewModel() : ViewModel() {
     }
 }
 
-sealed class ElementViewer {
-    data class Parameter(val parameter: com.example.cockounter.core.Parameter) : ElementViewer()
-    data class Role(val role: com.example.cockounter.core.Role) : ElementViewer()
-    data class PresetScript(val script: com.example.cockounter.core.PresetScript) : ElementViewer()
-    data class Library(val library: com.example.cockounter.core.Library) : ElementViewer()
-    companion object
-}
-
-sealed class HeaderViewer {
-    object Parameter : HeaderViewer()
-    object Role : HeaderViewer()
-    object PresetScript : HeaderViewer()
-    object Library : HeaderViewer()
-    companion object
-}
-
-
-
-@extension
-interface HeaderListHeaderShow : ListHeaderShow<HeaderViewer> {
-    override fun HeaderViewer.buildView(context: Context, isSelected: Boolean): View = when(this) {
-        HeaderViewer.Parameter -> SimpleHeader.listHeaderShow().run { SimpleHeader("Global parameters").buildView(context, isSelected) }
-        HeaderViewer.Role -> SimpleHeader.listHeaderShow().run { SimpleHeader("Roles").buildView(context, isSelected) }
-        HeaderViewer.PresetScript -> SimpleHeader.listHeaderShow().run { SimpleHeader("Actions").buildView(context, isSelected) }
-        HeaderViewer.Library -> SimpleHeader.listHeaderShow().run { SimpleHeader("Libraries").buildView(context, isSelected) }
-    }
-}
-
-@extension
-interface ViewerListElementShow : ListElementShow<ElementViewer> {
-    override fun ElementViewer.buildView(context: Context): View = when(this) {
-        is ElementViewer.Parameter -> Parameter.listElementShow().run { this@buildView.parameter.buildView(context) }
-        is ElementViewer.Role -> Role.listElementShow().run { this@buildView.role.buildView(context) }
-        is ElementViewer.PresetScript -> PresetScript.listElementShow().run { this@buildView.script.buildView(context) }
-        is ElementViewer.Library -> Library.listElementShow().run { this@buildView.library.buildView(context) }
-    }
-}
 
 class EditPresetActivity : AppCompatActivity() {
     private lateinit var viewModel: EditPresetViewModel
     private lateinit var adapter: EditPresetAdapter<HeaderViewer, ElementViewer>
+
+    sealed class ElementViewer {
+        data class Parameter(val parameter: com.example.cockounter.core.Parameter) : ElementViewer()
+        data class Role(val role: com.example.cockounter.core.Role) : ElementViewer()
+        data class PresetScript(val script: com.example.cockounter.core.PresetScript) : ElementViewer()
+        data class Library(val library: com.example.cockounter.core.Library) : ElementViewer()
+        companion object
+    }
+
+    sealed class HeaderViewer {
+        object Parameter : HeaderViewer()
+        object Role : HeaderViewer()
+        object PresetScript : HeaderViewer()
+        object Library : HeaderViewer()
+        companion object
+    }
+
+    interface HeaderListHeaderShow : ListHeaderShow<HeaderViewer> {
+        override fun HeaderViewer.buildView(context: Context, isSelected: Boolean): View = when(this) {
+            HeaderViewer.Parameter -> SimpleHeader.listHeaderShow().run { SimpleHeader("Global parameters").buildView(context, isSelected) }
+            HeaderViewer.Role -> SimpleHeader.listHeaderShow().run { SimpleHeader("Roles").buildView(context, isSelected) }
+            HeaderViewer.PresetScript -> SimpleHeader.listHeaderShow().run { SimpleHeader("Actions").buildView(context, isSelected) }
+            HeaderViewer.Library -> SimpleHeader.listHeaderShow().run { SimpleHeader("Libraries").buildView(context, isSelected) }
+        }
+    }
+    private fun HeaderViewer.Companion.listHeaderShow() = object : HeaderListHeaderShow {}
+
+    interface ViewerListElementShow : ListElementShow<ElementViewer> {
+        override fun ElementViewer.buildView(context: Context): View = when(this) {
+            is ElementViewer.Parameter -> Parameter.listElementShow().run { this@buildView.parameter.buildView(context) }
+            is ElementViewer.Role -> Role.listElementShow().run { this@buildView.role.buildView(context) }
+            is ElementViewer.PresetScript -> PresetScript.listElementShow().run { this@buildView.script.buildView(context) }
+            is ElementViewer.Library -> Library.listElementShow().run { this@buildView.library.buildView(context) }
+        }
+    }
+    private fun ElementViewer.Companion.listElementShow() = object : ViewerListElementShow {}
 
     companion object {
         const val ARG_PRESET_ID = "ARG_PRESET_ID"
@@ -436,18 +434,24 @@ private class EditPresetUI(
                 presetName = editText(name) {
                     hint = "name"
                     textChangedListener {
-                        owner.updateName(text.toString())
+                        onTextChanged { chars, _, _, _ ->
+                            owner.updateName(chars.toString())
+                        }
                     }
                 }
                 presetDescription = editText(description) {
                     hint = "Description"
                     textChangedListener {
-                        owner.updateDescription(text.toString())
+                        onTextChanged { chars, _, _, _ ->
+                            owner.updateDescription(chars.toString())
+                        }
                     }
                 }
                 expandableListView {
                     setAdapter(expandableAdapter)
                 }
+            }.lparams(width = matchParent, height = matchParent) {
+                behavior = AppBarLayout.ScrollingViewBehavior()
             }
             floatingActionButton {
                 onClick {

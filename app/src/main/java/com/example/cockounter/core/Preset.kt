@@ -239,15 +239,30 @@ fun Preset.buildActionButtons(): List<ActionButtonModel> {
     return global + shared + attachedGlobal + attachedPrivate + attachedShared
 }
 
+enum class ParameterType {
+    INTEGER {
+        override fun toString(): String = "Integer"
+    },
+    STRING {
+        override fun toString(): String = "String"
+    },
+    DOUBLE {
+        override fun toString(): String = "Fractional"
+    },
+    BOOLEAN {
+        override fun toString(): String = "true/false"
+    }
+}
+
 fun toParameter(
-    x: Any,
+    type: ParameterType,
     name: String,
     visibleName: String,
     defaultValue: String,
     actionsStubs: List<PresetScript>
 ): Either<String, Parameter> =
-    when (x.toString()) {
-        IntegerParameter.typeName -> defaultValue.toIntOrNull().toOption().fold(
+    when (type) {
+        ParameterType.INTEGER -> defaultValue.toIntOrNull().toOption().fold(
             { Left("$defaultValue is not an integer") },
             {
                 Right(
@@ -259,7 +274,7 @@ fun toParameter(
                     )
                 )
             })
-        StringParameter.typeName -> Right(
+        ParameterType.STRING -> Right(
             StringParameter(
                 name = name,
                 visibleName = visibleName,
@@ -267,7 +282,7 @@ fun toParameter(
                 actionsStubs = actionsStubs
             )
         )
-        DoubleParameter.typeName -> defaultValue.toDoubleOrNull().toOption().fold(
+        ParameterType.DOUBLE -> defaultValue.toDoubleOrNull().toOption().fold(
             { Left("$defaultValue is not a double") },
             {
                 Right(
@@ -279,7 +294,7 @@ fun toParameter(
                     )
                 )
             })
-        BooleanParameter.typeName -> Right(
+        ParameterType.BOOLEAN -> Right(
             BooleanParameter(
                 name = name,
                 visibleName = visibleName,
@@ -287,6 +302,5 @@ fun toParameter(
                 actionsStubs = actionsStubs
             )
         )
-        else -> Left("Unknown type")
     }
 
