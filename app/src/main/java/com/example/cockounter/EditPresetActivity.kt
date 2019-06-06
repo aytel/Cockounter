@@ -364,7 +364,7 @@ private class EditPresetUI(
                     title = "Edit preset"
                     menu.apply {
                         add("Save").apply {
-                            setIcon(R.drawable.ic_done_black_24dp)
+                            //setIcon(R.drawable.ic_done_black_24dp)
                             setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS)
                             setOnMenuItemClickListener {
                                 owner.save(presetName.text.toString(), presetDescription.text.toString())
@@ -465,7 +465,7 @@ private class EditPresetUI(
                         }
                     }
                 }
-                imageResource = R.drawable.ic_add_white_24dp
+                //imageResource = R.drawable.ic_add_white_24dp
             }.lparams(width = wrapContent, height = wrapContent) {
                 gravity = Gravity.BOTTOM + Gravity.END
                 margin = dip(16)

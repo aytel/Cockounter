@@ -196,7 +196,7 @@ private class SelectPresetUI(val presetsAdapter: PresetInfoAdapter) : AnkoCompon
                     title = "Select preset"
                     menu.apply {
                         add("Import preset").apply {
-                            setIcon(R.drawable.ic_folder_open_black_24dp)
+                            //setIcon(R.drawable.ic_folder_open_black_24dp)
                             setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS)
                             setOnMenuItemClickListener {
                                 owner.loadPresetFromFile()
@@ -220,7 +220,7 @@ private class SelectPresetUI(val presetsAdapter: PresetInfoAdapter) : AnkoCompon
                 onClick {
                     owner.createPreset()
                 }
-                imageResource = R.drawable.ic_add_white_24dp
+                //imageResource = R.drawable.ic_add_white_24dp
             }.lparams {
                 width = wrapContent
                 height = wrapContent

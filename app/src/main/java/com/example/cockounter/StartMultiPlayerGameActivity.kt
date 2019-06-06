@@ -27,7 +27,7 @@ class StartMultiPlayerGameActivity : AppCompatActivity() {
                 }
                 yesButton {
                     if(name.text.toString() in players.map { it.name }) {
-                        val result = Intent();
+                        val result = Intent()
                         result.putExtra("names", players.map { it.name }.toTypedArray())
                         result.putExtra("roles", players.map { it.role }.toTypedArray())
                         result.putExtra("position", intent.getIntExtra("position", -1))
