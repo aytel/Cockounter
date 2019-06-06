@@ -9,7 +9,8 @@ import org.jetbrains.anko.linearLayout
 import org.jetbrains.anko.textView
 import org.jetbrains.anko.verticalLayout
 
-class StateCaptureAdapter(val list: MutableList<StateCapture>) : BaseAdapter() {
+class StateCaptureAdapter() : BaseAdapter() {
+    var list = listOf<StateCapture>()
     override fun getView(position: Int, convertView: View?, parent: ViewGroup?): View = with(parent!!.context) {
         linearLayout() {
             textView(list[position].name) {
@@ -26,4 +27,8 @@ class StateCaptureAdapter(val list: MutableList<StateCapture>) : BaseAdapter() {
     override fun getItemId(position: Int): Long = position.toLong()
 
     override fun getCount(): Int = list.size
+
+    fun update(list: List<StateCapture>) {
+        this.list = list
+    }
 }

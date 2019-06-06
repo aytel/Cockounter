@@ -37,97 +37,41 @@ fun <T> MutableLiveData<T>.notify() {
 }
 
 private class EditPresetViewModel() : ViewModel() {
-    val globalParametersList = MutableLiveData<MutableList<Parameter>>()
-    val rolesList = MutableLiveData<MutableList<Role>>()
-    val scriptsList = MutableLiveData<MutableList<PresetScript>>()
-    val librariesList = MutableLiveData<MutableList<Library>>()
+    val globalParameters = EditableList<Parameter>()
+    val roles = EditableList<Role>()
+    val scripts = EditableList<PresetScript>()
+    val libraries = EditableList<Library>()
     var name = ""
     var description = ""
-    var id: Int
-
-    init {
-        id = 0
-        globalParametersList.value = mutableListOf()
-        rolesList.value = mutableListOf()
-        scriptsList.value = mutableListOf()
-        librariesList.value = mutableListOf()
-    }
+    var id: Int = 0
 
     constructor(id: Int) : this() {
         this.id = id
         val presetInfo = doAsyncResult { Storage.getPresetInfoById(id) }.get()
         name = presetInfo.name
         description = presetInfo.description
-        globalParametersList.value = presetInfo.preset.globalParameters.values.toMutableList()
-        rolesList.value = presetInfo.preset.roles.values.toMutableList()
-        scriptsList.value = presetInfo.preset.actionsStubs.toMutableList()
-        librariesList.value = presetInfo.preset.libraries.toMutableList()
+        globalParameters.addAll(presetInfo.preset.globalParameters.values)
+        roles.addAll(presetInfo.preset.roles.values)
+        scripts.addAll(presetInfo.preset.actionsStubs)
+        libraries.addAll(presetInfo.preset.libraries)
     }
 
-    fun addGlobalParameter(parameter: Parameter) {
-        globalParametersList.value?.add(parameter)
-        globalParametersList.notify()
-    }
-
-    fun addRole(role: Role) {
-        rolesList.value!!.add(role)
-    }
-
-    fun addScript(script: PresetScript) {
-        scriptsList.value!!.add(script)
-    }
-
-    fun addLibrary(library: Library) {
-        librariesList.value!!.add(library)
-    }
-
-    fun changeGlobalParameter(index: Int, parameter: Parameter) {
-        globalParametersList.value!![index] = parameter
-    }
-
-    fun changeRole(index: Int, role: Role) {
-        rolesList.value!![index] = role
-    }
-
-    fun changeScript(index: Int, script: PresetScript) {
-        scriptsList.value!![index] = script
-    }
-
-    fun changeLibrary(index: Int, library: Library) {
-        librariesList.value!![index] = library
-    }
-
-    fun deleteGlobalParameter(index: Int) {
-        globalParametersList.value!!.removeAt(index)
-    }
-
-    fun deleteRole(index: Int) {
-        rolesList.value!!.removeAt(index)
-    }
-
-    fun deleteScript(index: Int) {
-        scriptsList.value!!.removeAt(index)
-    }
-
-    fun deleteLibrary(index: Int) {
-        librariesList.value!!.removeAt(index)
-    }
-
-    fun save(name: String, description: String) {
+    fun save() {
         val presetInfo = PresetInfo(
             id = id,
             name = name,
             description = description,
             preset = Preset(
-                globalParameters = globalParametersList.value!!.map { Pair(it.name, it) }.toMap(),
-                roles = rolesList.value!!.map { Pair(it.name, it) }.toMap(),
-                libraries = librariesList.value!!.toList(),
-                actionsStubs = scriptsList.value!!.toList()
+                globalParameters = globalParameters.data.map { Pair(it.name, it) }.toMap(),
+                roles = roles.data.map { Pair(it.name, it) }.toMap(),
+                libraries = libraries.data.toList(),
+                actionsStubs = scripts.data.toList()
             )
         )
-        doAsync {
+        doAsyncResult {
             Storage.insertPreset(presetInfo)
-        }
+            true
+        }.get()
     }
 }
 
@@ -204,10 +148,10 @@ class EditPresetActivity : AppCompatActivity() {
             ui = EditPresetUI(viewModel.name, viewModel.description, adapter)
         }
         ui.setContentView(this)
-        viewModel.globalParametersList.observe(this, Observer { list -> Log.i("s", "ss"); adapter.update(0, list.map{ElementViewer.Parameter(it)}) })
-        viewModel.rolesList.observe(this, Observer { list -> adapter.update(1, list.map { ElementViewer.Role(it) }) })
-        viewModel.scriptsList.observe(this, Observer { list -> adapter.update(2, list.map { ElementViewer.PresetScript(it) }) })
-        viewModel.librariesList.observe(this, Observer { list -> adapter.update(3, list.map { ElementViewer.Library(it) }) })
+        viewModel.globalParameters.liveData.observe(this, Observer { list -> Log.i("s", "ss"); adapter.update(0, list.map{ElementViewer.Parameter(it)}) })
+        viewModel.roles.liveData.observe(this, Observer { list -> adapter.update(1, list.map { ElementViewer.Role(it) }) })
+        viewModel.scripts.liveData.observe(this, Observer { list -> adapter.update(2, list.map { ElementViewer.PresetScript(it) }) })
+        viewModel.libraries.liveData.observe(this, Observer { list -> adapter.update(3, list.map { ElementViewer.Library(it) }) })
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -216,38 +160,38 @@ class EditPresetActivity : AppCompatActivity() {
         }
         when (requestCode) {
             CODE_SHARED_PARAMETER_ADDED -> if (resultCode == Activity.RESULT_OK) {
-                viewModel.addGlobalParameter(data.getSerializableExtra(EditParameterActivity.RETURN_PARAMETER) as Parameter)
+                viewModel.globalParameters.add(data.getSerializableExtra(EditParameterActivity.RETURN_PARAMETER) as Parameter)
             }
             CODE_ROLE_ADDED -> if (resultCode == Activity.RESULT_OK) {
-                viewModel.addRole(data.getSerializableExtra(EditRoleActivity.RETURN_ROLE) as Role)
+                viewModel.roles.add(data.getSerializableExtra(EditRoleActivity.RETURN_ROLE) as Role)
             }
             CODE_SHARED_PARAMETER_CHANGED -> if (resultCode == Activity.RESULT_OK) {
                 val index = data.getIntExtra(EditParameterActivity.RETURN_POSITION, -1)
-                viewModel.changeGlobalParameter(index, data.getSerializableExtra(EditParameterActivity.RETURN_PARAMETER) as Parameter)
+                viewModel.globalParameters[index] = data.getSerializableExtra(EditParameterActivity.RETURN_PARAMETER) as Parameter
             }
             CODE_ROLE_CHANGED -> if (resultCode == Activity.RESULT_OK) {
                 val index = data.getIntExtra(EditRoleActivity.RETURN_POSITION, -1)
-                viewModel.changeRole(index, data.getSerializableExtra(EditRoleActivity.RETURN_ROLE) as Role)
+                viewModel.roles[index] = data.getSerializableExtra(EditRoleActivity.RETURN_ROLE) as Role
             }
             CODE_SCRIPT_ADDED -> if (resultCode == Activity.RESULT_OK) {
-                viewModel.addScript(data.getSerializableExtra(EditPresetScriptActivity.RETURN_PRESET_SCRIPT) as PresetScript)
+                viewModel.scripts.add(data.getSerializableExtra(EditPresetScriptActivity.RETURN_PRESET_SCRIPT) as PresetScript)
             }
             CODE_SCRIPT_CHANGED -> if (resultCode == Activity.RESULT_OK) {
                 val index = data.getIntExtra(EditPresetScriptActivity.RETURN_POSITION, -1)
-                viewModel.changeScript(index, data.getSerializableExtra(EditPresetScriptActivity.RETURN_PRESET_SCRIPT) as PresetScript)
+                viewModel.scripts[index] = data.getSerializableExtra(EditPresetScriptActivity.RETURN_PRESET_SCRIPT) as PresetScript
             }
             CODE_LOAD_LIBRARY -> if (resultCode == Activity.RESULT_OK) {
                 val uri = data.data!!
                 loadLibrary(this, uri).fold({
                     alert(it.message!!).show()
                 }, {
-                    viewModel.addLibrary(Library("lib", it))
+                    viewModel.libraries.add(Library("lib", it))
                 })
             }
             CODE_ADD_LIBRARY -> if (resultCode == Activity.RESULT_OK) {
                 val name = data.getStringExtra(EditLibraryActivity.RETURN_NAME)
                 val source = data.getStringExtra(EditLibraryActivity.RETURN_SOURCE)
-                viewModel.addLibrary(Library(name, source))
+                viewModel.libraries.add(Library(name, source))
             }
         }
     }
@@ -255,14 +199,14 @@ class EditPresetActivity : AppCompatActivity() {
     fun editParameter(index: Int) {
         startActivityForResult(
             intentFor<EditParameterActivity>(
-                EditParameterActivity.ARG_PARAMETER to viewModel.globalParametersList.value!![index],
+                EditParameterActivity.ARG_PARAMETER to viewModel.globalParameters[index],
                 EditParameterActivity.ARG_POSITION to index
             ), CODE_SHARED_PARAMETER_CHANGED
         )
     }
 
     fun deleteParameter(index: Int) {
-        viewModel.deleteGlobalParameter(index)
+        viewModel.globalParameters.removeAt(index)
     }
 
     fun addParameter() {
@@ -277,14 +221,14 @@ class EditPresetActivity : AppCompatActivity() {
     fun editRole(index: Int) {
         startActivityForResult(
             intentFor<EditRoleActivity>(
-                EditRoleActivity.ARG_ROLE to viewModel.rolesList.value!![index],
+                EditRoleActivity.ARG_ROLE to viewModel.roles[index],
                 EditRoleActivity.ARG_POSITION to index
             ), CODE_ROLE_CHANGED
         )
     }
 
     fun deleteRole(index: Int) {
-        viewModel.deleteRole(index)
+        viewModel.roles.removeAt(index)
     }
 
     fun addRole() {
@@ -298,14 +242,14 @@ class EditPresetActivity : AppCompatActivity() {
     fun editScript(index: Int) {
         startActivityForResult(
             intentFor<EditPresetScriptActivity>(
-                EditPresetScriptActivity.ARG_PRESET_SCRIPT to viewModel.scriptsList.value!![index],
+                EditPresetScriptActivity.ARG_PRESET_SCRIPT to viewModel.scripts[index],
                 EditPresetScriptActivity.ARG_POSITION to index
             ), CODE_SCRIPT_CHANGED
         )
     }
 
     fun deleteScript(index: Int) {
-        viewModel.deleteScript(index)
+        viewModel.scripts.removeAt(index)
     }
 
     fun addScript() {
@@ -315,8 +259,8 @@ class EditPresetActivity : AppCompatActivity() {
         )
     }
 
-    fun save(name: String, description: String) {
-        viewModel.save(name, description)
+    fun save() {
+        viewModel.save()
         setResult(Activity.RESULT_OK)
         finish()
     }
@@ -343,12 +287,6 @@ class EditPresetActivity : AppCompatActivity() {
 private class EditPresetUI(
     val name: String,
     val description: String,
-    /*
-    val globalParametersAdapter: ParameterAdapter,
-    val rolesAdapter: ArrayAdapter<Role>,
-    val scriptsAdapter: PresetScriptAdapter,
-    val librariesAdapter: ArrayAdapter<Library>
-    */
     val expandableAdapter: BaseExpandableListAdapter
 ) : AnkoComponent<EditPresetActivity> {
     private lateinit var presetName: EditText
@@ -367,7 +305,7 @@ private class EditPresetUI(
                             //setIcon(R.drawable.ic_done_black_24dp)
                             setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS)
                             setOnMenuItemClickListener {
-                                owner.save(presetName.text.toString(), presetDescription.text.toString())
+                                owner.save()
                                 true
                             }
                         }
@@ -375,60 +313,6 @@ private class EditPresetUI(
                 }.lparams(width = matchParent, height = wrapContent) {
                     scrollFlags = 0
                 }
-            /*
-            scrollView {
-                verticalLayout {
-                    presetName = editText(presetInfo?.name ?: "") {
-                        hint = "Name"
-                    }
-                    presetDescription = editText(presetInfo?.description ?: "") {
-                        hint = "Description"
-                    }
-                    textView("Global counters")
-                    listView {
-                        adapter = globalParametersAdapter
-                        onItemLongClick { _, _, index, _ ->
-                            selector(null, listOf("Edit", "Delete")) { _, i ->
-                                when (i) {
-                                    0 -> owner.editParameter(index)
-                                    1 -> owner.deleteParameter(index)
-                                }
-                            }
-                        }
-                    }
-                    listView {
-                        adapter = rolesAdapter
-                        onItemLongClick { _, _, index, _ ->
-                            selector(null, listOf("Edit", "Delete")) { _, i ->
-                                when (i) {
-                                    0 -> owner.editRole(index)
-                                    1 -> owner.deleteRole(index)
-                                }
-                            }
-                        }
-                    }
-                    listView {
-                        adapter = scriptsAdapter
-                        onItemLongClick { _, _, index, _ ->
-                            selector(null, listOf("Edit", "Delete")) { _, i ->
-                                when (i) {
-                                    0 -> owner.editScript(index)
-                                    1 -> owner.deleteScript(index)
-                                }
-                            }
-                        }
-                    }
-                    listView {
-                        adapter = librariesAdapter
-                    }
-                }
-                //expandableListView {
-                //
-                //}
-            }.lparams() {
-                behavior = AppBarLayout.ScrollingViewBehavior()
-            }
-            */
             }
             verticalLayout {
                 presetName = editText(name) {

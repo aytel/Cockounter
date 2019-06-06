@@ -189,7 +189,7 @@ sealed class ParameterPointer : Serializable {
 
 data class PresetScript(
     val visibleName: String,
-    val functionName: String?,
+    //val functionName: String?,
     val script: String,
     val context: ScriptContextDescription
 ) : Serializable {

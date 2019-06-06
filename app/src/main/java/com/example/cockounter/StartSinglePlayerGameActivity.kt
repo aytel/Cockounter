@@ -17,21 +17,16 @@ import org.jetbrains.anko.sdk27.coroutines.onClick
 import kotlin.properties.Delegates
 
 private class StartSinglePlayerGameViewModel(roles: Array<String>) : ViewModel() {
-    val players: MutableLiveData<MutableList<PlayerDescription>> by lazy { MutableLiveData<MutableList<PlayerDescription>>() }
+    val players = EditableList<PlayerDescription>()
     val roles: List<String> = roles.toList()
 
-    init {
-        players.value = mutableListOf()
-    }
-
-
     fun addNewPlayer(name: String, role: String): Option<String> {
-        val usedNames = players.value!!.map { it.name }
+        val usedNames = players.data.map { it.name }
         return when (name) {
             "" -> Some("Empty name")
             in usedNames -> Some("Name is already used")
             else -> {
-                players.value!!.add(PlayerDescription(name, role))
+                players.add(PlayerDescription(name, role))
                 None
             }
         }
@@ -56,7 +51,7 @@ open class StartSinglePlayerGameActivity : AppCompatActivity() {
             }
 
         }).get(StartSinglePlayerGameViewModel::class.java)
-        viewModel.players.observe(this, Observer { list -> playersAdapter.update(list) })
+        viewModel.players.liveData.observe(this, Observer { list -> playersAdapter.update(list) })
         StartSinglePlayerGameUI(playersAdapter).setContentView(this)
     }
 
@@ -84,8 +79,8 @@ open class StartSinglePlayerGameActivity : AppCompatActivity() {
 
     open fun startGame() {
         val result = Intent();
-        result.putExtra(RETURN_NAMES, viewModel.players.value!!.map { it.name }.toTypedArray())
-        result.putExtra(RETURN_ROLES, viewModel.players.value!!.map { it.role }.toTypedArray())
+        result.putExtra(RETURN_NAMES, viewModel.players.data.map { it.name }.toTypedArray())
+        result.putExtra(RETURN_ROLES, viewModel.players.data.map { it.role }.toTypedArray())
         setResult(Activity.RESULT_OK, result)
         finish()
     }

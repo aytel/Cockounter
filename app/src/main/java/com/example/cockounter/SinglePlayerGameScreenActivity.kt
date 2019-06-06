@@ -1,5 +1,6 @@
 package com.example.cockounter
 
+import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -26,6 +27,7 @@ import com.example.cockounter.adapters.ExpandablePlayerRepresentationAdapter
 import com.example.cockounter.core.*
 import com.example.cockounter.script.Action
 import com.example.cockounter.script.Evaluation
+import com.example.cockounter.script.buildInteractionFunctionsWithContext
 import com.example.cockounter.script.buildScriptEvaluation
 import com.example.cockounter.storage.Storage
 import com.google.android.material.appbar.AppBarLayout
@@ -78,17 +80,21 @@ private class SinglePlayerGameScreenViewModel() : ViewModel() {
             return false
         } else {
             state.value = stack.pop()
-            return true;
+            return true
         }
     }
 
-    fun performAction(action: Action, evaluator: (Action) -> Try<Evaluation>): Option<String> {
+    fun performAction(action: Action, evaluator: (Action) -> Try<Evaluation>, context: Context): Option<String> {
         try {
             evaluator(action).flatMap { it(state.value!!) }.fold({
                 return Some(it.message ?: "")
             }, {
                 stack.push(state.value!!)
-                state.value = it
+                with(context) {
+                    runOnUiThread {
+                        state.value = it
+                    }
+                }
                 return None
             })
         } catch (e: Exception) {
@@ -113,7 +119,6 @@ private class SinglePlayerGameScreenViewModel() : ViewModel() {
                 currentLayout = LayoutType.BY_PLAYER
             }
         }
-
     }
 }
 
@@ -140,7 +145,7 @@ class SinglePlayerGameScreenActivity : AppCompatActivity(), GameHolder, ActionPe
 
     override fun performAction(action: Action) {
         doAsync {
-            when (val result = viewModel.performAction(action, evaluator)) {
+            when (val result = viewModel.performAction(action, evaluator, this@SinglePlayerGameScreenActivity)) {
                 is Some -> {
                     runOnUiThread {
                         scriptFailure(result.t)
@@ -305,7 +310,7 @@ class PlayerGameScreenFragment : Fragment(), ActionPerformer {
         }
     }
 
-    fun getState() = (act as SinglePlayerGameScreenActivity).getState()
+    fun getState() = (act as GameHolder).getState()
 
     override fun performAction(action: Action) {
         (act as ActionPerformer).performAction(action)

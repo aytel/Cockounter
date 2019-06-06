@@ -1,7 +1,9 @@
 package com.example.cockounter
 
+import android.content.Context
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.view.MenuItem
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -36,7 +38,7 @@ private class MultiPlayerGameViewModel() : ViewModel() {
     lateinit var representation: MutableLiveData<GameRepresentation>
     lateinit var evaluator: ScriptEvaluation
     private lateinit var name: String
-    private lateinit var uuid: UUID
+    lateinit var uuid: UUID
     private var currentLayout = LayoutType.BY_PLAYER
 
     constructor(id: Int, names: Array<String>, roles: Array<String>) : this() {
@@ -68,12 +70,14 @@ private class MultiPlayerGameViewModel() : ViewModel() {
         BY_PLAYER, BY_ROLE
     }
 
-    fun performAction(action: Action, evaluator: (Action) -> Try<Evaluation>): Option<String> {
+    fun performAction(action: Action, evaluator: (Action) -> Try<Evaluation>, context: Context): Option<String> {
         try {
             evaluator(action).flatMap { it(state.value!!) }.fold({
                 return Some(it.message ?: "")
             }, {
-                state.value = NetworkHandler.updateGameState(uuid, it)
+                context.runOnUiThread {
+                    state.value = NetworkHandler.updateGameState(uuid, it)
+                }
                 return None
             })
         } catch (e: Exception) {
@@ -93,6 +97,13 @@ private class MultiPlayerGameViewModel() : ViewModel() {
             }
         }
 
+    }
+
+    fun updateState(context: Context) {
+        val data = NetworkHandler.getGameState(uuid)
+        context.runOnUiThread {
+            state.value = data
+        }
     }
 }
 
@@ -167,6 +178,20 @@ class MultiplayerGameActivity : AppCompatActivity(), GameHolder, ActionPerformer
                                 true
                             }
                         }
+                        add("Show uuid").apply {
+                            setOnMenuItemClickListener {
+                                showUUID()
+                                true
+                            }
+                        }
+                        add("Update").apply {
+                            setIcon(R.drawable.ic_refresh_black_24dp)
+                            setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS)
+                            setOnMenuItemClickListener {
+                                updateState()
+                                true
+                            }
+                        }
                     }
 
                 }
@@ -189,12 +214,22 @@ class MultiplayerGameActivity : AppCompatActivity(), GameHolder, ActionPerformer
     }
 
     override fun performAction(action: Action) {
-        when(val result = viewModel.performAction(action, evaluator)) {
+        when(val result = doAsyncResult { viewModel.performAction(action, evaluator, this@MultiplayerGameActivity) }.get()) {
             is Some -> scriptFailure(result.t)
         }
     }
 
     private fun changeLayout() {
         viewModel.changeLayout()
+    }
+
+    private fun showUUID() {
+        alert {
+            message = viewModel.uuid.toString()
+        }.show()
+    }
+
+    private fun updateState() {
+        viewModel.updateState(this)
     }
 }

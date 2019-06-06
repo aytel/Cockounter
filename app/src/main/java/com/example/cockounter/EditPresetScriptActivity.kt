@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Log
 import android.view.MenuItem
 import android.view.View
 import android.widget.ArrayAdapter
@@ -17,19 +18,18 @@ import org.jetbrains.anko.*
 import org.jetbrains.anko.design.appBarLayout
 import org.jetbrains.anko.design.coordinatorLayout
 import org.jetbrains.anko.sdk27.coroutines.onClick
+import org.jetbrains.anko.sdk27.coroutines.onItemSelectedListener
 import org.jetbrains.anko.sdk27.coroutines.textChangedListener
 import java.text.FieldPosition
 
 private class EditPresetScriptViewModel() : ViewModel() {
     var visibleName: String = ""
-    var functionName: String = ""
     var script: String = ""
     var context: ScriptContextDescription = ScriptContextDescription.NONE
     var contextPosition = 0
 
     constructor(presetScript: PresetScript) : this() {
         visibleName = presetScript.visibleName
-        functionName = presetScript.functionName ?: ""
         script = presetScript.script
         context = presetScript.context
     }
@@ -62,7 +62,7 @@ class EditPresetScriptActivity : AppCompatActivity() {
         }
         val contextAdapter = ArrayAdapter(this, android.R.layout.simple_list_item_1, ScriptContextDescription.values())
         with(viewModel) {
-            EditButtonDescriptionUI(visibleName, functionName, script, contextPosition)
+            EditButtonDescriptionUI(visibleName, script, contextPosition)
         }.setContentView(this)
     }
 
@@ -76,7 +76,6 @@ class EditPresetScriptActivity : AppCompatActivity() {
         result.run {
             putExtra(RETURN_PRESET_SCRIPT, PresetScript(
                 visibleName = viewModel.visibleName,
-                functionName = if (viewModel.functionName.isNotBlank()) viewModel.functionName else null,
                 script = viewModel.script,
                 context = viewModel.context
             ))
@@ -90,10 +89,6 @@ class EditPresetScriptActivity : AppCompatActivity() {
         viewModel.visibleName = name
     }
 
-    fun updateFunctionName(functionName: String) {
-        viewModel.functionName = functionName
-    }
-
     fun updateScript(script: String) {
         viewModel.script = script
     }
@@ -101,10 +96,11 @@ class EditPresetScriptActivity : AppCompatActivity() {
     fun updateContext(context: ScriptContextDescription, position: Int) {
         viewModel.context = context
         viewModel.contextPosition = position
+        Log.d("pos", position.toString())
     }
 }
 
-class EditButtonDescriptionUI(val name: String, val functionName: String, val script: String, val typePosition: Int) : AnkoComponent<EditPresetScriptActivity> {
+class EditButtonDescriptionUI(val name: String, val script: String, val typePosition: Int) : AnkoComponent<EditPresetScriptActivity> {
     override fun createView(ui: AnkoContext<EditPresetScriptActivity>): View = with(ui) {
          coordinatorLayout {
              appBarLayout {
@@ -145,16 +141,15 @@ class EditButtonDescriptionUI(val name: String, val functionName: String, val sc
                          }
                      }
                  }
-                 editText(functionName) {
-                     hint = "Function name"
-                     textChangedListener {
-                         onTextChanged { chars, _, _, _ ->
-                             owner.updateFunctionName(text.toString())
-                         }
-                     }
-                 }
                  val spinner = spinner {
                      adapter = ArrayAdapter(owner, android.R.layout.simple_list_item_1, ScriptContextDescription.values())
+                     setSelection(typePosition)
+                     onItemSelectedListener {
+                         onItemSelected { _, _, i, _ ->
+                             owner.updateContext(selectedItem as ScriptContextDescription, i)
+                         }
+                     }
+
                  }
                  editText(script) {
                      hint = "script"
