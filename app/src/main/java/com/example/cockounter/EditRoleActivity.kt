@@ -28,6 +28,7 @@ import org.jetbrains.anko.*
 import org.jetbrains.anko.design.appBarLayout
 import org.jetbrains.anko.design.coordinatorLayout
 import org.jetbrains.anko.design.floatingActionButton
+import org.jetbrains.anko.sdk27.coroutines.onChildClick
 import org.jetbrains.anko.sdk27.coroutines.onClick
 import org.jetbrains.anko.sdk27.coroutines.textChangedListener
 
@@ -115,7 +116,7 @@ class EditRoleActivity : AppCompatActivity() {
     interface HeaderShow : ListHeaderShow<HeaderViewer> {
         override fun HeaderViewer.buildView(context: Context, isSelected: Boolean): View = when(this) {
             HeaderViewer.SharedParameter -> SimpleHeader.listHeaderShow().run { SimpleHeader("Shared parameters").buildView(context, isSelected) }
-            HeaderViewer.PrivateParameter -> SimpleHeader.listHeaderShow().run { SimpleHeader("Roles").buildView(context, isSelected) }
+            HeaderViewer.PrivateParameter -> SimpleHeader.listHeaderShow().run { SimpleHeader("Private parameters").buildView(context, isSelected) }
             HeaderViewer.PresetScript -> SimpleHeader.listHeaderShow().run { SimpleHeader("Actions").buildView(context, isSelected) }
         }
     }
@@ -215,6 +216,33 @@ class EditRoleActivity : AppCompatActivity() {
         viewModel.scripts.removeAt(index)
     }
 
+    fun processSharedParameter(index: Int) {
+        selector(null, listOf("Edit", "Delete")) { _, i ->
+            when (i) {
+                0 -> editSharedParameter(index)
+                1 -> deleteSharedParameter(index)
+            }
+        }
+    }
+
+    fun processPrivateParameter(index: Int) {
+        selector(null, listOf("Edit", "Delete")) { _, i ->
+            when (i) {
+                0 -> editPrivateParameter(index)
+                1 -> deletePrivateParameter(index)
+            }
+        }
+    }
+
+    fun processScript(index: Int) {
+        selector(null, listOf("Edit", "Delete")) { _, i ->
+            when (i) {
+                0 -> editAction(index)
+                1 -> deleteAction(index)
+            }
+        }
+    }
+
     fun save() {
         val result = Intent()
         val sharedParameters = viewModel.sharedParameters.data
@@ -311,6 +339,12 @@ private class EditRoleUI(
                 }
                 expandableListView {
                     setAdapter(expandableAdapter)
+                    onChildClick { _, _, groupPosition, childPosition, _ ->
+                        when(groupPosition) {
+
+                        }
+
+                    }
                 }
             }.lparams(width = matchParent, height = matchParent) {
                 behavior = AppBarLayout.ScrollingViewBehavior()

@@ -207,7 +207,18 @@ fun Role.privateParameterPointers(): List<ParameterPointer> =
 
 
 enum class ScriptContextDescription : Serializable {
-    NONE, SINGLE_PARAMETER, PLAYER_ONLY, ALL
+    NONE {
+        override fun toString(): String = "Nothing"
+    },
+    SINGLE_PARAMETER {
+        override fun toString(): String = "Single parameter (x)"
+    },
+    PLAYER_ONLY {
+        override fun toString(): String = "Current player only"
+    },
+    ALL {
+        override fun toString(): String = "All parameters"
+    }
 }
 
 sealed class ActionButtonModel : Serializable {

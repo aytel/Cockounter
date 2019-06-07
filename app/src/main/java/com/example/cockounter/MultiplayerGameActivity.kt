@@ -1,6 +1,8 @@
 package com.example.cockounter
 
 import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.Color
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.MenuItem
@@ -23,6 +25,8 @@ import com.example.cockounter.script.buildScriptEvaluation
 import com.example.cockounter.storage.Storage
 import com.google.android.material.appbar.AppBarLayout
 import com.google.android.material.tabs.TabLayout
+import com.google.zxing.BarcodeFormat
+import com.google.zxing.qrcode.QRCodeWriter
 import io.ktor.client.HttpClient
 import org.jetbrains.anko.*
 import org.jetbrains.anko.design.appBarLayout
@@ -225,7 +229,19 @@ class MultiplayerGameActivity : AppCompatActivity(), GameHolder, ActionPerformer
 
     private fun showUUID() {
         alert {
-            message = viewModel.uuid.toString()
+            val qr = QRCodeWriter().encode(viewModel.uuid.toString(), BarcodeFormat.QR_CODE, 512, 512)
+            val bitmap = Bitmap.createBitmap(qr.width, qr.height, Bitmap.Config.RGB_565)
+            for(i in 0..(qr.width - 1)) {
+                for(j in 0..(qr.height - 1)) {
+                    bitmap.setPixel(i, j, if(qr.get(i, j)) Color.BLACK else Color.WHITE)
+                }
+            }
+            customView {
+                imageView {
+                    setImageBitmap(bitmap)
+                }
+            }
+
         }.show()
     }
 

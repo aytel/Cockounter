@@ -27,7 +27,6 @@ import com.example.cockounter.adapters.ExpandablePlayerRepresentationAdapter
 import com.example.cockounter.core.*
 import com.example.cockounter.script.Action
 import com.example.cockounter.script.Evaluation
-import com.example.cockounter.script.buildInteractionFunctionsWithContext
 import com.example.cockounter.script.buildScriptEvaluation
 import com.example.cockounter.storage.Storage
 import com.google.android.material.appbar.AppBarLayout

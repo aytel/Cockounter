@@ -29,6 +29,7 @@ import org.jetbrains.anko.*
 import org.jetbrains.anko.design.appBarLayout
 import org.jetbrains.anko.design.coordinatorLayout
 import org.jetbrains.anko.design.floatingActionButton
+import org.jetbrains.anko.sdk27.coroutines.onChildClick
 import org.jetbrains.anko.sdk27.coroutines.onClick
 import org.jetbrains.anko.sdk27.coroutines.textChangedListener
 
@@ -79,6 +80,7 @@ private class EditPresetViewModel() : ViewModel() {
 class EditPresetActivity : AppCompatActivity() {
     private lateinit var viewModel: EditPresetViewModel
     private lateinit var adapter: EditPresetAdapter<HeaderViewer, ElementViewer>
+    private var selectedPosition: Int = -1
 
     sealed class ElementViewer {
         data class Parameter(val parameter: com.example.cockounter.core.Parameter) : ElementViewer()
@@ -126,6 +128,7 @@ class EditPresetActivity : AppCompatActivity() {
         private const val CODE_SCRIPT_CHANGED = 5
         private const val CODE_LOAD_LIBRARY = 6
         private const val CODE_ADD_LIBRARY = 7
+        private const val CODE_LIBRARY_CHANGED = 8
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -193,6 +196,11 @@ class EditPresetActivity : AppCompatActivity() {
                 val source = data.getStringExtra(EditLibraryActivity.RETURN_SOURCE)
                 viewModel.libraries.add(Library(name, source))
             }
+            CODE_LIBRARY_CHANGED -> if(resultCode == Activity.RESULT_OK) {
+                val name = data.getStringExtra(EditLibraryActivity.RETURN_NAME)
+                val source = data.getStringExtra(EditLibraryActivity.RETURN_SOURCE)
+                viewModel.libraries[selectedPosition] = Library(name, source)
+            }
         }
     }
 
@@ -259,6 +267,17 @@ class EditPresetActivity : AppCompatActivity() {
         )
     }
 
+    fun editLibrary(index: Int) {
+        selectedPosition = index
+        startActivityForResult(intentFor<EditLibraryActivity>(EditLibraryActivity.ARG_NAME to viewModel.libraries[index].name,
+            EditLibraryActivity.ARG_SOURCE to viewModel.libraries[index].script), CODE_LIBRARY_CHANGED)
+
+    }
+
+    fun deleteLibrary(index: Int) {
+        viewModel.libraries.removeAt(index)
+    }
+
     fun save() {
         viewModel.save()
         setResult(Activity.RESULT_OK)
@@ -282,6 +301,42 @@ class EditPresetActivity : AppCompatActivity() {
     fun updateDescription(description: String) {
         viewModel.description = description
     }
+
+    fun processParameter(index: Int) {
+        selector(null, listOf("Edit", "Delete")) { _, i ->
+            when (i) {
+                0 -> editParameter(index)
+                1 -> deleteParameter(index)
+            }
+        }
+    }
+
+    fun processRole(index: Int) {
+        selector(null, listOf("Edit", "Delete")) { _, i ->
+            when (i) {
+                0 -> editRole(index)
+                1 -> deleteRole(index)
+            }
+        }
+    }
+
+    fun processScript(index: Int) {
+        selector(null, listOf("Edit", "Delete")) { _, i ->
+            when (i) {
+                0 -> editScript(index)
+                1 -> deleteScript(index)
+            }
+        }
+    }
+
+    fun processLibrary(index: Int) {
+        selector(null, listOf("Edit", "Delete")) { _, i ->
+            when (i) {
+                0 -> editLibrary(index)
+                1 -> deleteLibrary(index)
+            }
+        }
+    }
 }
 
 private class EditPresetUI(
@@ -302,7 +357,7 @@ private class EditPresetUI(
                     title = "Edit preset"
                     menu.apply {
                         add("Save").apply {
-                            //setIcon(R.drawable.ic_done_black_24dp)
+                            setIcon(R.drawable.ic_done_black_24dp)
                             setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS)
                             setOnMenuItemClickListener {
                                 owner.save()
@@ -333,6 +388,14 @@ private class EditPresetUI(
                 }
                 expandableListView {
                     setAdapter(expandableAdapter)
+                    onChildClick { _, _, groupPosition, childPosition, _ ->
+                        when(groupPosition) {
+                            0 -> owner.processParameter(childPosition)
+                            1 -> owner.processRole(childPosition)
+                            2 -> owner.processScript(childPosition)
+                            3 -> owner.processLibrary(childPosition)
+                        }
+                    }
                 }
             }.lparams(width = matchParent, height = matchParent) {
                 behavior = AppBarLayout.ScrollingViewBehavior()
@@ -349,7 +412,7 @@ private class EditPresetUI(
                         }
                     }
                 }
-                //imageResource = R.drawable.ic_add_white_24dp
+                imageResource = R.drawable.ic_add_white_24dp
             }.lparams(width = wrapContent, height = wrapContent) {
                 gravity = Gravity.BOTTOM + Gravity.END
                 margin = dip(16)
