@@ -69,6 +69,7 @@ class JoinGameActivity : AppCompatActivity() {
             CODE_SCAN_QR_CODE -> if (resultCode == Activity.RESULT_OK) {
                 val message = data.getSerializableExtra(QRCodeScannerActivity.RESULT_SCANNED_MESSAGE) as String
                 toast(message)
+                joinGame("df", message)
             }
         }
     }
