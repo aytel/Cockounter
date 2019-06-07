@@ -4,13 +4,12 @@ import android.util.Log
 import android.view.View
 import android.view.ViewGroup
 import android.widget.BaseExpandableListAdapter
+import com.example.cockounter.core.GameState
+import com.example.cockounter.script.Action
 
-class EditPresetAdapter<H, E>(
-    val headers: List<H>,
-    val listElementShow: ListElementShow<E>,
-    val listHeaderShow: ListHeaderShow<H>
-) : BaseExpandableListAdapter() {
-    val groups: MutableList<List<E>> = headers.map { listOf<E>() }.toMutableList()
+class ExpandableGameAdapter<H, E>(val headers: List<H>, val listHeaderShow: ListHeaderShow<H>, val gameElementShow: GameElementShow<E>, val state: GameState, val perform: (Action) -> Unit) : BaseExpandableListAdapter(){
+    private val groups: MutableList<List<E>> = headers.map { listOf<E>() }.toMutableList()
+
 
     override fun getGroup(groupPosition: Int): Any = groups[groupPosition]
 
@@ -34,15 +33,9 @@ class EditPresetAdapter<H, E>(
         isLastChild: Boolean,
         convertView: View?,
         parent: ViewGroup?
-    ): View = listElementShow.run { groups[groupPosition][childPosition].buildView(parent!!.context) }
+    ): View = gameElementShow.run { groups[groupPosition][childPosition].buildView(parent!!.context, state, perform) }
 
     override fun getChildId(groupPosition: Int, childPosition: Int): Long = childPosition.toLong()
 
     override fun getGroupCount(): Int = headers.size
-
-    fun update(groupPosition: Int, list: List<E>) {
-        Log.i("s", list.toString())
-        groups[groupPosition] = list
-        notifyDataSetChanged()
-    }
 }

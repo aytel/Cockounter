@@ -16,7 +16,9 @@ data class PlayerRepresentation(
     val sharedParameters: List<ParameterRepresentation>,
     val privateParameters: List<ParameterRepresentation>,
     val freeButtons: List<ActionButtonRepresentation>
-)
+) {
+    companion object
+}
 
 data class RoleRepresentation(
     val role: String,
@@ -24,25 +26,35 @@ data class RoleRepresentation(
     val sharedParameters: List<ParameterRepresentation>,
     val privateParameterBlocks: List<PrivateParameterBlockRepresentation>,
     val freeButtons: List<ActionButtonRepresentation>
-)
+) {
+    companion object
+}
 
 data class PrivateParameterBlockRepresentation(
     val name: String,
     val parameters: List<GroupPrivateParameterRepresentation>
-)
+) {
+    companion object
+}
 
 data class GroupPrivateParameterRepresentation(
     val playerName: String,
     val parameter: ParameterRepresentation
-)
+) {
+    companion object
+}
 
 data class ParameterRepresentation(
     val name: String,
     val parameter: GameParameterPointer,
     val attachedButtons: List<ActionButtonRepresentation>
-)
+) {
+    companion object
+}
 
-data class ActionButtonRepresentation(val text: String, val action: Action)
+data class ActionButtonRepresentation(val text: String, val action: Action) {
+    companion object
+}
 
 fun buildContext(
     context: ScriptContextDescription,

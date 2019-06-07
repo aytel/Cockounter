@@ -1,49 +1,78 @@
 package com.example.cockounter.adapters
 
+import android.content.Context
 import android.view.View
 import android.view.ViewGroup
 import android.widget.BaseExpandableListAdapter
-import arrow.core.None
-import com.example.cockounter.core.*
+import com.example.cockounter.adapters.simpleheader.listHeaderShow.listHeaderShow
+import com.example.cockounter.core.ActionButtonRepresentation
+import com.example.cockounter.core.GameState
+import com.example.cockounter.core.ParameterRepresentation
+import com.example.cockounter.core.PlayerRepresentation
 import com.example.cockounter.script.Action
-import org.jetbrains.anko.*
-import org.jetbrains.anko.sdk27.coroutines.onClick
+
 
 class ExpandablePlayerRepresentationAdapter(
     private val representation: PlayerRepresentation,
-    private val getState: () -> GameState,
     private val perform: (Action) -> Unit
 ) : BaseExpandableListAdapter() {
 
-    override fun getGroup(groupPosition: Int): Any = when(groupPosition) {
-            0 -> representation.globalParameters
-            1 -> representation.sharedParameters
-            2 -> representation.privateParameters
-            3 -> representation.freeButtons
-            else -> None
+    sealed class ElementViewer {
+        data class Parameter(val parameter: ParameterRepresentation) : ElementViewer()
+        data class Button(val button: ActionButtonRepresentation) : ElementViewer()
+        companion object
+    }
+
+    interface ElementViewerGameElementShow : GameElementShow<ElementViewer> {
+        override fun ElementViewer.buildView(context: Context, gameState: GameState, perform: (Action) -> Unit): View = when(this) {
+            is ElementViewer.Parameter -> ParameterRepresentation.gameElementShow().run { parameter.buildView(context, gameState, perform) }
+            is ElementViewer.Button -> ActionButtonRepresentation.gameElementShow().run { button.buildView(context, gameState, perform) }
         }
+    }
+    fun ElementViewer.Companion.gameElementShow() = object : ElementViewerGameElementShow {}
+
+    sealed class HeaderViewer {
+        object GlobalParameters : HeaderViewer()
+        object SharedParameters : HeaderViewer()
+        object PrivateParameters : HeaderViewer()
+        object Buttons : HeaderViewer()
+        companion object
+    }
+
+    interface HeaderViewerListHeaderShow : ListHeaderShow<HeaderViewer> {
+        override fun HeaderViewer.buildView(context: Context, isSelected: Boolean): View = when(this){
+            HeaderViewer.GlobalParameters -> SimpleHeader.listHeaderShow().run { SimpleHeader("Global parameters").buildView(context, isSelected) }
+            HeaderViewer.SharedParameters -> SimpleHeader.listHeaderShow().run { SimpleHeader("Shared parameters").buildView(context, isSelected) }
+            HeaderViewer.PrivateParameters -> SimpleHeader.listHeaderShow().run { SimpleHeader("Private parameters").buildView(context, isSelected) }
+            HeaderViewer.Buttons -> SimpleHeader.listHeaderShow().run { SimpleHeader("Actions").buildView(context, isSelected) }
+        }
+    }
+    fun HeaderViewer.Companion.listHeaderShow() = object : HeaderViewerListHeaderShow {}
+
+    private val headers = listOf(HeaderViewer.GlobalParameters, HeaderViewer.SharedParameters, HeaderViewer.PrivateParameters, HeaderViewer.Buttons)
+    private val groups = headers.map { listOf<ElementViewer>() }.toMutableList()
+    private lateinit var state: GameState
+
+    init {
+        groups[0] = representation.globalParameters.map { ElementViewer.Parameter(it) }
+        groups[1] = representation.sharedParameters.map { ElementViewer.Parameter(it) }
+        groups[2] = representation.privateParameters.map { ElementViewer.Parameter(it) }
+        groups[3] = representation.freeButtons.map { ElementViewer.Button(it) }
+    }
+
+    override fun getGroup(groupPosition: Int): Any = groups[groupPosition]
 
     override fun isChildSelectable(groupPosition: Int, childPosition: Int): Boolean = true
 
     override fun hasStableIds(): Boolean = true
 
-    override fun getGroupView(groupPosition: Int, isExpanded: Boolean, convertView: View?, parent: ViewGroup?): View = with(parent!!.context) {
-        verticalLayout {
-            textView {
-                text = when(groupPosition) {
-                    0 -> "Global parameters"
-                    1 -> "Shared parameters"
-                    2 -> "Private parameters"
-                    3 -> "Actions"
-                    else -> "Nothing"
-                }
-            }
-        }
-    }
+    override fun getGroupView(groupPosition: Int, isExpanded: Boolean, convertView: View?, parent: ViewGroup?): View =
+        HeaderViewer.listHeaderShow().run { headers[groupPosition].buildView(parent!!.context, isExpanded) }
 
-    override fun getChildrenCount(groupPosition: Int): Int = (getGroup(groupPosition) as List<*>).size
 
-    override fun getChild(groupPosition: Int, childPosition: Int): Any = (getGroup(groupPosition) as List<*>)[childPosition]!!
+    override fun getChildrenCount(groupPosition: Int): Int = groups[groupPosition].size
+
+    override fun getChild(groupPosition: Int, childPosition: Int): Any = groups[groupPosition][childPosition]
 
     override fun getGroupId(groupPosition: Int): Long = groupPosition.toLong()
 
@@ -53,49 +82,15 @@ class ExpandablePlayerRepresentationAdapter(
         isLastChild: Boolean,
         convertView: View?,
         parent: ViewGroup?
-    ): View = with(parent!!.context) {
-        when(groupPosition) {
-            in 0..2 -> {
-                val item = getChild(groupPosition, childPosition) as ParameterRepresentation
-                val state = getState()
-                scrollView {
-                    linearLayout {
-                        verticalLayout {
-                            textView(item.name)
-                            textView(state[item.parameter].valueString())
-                        }
-                        item.attachedButtons.forEach {
-                            val action = it.action
-                            button(it.text) {
-                                onClick {
-                                    perform(action)
-                                }
-                            }
-                        }
-                        //button("test")
-                    }
-                }
-            }
-            3 -> {
-                val item = getChild(groupPosition, childPosition) as ActionButtonRepresentation
-                verticalLayout {
-                    button(item.text) {
-                        onClick {
-                            perform(item.action)
-                            toast("click")
-                        }
-                    }
-                }
-            }
-            else -> {
-                verticalLayout {
-                    textView("TODO")
-                }
-            }
-        }
-    }
+    ): View =
+        ElementViewer.gameElementShow().run { groups[groupPosition][childPosition].buildView(parent!!.context, state, perform) }
 
     override fun getChildId(groupPosition: Int, childPosition: Int): Long = childPosition.toLong()
 
-    override fun getGroupCount(): Int = 4;
+    override fun getGroupCount(): Int = headers.size;
+
+    fun update(state: GameState) {
+        this.state = state
+        notifyDataSetChanged()
+    }
 }

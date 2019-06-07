@@ -1,19 +1,13 @@
 package com.example.cockounter.adapters
 
 import android.content.Context
-import android.text.BoringLayout
 import android.util.Log
-import android.util.TypedValue
 import android.view.View
-import android.widget.ExpandableListView
-import androidx.constraintlayout.solver.Metrics
-import arrow.core.extensions.eq
 import arrow.extension
-import com.example.cockounter.core.Library
-import com.example.cockounter.core.Parameter
-import com.example.cockounter.core.PresetScript
-import com.example.cockounter.core.Role
+import com.example.cockounter.core.*
+import com.example.cockounter.script.Action
 import org.jetbrains.anko.*
+import org.jetbrains.anko.sdk27.coroutines.onClick
 
 interface ListElementShow<F> {
     fun F.buildView(context: Context): View
@@ -78,6 +72,48 @@ interface LibraryElementShow : ListElementShow<Library> {
 }
 
 //fun Library.Companion.listElementShow(): ListElementShow<Library> = object : LibraryElementShow {}
+
+interface GameElementShow<F> {
+    fun F.buildView(context: Context, gameState: GameState, perform: (Action) -> Unit): View
+}
+
+interface ParameterRepresentationElementShow : GameElementShow<ParameterRepresentation> {
+    override fun ParameterRepresentation.buildView(context: Context, gameState: GameState, perform: (Action) -> Unit): View = with(context) {
+            linearLayout {
+                verticalLayout {
+                    textView(name)
+                    textView(gameState[parameter].valueString())
+                }
+                horizontalScrollView {
+                    linearLayout {
+                        attachedButtons.forEach {
+                            val action = it.action
+                            button(it.text) {
+                                onClick {
+                                    perform(action)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+fun ParameterRepresentation.Companion.gameElementShow() = object : ParameterRepresentationElementShow {}
+
+interface ActionElementShow : GameElementShow<ActionButtonRepresentation> {
+    override fun ActionButtonRepresentation.buildView(context: Context, gameState: GameState, perform: (Action) -> Unit): View = with(context) {
+        verticalLayout {
+            button(text) {
+                onClick {
+                    perform(action)
+                    Log.d("Action", "Action: $text performed")
+                }
+            }
+        }
+    }
+}
+fun ActionButtonRepresentation.Companion.gameElementShow() = object : ActionElementShow {}
 
 
 interface ListHeaderShow<F> {

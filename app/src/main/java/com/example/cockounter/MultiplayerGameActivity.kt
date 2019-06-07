@@ -27,7 +27,6 @@ import com.google.android.material.appbar.AppBarLayout
 import com.google.android.material.tabs.TabLayout
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.qrcode.QRCodeWriter
-import io.ktor.client.HttpClient
 import org.jetbrains.anko.*
 import org.jetbrains.anko.design.appBarLayout
 import org.jetbrains.anko.design.coordinatorLayout
@@ -35,7 +34,7 @@ import org.jetbrains.anko.design.themedTabLayout
 import org.jetbrains.anko.support.v4.viewPager
 import java.util.*
 
-private class MultiPlayerGameViewModel() : ViewModel() {
+class MultiPlayerGameViewModel() : ViewModel() {
     lateinit var state: MutableLiveData<GameState>
     lateinit var preset: Preset
     lateinit var players: List<PlayerDescription>
@@ -159,10 +158,10 @@ class MultiplayerGameActivity : AppCompatActivity(), GameHolder, ActionPerformer
                 }).get(MultiPlayerGameViewModel::class.java)
             }
         }
-        viewModel.state.observe(this, androidx.lifecycle.Observer { _ -> pagerAdapter.notifyDataSetChanged() })
+        //viewModel.state.observe(this, androidx.lifecycle.Observer { _ -> pagerAdapter.notifyDataSetChanged() })
         viewModel.representation.observe(this, androidx.lifecycle.Observer { _ -> pagerAdapter.notifyDataSetChanged() })
         evaluator = viewModel.evaluator(this)
-        pagerAdapter = PlayerGameScreenAdapter(supportFragmentManager, getState, getRepresentation)
+        pagerAdapter = PlayerGameScreenAdapter(supportFragmentManager, getRepresentation)
 
         coordinatorLayout {
             lparams(matchParent, matchParent)

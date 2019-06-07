@@ -49,7 +49,7 @@ interface StateCaptureDao {
 
 class StateCaptureConverter {
     companion object {
-        val gson = GsonBuilder().registerTypeAdapter(GameParameter::class.java, InterfaceAdapter<GameParameter>())
+        val gson = GsonBuilder().setDateFormat("MMM d, y hh:mm:ss a").registerTypeAdapter(GameParameter::class.java, InterfaceAdapter<GameParameter>())
             .registerTypeAdapter(Parameter::class.java, InterfaceAdapter<Parameter>()).create()
 
         data class PlayersWrapper(val players: List<PlayerDescription>)

@@ -179,7 +179,9 @@ class SinglePlayerGameScreenActivity : AppCompatActivity(), GameHolder, ActionPe
     }
 
 
-    private val pagerAdapter by lazy { PlayerGameScreenAdapter(supportFragmentManager, getState, {viewModel.representation.value!!}) }
+    private val pagerAdapter by lazy { PlayerGameScreenAdapter(
+        supportFragmentManager,
+        {viewModel.representation.value!!}) }
     private lateinit var myTabLayout: TabLayout
     private lateinit var myViewPager: ViewPager
     private lateinit var viewModel: SinglePlayerGameScreenViewModel
@@ -212,7 +214,7 @@ class SinglePlayerGameScreenActivity : AppCompatActivity(), GameHolder, ActionPe
                 }).get(SinglePlayerGameScreenViewModel::class.java)
             }
         }
-        viewModel.state.observe(this, androidx.lifecycle.Observer { _ -> pagerAdapter.notifyDataSetChanged() })
+        //viewModel.state.observe(this, androidx.lifecycle.Observer { _ -> pagerAdapter.notifyDataSetChanged() })
         viewModel.representation.observe(this, androidx.lifecycle.Observer { _ -> pagerAdapter.notifyDataSetChanged() })
         coordinatorLayout {
             lparams(matchParent, matchParent)
@@ -296,12 +298,25 @@ class PlayerGameScreenFragment : Fragment(), ActionPerformer {
             val representation = (act as GameHolder).getRepresentation()
             when(representation) {
                 is ByPlayerRepresentation -> {
-                    gameAdapter = ExpandablePlayerRepresentationAdapter(representation.players[index], ::getState, ::performAction)
+                    gameAdapter = ExpandablePlayerRepresentationAdapter(representation.players[index], ::performAction)
+                    if(act is SinglePlayerGameScreenActivity) {
+                        val viewModel = ViewModelProviders.of(act).get(SinglePlayerGameScreenViewModel::class.java)
+                        viewModel.state.observe(this, androidx.lifecycle.Observer {
+                            (gameAdapter as ExpandablePlayerRepresentationAdapter).update(it)
+                        })
+
+                    } else if(act is MultiplayerGameActivity) {
+                        val viewModel = ViewModelProviders.of(act).get(MultiPlayerGameViewModel::class.java)
+                        viewModel.state.observe(this, androidx.lifecycle.Observer {
+                            (gameAdapter as ExpandablePlayerRepresentationAdapter).update(it)
+                        })
+                    }
                 }
                 is ByRoleRepresentation -> {
                     //gameAdapter = RoleRepresentationAdapter(representation.roles[index], ::getState, ::performAction)
                 }
             }
+
             return PlayerGameScreenUI(gameAdapter).createView(AnkoContext.Companion.create(ctx, this))
         } else {
             //FIXME
@@ -318,7 +333,6 @@ class PlayerGameScreenFragment : Fragment(), ActionPerformer {
             message = getState().toString()
         }.listElementShow()
         */
-        gameAdapter.notifyDataSetChanged()
     }
 }
 
@@ -329,44 +343,14 @@ class PlayerGameScreenUI(val playerAdapter: ExpandableListAdapter) : AnkoCompone
                 setAdapter(playerAdapter)
             }
         }
-        /*
-        scrollView {
-            verticalLayout {
-                textView("Global counters")
-                listView {
-                    adapter = globalParametersAdapter
-                }.lparams(matchParent, matchParent)
-                textView("Shared counters")
-                listView {
-                    adapter = sharedParametersAdapter
-                }.lparams(matchParent, matchParent)
-                textView("Private counters")
-                listView {
-                    adapter = privateParametersAdapter
-                }.lparams(matchParent, matchParent)
-                globalScripts.forEachIndexed { index, script ->
-                    button(script) {
-                        onClick {
-                            ui.owner.performGlobalScript(index)
-                        }
-                    }
-                }
-                scripts.forEachIndexed { index, script ->
-                    button(script) {
-                        onClick {
-                            ui.owner.performScript(index)
-                        }
-                    }
-                }
-            }
-        }
-        */
-
     }
 
 }
 
-class PlayerGameScreenAdapter(fm: FragmentManager, val getState: () -> GameState, val getRepresentation: () -> GameRepresentation) :
+class PlayerGameScreenAdapter(
+    fm: FragmentManager,
+    val getRepresentation: () -> GameRepresentation
+) :
     FragmentPagerAdapter(fm) {
     override fun getItem(position: Int): Fragment =
         PlayerGameScreenFragment.newInstance(position)
