@@ -67,6 +67,7 @@ class MultiPlayerGameViewModel() : ViewModel() {
         representation = MutableLiveData()
         representation.value = buildByPlayerRepresentation(preset, players)
         evaluator = buildScriptEvaluation(preset, players)
+        this.uuid = uuid
     }
 
     enum class LayoutType {
