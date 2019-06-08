@@ -14,6 +14,7 @@ import io.ktor.client.request.get
 import io.ktor.client.request.parameter
 import io.ktor.client.request.post
 import io.ktor.http.Parameters
+import io.ktor.http.append
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import org.jetbrains.anko.doAsync
@@ -86,12 +87,15 @@ class NetworkHandler {
             }
 
             val params = Parameters.build {
-                append("old", oldToken ?: "")
-                append("new", newToken ?: "")
+                if (oldToken != null)
+                    append("old", oldToken)
+                if (newToken != null)
+                    append("new", newToken)
+                append("uuid", uuid.toString())
             }
 
             runBlocking(Dispatchers.IO) {
-                client.submitForm<Void>(CHANGE_TOKEN, params, encodeInQuery = false)
+                client.submitForm<String>(CHANGE_TOKEN, params, encodeInQuery = false)
             }
         }
 
