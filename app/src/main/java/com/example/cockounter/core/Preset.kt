@@ -164,7 +164,7 @@ data class BooleanParameter(
         const val typeName: String = "Boolean"
     }
 
-    override fun initialValueString(): String = initialValue.toString()
+    override fun initialValueString(): String = if(initialValue) "yes" else "no"
 }
 
 data class Library(val name: String, val script: String) : Serializable {

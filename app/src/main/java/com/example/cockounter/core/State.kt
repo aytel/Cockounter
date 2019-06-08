@@ -121,22 +121,22 @@ sealed class GameParameter : Serializable {
 
 data class IntegerGameParameter(override val name: String, override val visibleName: String, val value: Int) :
     GameParameter() {
-    override fun valueString() = "Integer: $value"
+    override fun valueString() = "$value"
 }
 
 data class StringGameParameter(override val name: String, override val visibleName: String, val value: String) :
     GameParameter() {
-    override fun valueString() = "String: $value"
+    override fun valueString() = value
 }
 
 data class DoubleGameParameter(override val name: String, override val visibleName: String, val value: Double) :
     GameParameter() {
-    override fun valueString() = "Double: $value"
+    override fun valueString() = "$value"
 }
 
 data class BooleanGameParameter(override val name: String, override val visibleName: String, val value: Boolean) :
     GameParameter() {
-    override fun valueString() = "Boolean: $value"
+    override fun valueString() = if(value) "yes" else "no"
 }
 
 operator fun GameState.get(role: String) = roles.getValue(role)
@@ -205,14 +205,6 @@ fun buildState(preset: Preset, players: List<PlayerDescription>): GameState {
     return GameState(globalParameters, roles.toImmutableMap())
 }
 
-
-
-sealed class ActionButtonDescription {
-    data class Attached(val parameter: GameParameterPointer, val index: Int) : ActionButtonDescription()
-    data class Global(val index: Int) : ActionButtonDescription()
-    data class Role(val role: String, val index: Int) : ActionButtonDescription()
-}
-
 sealed class ScriptContext {
     object None : ScriptContext()
     data class SingleParameter(val parameter: GameParameterPointer) : ScriptContext()
@@ -220,7 +212,3 @@ sealed class ScriptContext {
     data class Full(val player: PlayerDescription) : ScriptContext()
 }
 
-data class ActionButton(val visibleName: String, val functionName: Option<String>, val script: String, val context: ScriptContext) :
-    Serializable {
-    companion object
-}
