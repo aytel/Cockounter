@@ -38,7 +38,7 @@ class JoinGameActivity : AppCompatActivity() {
         }
     }
 
-    fun askName(uuid: String) {
+    private fun askName(uuid: String) {
         alert {
             customView {
                 val name = editText {
@@ -51,7 +51,7 @@ class JoinGameActivity : AppCompatActivity() {
         }
     }
 
-    fun joinGame(name: String, uuid: String) {
+    private fun joinGame(name: String, uuid: String) {
         startActivity(
             intentFor<MultiPlayerGameActivity>(
                 MultiPlayerGameActivity.MODE to MultiPlayerGameActivity.MODE_JOIN_GAME,
@@ -73,22 +73,22 @@ class JoinGameActivity : AppCompatActivity() {
             }
         }
     }
-}
 
-private class JoinGameUI : AnkoComponent<JoinGameActivity> {
-    override fun createView(ui: AnkoContext<JoinGameActivity>): View = with(ui) {
-        verticalLayout {
-            button("Scan QR code") {
-                onClick {
-                    owner.scanQRCode()
+    private class JoinGameUI : AnkoComponent<JoinGameActivity> {
+        override fun createView(ui: AnkoContext<JoinGameActivity>): View = with(ui) {
+            verticalLayout {
+                button("Scan QR code") {
+                    onClick {
+                        owner.scanQRCode()
+                    }
                 }
-            }
-            button("Enter manually") {
-                onClick {
-                    owner.enterCode()
+                button("Enter manually") {
+                    onClick {
+                        owner.enterCode()
+                    }
                 }
             }
         }
     }
-
 }
+

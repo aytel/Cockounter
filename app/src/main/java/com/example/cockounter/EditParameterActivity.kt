@@ -128,6 +128,16 @@ class EditParameterActivity : AppCompatActivity() {
         )
     }
 
+    override fun onBackPressed() {
+        alert {
+            message = "Save changes?"
+            yesButton {
+                save()
+            }
+            noButton {  }
+        }
+    }
+
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         if (data == null) {
             return

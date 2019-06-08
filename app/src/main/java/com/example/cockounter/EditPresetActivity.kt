@@ -326,6 +326,16 @@ class EditPresetActivity : AppCompatActivity() {
             }
         }
     }
+
+    override fun onBackPressed() {
+        alert {
+            message = "Save changes?"
+            yesButton {
+                save()
+            }
+            noButton {  }
+        }
+    }
 }
 
 private class EditPresetUI(

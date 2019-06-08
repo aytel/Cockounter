@@ -31,7 +31,6 @@ class EditPresetScriptViewModel() : ViewModel() {
         script = presetScript.script
         context = presetScript.context
     }
-
 }
 
 class EditPresetScriptActivity : AppCompatActivity() {
@@ -58,10 +57,19 @@ class EditPresetScriptActivity : AppCompatActivity() {
 
             }).get(EditPresetScriptViewModel::class.java)
         }
-        val contextAdapter = ArrayAdapter(this, android.R.layout.simple_list_item_1, ScriptContextDescription.values())
         with(viewModel) {
             EditButtonDescriptionUI(visibleName, script, contextPosition)
         }.setContentView(this)
+    }
+
+    override fun onBackPressed() {
+        alert {
+            message = "Save changes?"
+            yesButton {
+                save()
+            }
+            noButton {  }
+        }
     }
 
     fun runScript() {
@@ -69,6 +77,7 @@ class EditPresetScriptActivity : AppCompatActivity() {
             com.example.cockounter.script.runScript(this@EditPresetScriptActivity, viewModel.script)
         }
     }
+
 
     fun save() {
         val result = Intent()
@@ -139,7 +148,7 @@ class EditButtonDescriptionUI(val name: String, val script: String, val typePosi
                          }
                      }
                  }
-                 val spinner = spinner {
+                 spinner {
                      adapter = ArrayAdapter(owner, android.R.layout.simple_list_item_1, ScriptContextDescription.values())
                      setSelection(typePosition)
                      onItemSelectedListener {
