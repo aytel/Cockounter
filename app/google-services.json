@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "993105812102",
+    "firebase_url": "https://cockounter.firebaseio.com",
+    "project_id": "cockounter",
+    "storage_bucket": "cockounter.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:993105812102:android:3f9bf361a074e510",
+        "android_client_info": {
+          "package_name": "com.example.cockounter"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "993105812102-id9fpeo1cap0qgh0n73c4mgrkvrvfrr7.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDC-2SsS7lg1V7JGNZkZrVn0394KRa-ZvY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "993105812102-id9fpeo1cap0qgh0n73c4mgrkvrvfrr7.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
