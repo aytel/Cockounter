@@ -75,7 +75,7 @@ class NetworkHandler {
                 append("uuid", uuid.toString())
             }
             return StateCaptureConverter.gson.fromJson(runBlocking(Dispatchers.IO) {
-                client.submitForm<String> (UPDATE_GAME_STATE, params, encodeInQuery = false)
+                client.submitForm<String>(UPDATE_GAME_STATE, params, encodeInQuery = false)
             }, GameState::class.java)
         }
 

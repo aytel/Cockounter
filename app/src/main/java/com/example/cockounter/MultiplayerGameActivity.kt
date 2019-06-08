@@ -3,9 +3,11 @@ package com.example.cockounter
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Color
+import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.MenuItem
+import androidx.annotation.RequiresApi
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -32,6 +34,7 @@ import org.jetbrains.anko.design.appBarLayout
 import org.jetbrains.anko.design.coordinatorLayout
 import org.jetbrains.anko.design.themedTabLayout
 import org.jetbrains.anko.support.v4.viewPager
+import java.net.NetworkInterface
 import java.util.*
 
 class MultiPlayerGameViewModel() : ViewModel() {
@@ -44,6 +47,7 @@ class MultiPlayerGameViewModel() : ViewModel() {
     lateinit var uuid: UUID
     private var currentLayout = LayoutType.BY_PLAYER
 
+    @RequiresApi(Build.VERSION_CODES.N)
     constructor(id: Int, names: Array<String>, roles: Array<String>) : this() {
         val presetInfo = doAsyncResult { Storage.getPresetInfoById(id)}.get()
         uuid = UUID.randomUUID()
@@ -139,6 +143,16 @@ class MultiplayerGameActivity : AppCompatActivity(), GameHolder, ActionPerformer
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        val ints = NetworkInterface.getNetworkInterfaces()
+        ints.asSequence().forEach {
+            System.err.println(it.name + " " + it.displayName)
+            if (!it.isLoopback) {
+                it.inetAddresses.asSequence().forEach {
+                    if (!it.isSiteLocalAddress)
+                        System.err.println(it.toString())
+                }
+            }
+        }
         when(intent.getIntExtra(MODE, MODE_ERROR)) {
             MODE_CREATE_GAME -> {
                 val id = intent.getIntExtra(ARG_PRESET_ID, 0)
@@ -146,6 +160,7 @@ class MultiplayerGameActivity : AppCompatActivity(), GameHolder, ActionPerformer
                 val names = intent.getStringArrayExtra(ARG_PLAYER_NAMES)
                 val roles = intent.getStringArrayExtra(ARG_PLAYER_ROLES)
                 viewModel = ViewModelProviders.of(this, object : ViewModelProvider.Factory {
+                    @RequiresApi(Build.VERSION_CODES.N)
                     override fun <T : ViewModel?> create(modelClass: Class<T>): T {
                         return MultiPlayerGameViewModel(id, names, roles) as T
                     }
