@@ -29,6 +29,7 @@ class NetworkHandler {
         private const val UPDATE_GAME_STATE = "$BASE_URL/update_gs"
         private const val CONNECT_TO_SESSION = "$BASE_URL/connect/%s"
         private const val GET_GAME_SESSION = "$BASE_URL/get/%s"
+        private const val CHANGE_TOKEN = "$BASE_URL/change"
 
         private val client = HttpClient(Android)
 
@@ -77,6 +78,21 @@ class NetworkHandler {
             return StateCaptureConverter.gson.fromJson(runBlocking(Dispatchers.IO) {
                 client.submitForm<String>(UPDATE_GAME_STATE, params, encodeInQuery = false)
             }, GameState::class.java)
+        }
+
+        fun changeToken(uuid: UUID?, oldToken: String?, newToken: String?) {
+            if (uuid == null) {
+                return
+            }
+
+            val params = Parameters.build {
+                append("old", oldToken ?: "")
+                append("new", newToken ?: "")
+            }
+
+            runBlocking(Dispatchers.IO) {
+                client.submitForm<Void>(CHANGE_TOKEN, params, encodeInQuery = false)
+            }
         }
 
     }

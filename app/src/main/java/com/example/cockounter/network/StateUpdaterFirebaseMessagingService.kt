@@ -11,49 +11,48 @@ import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 import java.util.*
 
-class StateUpdaterFirebaseMessagingService: FirebaseMessagingService() {K
+class StateUpdaterFirebaseMessagingService: FirebaseMessagingService() {
     companion object {
-        private var token: String? = null
+        var token: String? = null
         set(value) {
-            if (multiPlayerGameViewModel != null) {
-                multiPlayerGameViewModel.changeToken(field, value)
-            }
+            NetworkHandler.changeToken(multiPlayerGameViewModel?.uuid, field, value)
             field = value
-        }
-
-        val tokenHandler = { uuid: UUID ->
-            FirebaseInstanceId.getInstance().instanceId
-                .addOnCompleteListener(OnCompleteListener { task ->
-                    if (!task.isSuccessful) {
-                        Log.w("", "getInstanceId failed", task.exception)
-                        return@OnCompleteListener
-                    }
-
-                    // Get new Instance ID token
-                    token = task.result?.token
-
-                    // Log and toast
-                    //val msg = getString(R.string.msg_token_fmt, token)
-                    Log.d("", "token = $token")
-                })
         }
 
         var multiPlayerGameViewModel: MultiPlayerGameViewModel? = null
     }
 
     override fun onNewToken(token: String) {
+        Log.d("", "token = $token")
         super.onNewToken(token)
-        Log.w("", "token = $token")
         StateUpdaterFirebaseMessagingService.token = token
     }
 
     override fun onMessageReceived(remoteMessage: RemoteMessage) {
         Log.w("", "data = ${remoteMessage.data}")
-        if (remoteMessage.data.isNotEmpty() && multiPlayerGameViewModel != null) {
-            multiPlayerGameViewModel.updateGameState(StateCaptureConverter.gson.fromJson(
+        if (remoteMessage.data.isNotEmpty()) {
+            multiPlayerGameViewModel?.updateGameState(StateCaptureConverter.gson.fromJson(
                 remoteMessage.data["state"],
                 GameState::class.java
             ))
         }
+    }
+
+    fun setToken() {
+        val tokenGetter = FirebaseInstanceId.getInstance().instanceId
+            .addOnSuccessListener { result ->
+
+                // Get new Instance ID token
+                token = result.token
+
+                // Log and toast
+                //val msg = getString(R.string.msg_token_fmt, token)
+                Log.d("", "token = ${result.token}")
+            }
+
+        while (!tokenGetter.isSuccessful) {
+            Thread.sleep(100)
+        }
+        token = tokenGetter.result?.token
     }
 }

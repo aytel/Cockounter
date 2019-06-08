@@ -10,12 +10,15 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.room.Room
+import com.example.cockounter.network.StateUpdaterFirebaseMessagingService
 import com.example.cockounter.storage.Storage
 import com.google.android.gms.tasks.OnCompleteListener
+import com.google.android.gms.tasks.OnSuccessListener
 import com.google.android.gms.tasks.Task
 import com.google.firebase.iid.FirebaseInstanceId
 import org.jetbrains.anko.*
 import org.jetbrains.anko.sdk27.coroutines.onClick
+import java.lang.Thread.sleep
 
 class MainActivity : AppCompatActivity() {
     companion object {
@@ -33,7 +36,6 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        Log.w("", "token = ${FirebaseInstanceId.getInstance().getToken()}")
 
 
         MainUI().setContentView(this)
