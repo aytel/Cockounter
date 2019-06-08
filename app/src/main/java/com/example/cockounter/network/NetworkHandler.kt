@@ -70,15 +70,15 @@ class NetworkHandler {
             }, GameState::class.java )
         }
 
-        fun updateGameState(uuid: UUID, gameState: GameState): GameState {
+        fun updateGameState(uuid: UUID, gameState: GameState) {
             val json = StateCaptureConverter.gson.toJson(gameState)
             val params = Parameters.build {
                 append("state", json)
                 append("uuid", uuid.toString())
             }
-            return StateCaptureConverter.gson.fromJson(runBlocking(Dispatchers.IO) {
+            runBlocking(Dispatchers.IO) {
                 client.submitForm<String>(UPDATE_GAME_STATE, params, encodeInQuery = false)
-            }, GameState::class.java)
+            }
         }
 
         fun changeToken(uuid: UUID?, oldToken: String?, newToken: String?) {
