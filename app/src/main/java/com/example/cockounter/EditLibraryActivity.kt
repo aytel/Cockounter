@@ -2,17 +2,16 @@ package com.example.cockounter
 
 import android.app.Activity
 import android.content.Intent
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.MenuItem
 import android.view.View
+import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelProviders
 import org.jetbrains.anko.*
 import org.jetbrains.anko.design.appBarLayout
 import org.jetbrains.anko.design.coordinatorLayout
-import org.jetbrains.anko.sdk27.coroutines.onClick
 import org.jetbrains.anko.sdk27.coroutines.textChangedListener
 
 class EditLibraryViewModel() : ViewModel() {
@@ -80,8 +79,10 @@ class EditLibraryActivity : AppCompatActivity() {
             yesButton {
                 save()
             }
-            noButton {  }
-        }
+            noButton {
+                finish()
+            }
+        }.show()
     }
 
     private fun updateName(name: String) {
@@ -116,7 +117,7 @@ class EditLibraryActivity : AppCompatActivity() {
                 }
                 scrollView {
                     verticalLayout {
-                        val nameText = editText(name ?: "") {
+                        editText(name ?: "") {
                             hint = "Name"
                             textChangedListener {
                                 onTextChanged { chars, _, _, _ ->
@@ -124,7 +125,7 @@ class EditLibraryActivity : AppCompatActivity() {
                                 }
                             }
                         }
-                        val sourceText = editText(source ?: "") {
+                        editText(source ?: "") {
                             textChangedListener {
                                 onTextChanged { chars, _, _, _ ->
                                     owner.updateSource(chars.toString())

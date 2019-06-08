@@ -3,7 +3,6 @@ package com.example.cockounter
 import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log
 import android.view.MenuItem
 import android.view.View
 import android.widget.ArrayAdapter
@@ -68,18 +67,20 @@ class EditPresetScriptActivity : AppCompatActivity() {
             yesButton {
                 save()
             }
-            noButton {  }
-        }
+            noButton {
+                finish()
+            }
+        }.show()
     }
 
-    fun runScript() {
+    private fun runScript() {
         doAsync {
             com.example.cockounter.script.runScript(this@EditPresetScriptActivity, viewModel.script)
         }
     }
 
 
-    fun save() {
+    private fun save() {
         val result = Intent()
         result.run {
             putExtra(RETURN_PRESET_SCRIPT, PresetScript(
@@ -93,82 +94,83 @@ class EditPresetScriptActivity : AppCompatActivity() {
         finish()
     }
 
-    fun updateName(name: String) {
+    private fun updateName(name: String) {
         viewModel.visibleName = name
     }
 
-    fun updateScript(script: String) {
+    private fun updateScript(script: String) {
         viewModel.script = script
     }
 
-    fun updateContext(context: ScriptContextDescription, position: Int) {
+    private fun updateContext(context: ScriptContextDescription, position: Int) {
         viewModel.context = context
         viewModel.contextPosition = position
     }
-}
 
-class EditButtonDescriptionUI(val name: String, val script: String, val typePosition: Int) : AnkoComponent<EditPresetScriptActivity> {
-    override fun createView(ui: AnkoContext<EditPresetScriptActivity>): View = with(ui) {
-         coordinatorLayout {
-             appBarLayout {
-                 lparams(matchParent, wrapContent) {
+    private class EditButtonDescriptionUI(private val name: String, private val script: String, private val typePosition: Int) : AnkoComponent<EditPresetScriptActivity> {
+        override fun createView(ui: AnkoContext<EditPresetScriptActivity>): View = with(ui) {
+            coordinatorLayout {
+                appBarLayout {
+                    lparams(matchParent, wrapContent) {
 
-                 }
-                 toolbar {
-                     //owner.setSupportActionBar(this.toolbar())
-                     title = "Edit preset"
-                     menu.apply {
-                         add("Run").apply {
-                             setIcon(R.drawable.ic_play_arrow_black_24dp)
-                             setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS)
-                             setOnMenuItemClickListener {
-                                 owner.runScript()
-                                 true
-                             }
-                         }
-                         add("Save").apply {
-                             setIcon(R.drawable.ic_done_black_24dp)
-                             setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS)
-                             setOnMenuItemClickListener {
-                                 owner.save()
-                                 true
-                             }
-                         }
-                     }
-                 }.lparams(width = matchParent, height = wrapContent) {
-                     scrollFlags = 0
-                 }
-             }
-             verticalLayout {
-                 editText(name) {
-                     hint = "Name"
-                     textChangedListener {
-                         onTextChanged { chars, _, _, _ ->
-                             owner.updateName(text.toString())
-                         }
-                     }
-                 }
-                 spinner {
-                     adapter = ArrayAdapter(owner, android.R.layout.simple_list_item_1, ScriptContextDescription.values())
-                     setSelection(typePosition)
-                     onItemSelectedListener {
-                         onItemSelected { _, _, i, _ ->
-                             owner.updateContext(selectedItem as ScriptContextDescription, i)
-                         }
-                     }
+                    }
+                    toolbar {
+                        //owner.setSupportActionBar(this.toolbar())
+                        title = "Edit preset"
+                        menu.apply {
+                            add("Run").apply {
+                                setIcon(R.drawable.ic_play_arrow_black_24dp)
+                                setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS)
+                                setOnMenuItemClickListener {
+                                    owner.runScript()
+                                    true
+                                }
+                            }
+                            add("Save").apply {
+                                setIcon(R.drawable.ic_done_black_24dp)
+                                setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS)
+                                setOnMenuItemClickListener {
+                                    owner.save()
+                                    true
+                                }
+                            }
+                        }
+                    }.lparams(width = matchParent, height = wrapContent) {
+                        scrollFlags = 0
+                    }
+                }
+                verticalLayout {
+                    editText(name) {
+                        hint = "Name"
+                        textChangedListener {
+                            onTextChanged { chars, _, _, _ ->
+                                owner.updateName(text.toString())
+                            }
+                        }
+                    }
+                    spinner {
+                        adapter = ArrayAdapter(owner, android.R.layout.simple_list_item_1, ScriptContextDescription.values())
+                        setSelection(typePosition)
+                        onItemSelectedListener {
+                            onItemSelected { _, _, i, _ ->
+                                owner.updateContext(selectedItem as ScriptContextDescription, i)
+                            }
+                        }
 
-                 }
-                 editText(script) {
-                     hint = "script"
-                     textChangedListener {
-                         onTextChanged { chars, _, _, _ ->
-                             owner.updateScript(text.toString())
-                         }
-                     }
-                 }
-             }.lparams(width = matchParent, height = matchParent) {
-                behavior = AppBarLayout.ScrollingViewBehavior()
+                    }
+                    editText(script) {
+                        hint = "script"
+                        textChangedListener {
+                            onTextChanged { chars, _, _, _ ->
+                                owner.updateScript(text.toString())
+                            }
+                        }
+                    }
+                }.lparams(width = matchParent, height = matchParent) {
+                    behavior = AppBarLayout.ScrollingViewBehavior()
+                }
             }
-         }
+        }
     }
 }
+

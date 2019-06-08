@@ -203,8 +203,9 @@ class SinglePlayerGameActivity : AppCompatActivity(), GameHolder, ActionPerforme
 
 
     private val pagerAdapter by lazy { PlayerGameScreenAdapter(
-        supportFragmentManager,
-        {viewModel.representation.value!!}) }
+        supportFragmentManager
+    ) {viewModel.representation.value!!}
+    }
     private lateinit var myTabLayout: TabLayout
     private lateinit var myViewPager: ViewPager
     private lateinit var viewModel: SinglePlayerGameViewModel
@@ -277,10 +278,6 @@ class SinglePlayerGameActivity : AppCompatActivity(), GameHolder, ActionPerforme
                     }
 
                 }
-                //viewPager {
-                //    adapter = pagerAdapter
-                //    id = R.id.container
-                //}
 
                 myTabLayout = themedTabLayout(R.style.ThemeOverlay_AppCompat_Dark) {
                     tabMode = TabLayout.MODE_SCROLLABLE

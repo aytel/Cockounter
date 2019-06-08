@@ -23,6 +23,7 @@ import org.jetbrains.anko.design.coordinatorLayout
 import org.jetbrains.anko.design.floatingActionButton
 import org.jetbrains.anko.recyclerview.v7.recyclerView
 import org.jetbrains.anko.sdk27.coroutines.onClick
+import java.lang.Exception
 
 
 class SelectPresetActivity : AppCompatActivity() {
@@ -38,9 +39,8 @@ class SelectPresetActivity : AppCompatActivity() {
         private const val CODE_SAVE_FILE = 5;
     }
 
-    private val presetsList = mutableListOf<PresetInfo>()
     private val presetsAdapter: PresetInfoAdapter by lazy {
-        PresetInfoAdapter({ presetsList }, ::returnPreset, { index ->
+        PresetInfoAdapter(::returnPreset) { index ->
             selector(null, listOf("Edit", "Delete", "Export")) { _, i ->
                 when (i) {
                     0 -> editPreset(index)
@@ -48,7 +48,7 @@ class SelectPresetActivity : AppCompatActivity() {
                     2 -> loadPresetToFile(index)
                 }
             }
-        })
+        }
     }
     private var presetToSave: PresetInfo? = null
 
@@ -63,26 +63,26 @@ class SelectPresetActivity : AppCompatActivity() {
             CODE_PRESET_CHANGED -> if (resultCode == Activity.RESULT_OK) {
                 presetsAdapter.notifyDataSetChanged()
             }
-            //FIXME
             CODE_LOAD_FILE -> if (resultCode == Activity.RESULT_OK) {
                 val uri = data.data!!
-                loadPreset(this, uri).fold({
-                    alert(it.message!!).show()
-                }, {
-                    presetsList.add(it)
-                    presetsAdapter.notifyDataSetChanged()
-                    Storage.insertPreset(it)
-                })
+                try {
+                    val presetInfo = loadPreset(this, uri)
+                    doAsync {
+                        Storage.insertPreset(presetInfo)
+                    }
+                } catch (e: Exception) {
+                    alert(e.message!!).show()
+                }
             }
-            //FIXME
             CODE_SAVE_FILE -> if (resultCode == Activity.RESULT_OK) {
                 val uri = data.data!!
                 if (presetToSave != null) {
-                    savePreset(this, uri, presetToSave!!).fold({
-                        alert(it.message!!).show()
-                    }, {
+                    try {
+                        savePreset(this, uri, presetToSave!!)
                         toast("Saved")
-                    })
+                    } catch (e: Exception) {
+                        alert(e.message!!).show()
+                    }
                 }
             }
         }
@@ -91,36 +91,27 @@ class SelectPresetActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val data = Storage.getAllPresetInfos()
-        data.observe(this, Observer { list ->
-            run {
-                presetsList.clear()
-                presetsList.addAll(list)
-                presetsAdapter.notifyDataSetChanged()
-            }
-        })
-
+        data.observe(this, Observer { presetsAdapter.update(it)})
         SelectPresetUI(presetsAdapter).setContentView(this@SelectPresetActivity)
     }
 
     private fun editPreset(index: Int) {
         startActivityForResult(
             intentFor<EditPresetActivity>(
-                EditPresetActivity.ARG_PRESET_ID to presetsList[index].id
+                EditPresetActivity.ARG_PRESET_ID to presetsAdapter[index].id
             ), CODE_PRESET_CHANGED
         )
     }
 
     private fun deletePreset(index: Int) {
         doAsync {
-            Storage.deletePreset(presetsList[index])
+            Storage.deletePreset(presetsAdapter[index])
         }
-        presetsList.removeAt(index)
-        presetsAdapter.notifyDataSetChanged()
     }
 
     private fun returnPreset(index: Int) {
         val result = Intent()
-        result.putExtra(RETURN_PRESET_ID, presetsList[index].id)
+        result.putExtra(RETURN_PRESET_ID, presetsAdapter[index].id)
         setResult(Activity.RESULT_OK, result)
         finish()
     }
@@ -138,7 +129,7 @@ class SelectPresetActivity : AppCompatActivity() {
     private fun loadPresetToFile(index: Int) {
         val intent = Intent(Intent.ACTION_CREATE_DOCUMENT)
         intent.type = "*/*"
-        presetToSave = presetsList[index]
+        presetToSave = presetsAdapter[index]
         startActivityForResult(intent, CODE_SAVE_FILE)
     }
 

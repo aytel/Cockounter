@@ -20,12 +20,12 @@ class JoinGameActivity : AppCompatActivity() {
         JoinGameUI().setContentView(this)
     }
 
-    fun scanQRCode() {
+    private fun scanQRCode() {
         ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.CAMERA), 1)
         startActivityForResult(intentFor<QRCodeScannerActivity>(), CODE_SCAN_QR_CODE)
     }
 
-    fun enterCode() {
+    private fun enterCode() {
         alert {
             customView {
                 val code = editText {

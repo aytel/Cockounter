@@ -183,7 +183,6 @@ class MultiPlayerGameActivity : AppCompatActivity(), GameHolder, ActionPerformer
                 }).get(MultiPlayerGameViewModel::class.java)
             }
         }
-        //viewModel.state.observe(this, androidx.lifecycle.Observer { _ -> pagerAdapter.notifyDataSetChanged() })
         viewModel.representation.observe(this, androidx.lifecycle.Observer { _ -> pagerAdapter.notifyDataSetChanged() })
         evaluator = viewModel.evaluator(this)
         pagerAdapter = PlayerGameScreenAdapter(supportFragmentManager, getRepresentation)
@@ -242,8 +241,12 @@ class MultiPlayerGameActivity : AppCompatActivity(), GameHolder, ActionPerformer
     }
 
     override fun performAction(action: Action) {
-        when(val result = doAsyncResult { viewModel.performAction(action, evaluator, this@MultiPlayerGameActivity) }.get()) {
-            is Some -> scriptFailure(result.t)
+        doAsync {
+            when(val result = viewModel.performAction(action, evaluator, this@MultiPlayerGameActivity)) {
+                is Some -> runOnUiThread {
+                    scriptFailure(result.t)
+                }
+            }
         }
     }
 
@@ -264,6 +267,7 @@ class MultiPlayerGameActivity : AppCompatActivity(), GameHolder, ActionPerformer
                 imageView {
                     setImageBitmap(bitmap)
                 }
+                textView(viewModel.uuid.toString())
             }
 
         }.show()

@@ -25,6 +25,7 @@ import org.jetbrains.anko.design.floatingActionButton
 import org.jetbrains.anko.sdk27.coroutines.onChildClick
 import org.jetbrains.anko.sdk27.coroutines.onClick
 import org.jetbrains.anko.sdk27.coroutines.textChangedListener
+import java.lang.Exception
 
 class EditPresetViewModel() : ViewModel() {
     val globalParameters = EditableList<Parameter>()
@@ -174,11 +175,23 @@ class EditPresetActivity : AppCompatActivity() {
             }
             CODE_LOAD_LIBRARY -> if (resultCode == Activity.RESULT_OK) {
                 val uri = data.data!!
-                loadLibrary(this, uri).fold({
-                    alert(it.message!!).show()
-                }, {
-                    viewModel.libraries.add(Library("lib", it))
-                })
+                try {
+                    val source = loadLibrary(this, uri)
+                    alert {
+                        title = "Select name"
+                        customView {
+                            val name = editText {
+                                hint = "Name"
+                            }
+                            yesButton {
+                                viewModel.libraries.add(Library(name.text.toString(), source))
+                            }
+                            noButton {  }
+                        }
+                    }
+                } catch (e: Exception) {
+                    alert(e.message!!).show()
+                }
             }
             CODE_ADD_LIBRARY -> if (resultCode == Activity.RESULT_OK) {
                 val name = data.getStringExtra(EditLibraryActivity.RETURN_NAME)
@@ -193,7 +206,7 @@ class EditPresetActivity : AppCompatActivity() {
         }
     }
 
-    fun editParameter(index: Int) {
+    private fun editParameter(index: Int) {
         startActivityForResult(
             intentFor<EditParameterActivity>(
                 EditParameterActivity.ARG_PARAMETER to viewModel.globalParameters[index],
@@ -202,11 +215,11 @@ class EditPresetActivity : AppCompatActivity() {
         )
     }
 
-    fun deleteParameter(index: Int) {
+    private fun deleteParameter(index: Int) {
         viewModel.globalParameters.removeAt(index)
     }
 
-    fun addParameter() {
+    private fun addParameter() {
         startActivityForResult(
             intentFor<EditParameterActivity>(
                 EditParameterActivity.ARG_PARAMETER to null
@@ -215,7 +228,7 @@ class EditPresetActivity : AppCompatActivity() {
         )
     }
 
-    fun editRole(index: Int) {
+    private fun editRole(index: Int) {
         startActivityForResult(
             intentFor<EditRoleActivity>(
                 EditRoleActivity.ARG_ROLE to viewModel.roles[index],
@@ -224,11 +237,11 @@ class EditPresetActivity : AppCompatActivity() {
         )
     }
 
-    fun deleteRole(index: Int) {
+    private fun deleteRole(index: Int) {
         viewModel.roles.removeAt(index)
     }
 
-    fun addRole() {
+    private fun addRole() {
         startActivityForResult(
             intentFor<EditRoleActivity>(
                 EditRoleActivity.ARG_ROLE to null
@@ -236,7 +249,7 @@ class EditPresetActivity : AppCompatActivity() {
         )
     }
 
-    fun editScript(index: Int) {
+    private fun editScript(index: Int) {
         startActivityForResult(
             intentFor<EditPresetScriptActivity>(
                 EditPresetScriptActivity.ARG_PRESET_SCRIPT to viewModel.scripts[index],
@@ -245,53 +258,53 @@ class EditPresetActivity : AppCompatActivity() {
         )
     }
 
-    fun deleteScript(index: Int) {
+    private fun deleteScript(index: Int) {
         viewModel.scripts.removeAt(index)
     }
 
-    fun addScript() {
+    private fun addScript() {
         startActivityForResult(
             intentFor<EditPresetScriptActivity>(EditPresetScriptActivity.ARG_PRESET_SCRIPT to null),
             CODE_SCRIPT_ADDED
         )
     }
 
-    fun editLibrary(index: Int) {
+    private fun editLibrary(index: Int) {
         selectedPosition = index
         startActivityForResult(intentFor<EditLibraryActivity>(EditLibraryActivity.ARG_NAME to viewModel.libraries[index].name,
             EditLibraryActivity.ARG_SOURCE to viewModel.libraries[index].script), CODE_LIBRARY_CHANGED)
 
     }
 
-    fun deleteLibrary(index: Int) {
+    private fun deleteLibrary(index: Int) {
         viewModel.libraries.removeAt(index)
     }
 
-    fun save() {
+    private fun save() {
         viewModel.save()
         setResult(Activity.RESULT_OK)
         finish()
     }
 
-    fun loadLibraryFromFile() {
+    private fun loadLibraryFromFile() {
         val intent = Intent(Intent.ACTION_OPEN_DOCUMENT)
         intent.type = "*/*"
         startActivityForResult(intent, CODE_LOAD_LIBRARY)
     }
 
-    fun createLibrary() {
+    private fun createLibrary() {
         startActivityForResult(intentFor<EditLibraryActivity>(), CODE_ADD_LIBRARY)
     }
 
-    fun updateName(name: String) {
+    private fun updateName(name: String) {
         viewModel.name = name
     }
 
-    fun updateDescription(description: String) {
+    private fun updateDescription(description: String) {
         viewModel.description = description
     }
 
-    fun processParameter(index: Int) {
+    private fun processParameter(index: Int) {
         selector(null, listOf("Edit", "Delete")) { _, i ->
             when (i) {
                 0 -> editParameter(index)
@@ -300,7 +313,7 @@ class EditPresetActivity : AppCompatActivity() {
         }
     }
 
-    fun processRole(index: Int) {
+    private fun processRole(index: Int) {
         selector(null, listOf("Edit", "Delete")) { _, i ->
             when (i) {
                 0 -> editRole(index)
@@ -309,7 +322,7 @@ class EditPresetActivity : AppCompatActivity() {
         }
     }
 
-    fun processScript(index: Int) {
+    private fun processScript(index: Int) {
         selector(null, listOf("Edit", "Delete")) { _, i ->
             when (i) {
                 0 -> editScript(index)
@@ -318,7 +331,7 @@ class EditPresetActivity : AppCompatActivity() {
         }
     }
 
-    fun processLibrary(index: Int) {
+    private fun processLibrary(index: Int) {
         selector(null, listOf("Edit", "Delete")) { _, i ->
             when (i) {
                 0 -> editLibrary(index)
@@ -333,90 +346,90 @@ class EditPresetActivity : AppCompatActivity() {
             yesButton {
                 save()
             }
-            noButton {  }
-        }
+            noButton {
+                finish()
+            }
+        }.show()
     }
-}
 
-private class EditPresetUI(
-    val name: String,
-    val description: String,
-    val expandableAdapter: BaseExpandableListAdapter
-) : AnkoComponent<EditPresetActivity> {
-    private lateinit var presetName: EditText
-    private lateinit var presetDescription: EditText
-    override fun createView(ui: AnkoContext<EditPresetActivity>): View = with(ui) {
-        coordinatorLayout {
-            appBarLayout {
-                lparams(matchParent, wrapContent) {
+    private class EditPresetUI(val name: String, val description: String, val expandableAdapter: BaseExpandableListAdapter) :
+        AnkoComponent<EditPresetActivity> {
+        private lateinit var presetName: EditText
+        private lateinit var presetDescription: EditText
+        override fun createView(ui: AnkoContext<EditPresetActivity>): View = with(ui) {
+            coordinatorLayout {
+                appBarLayout {
+                    lparams(matchParent, wrapContent) {
 
+                    }
+                    toolbar {
+                        //owner.setSupportActionBar(this.toolbar())
+                        title = "Edit preset"
+                        menu.apply {
+                            add("Save").apply {
+                                setIcon(R.drawable.ic_done_black_24dp)
+                                setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS)
+                                setOnMenuItemClickListener {
+                                    owner.save()
+                                    true
+                                }
+                            }
+                        }
+                    }.lparams(width = matchParent, height = wrapContent) {
+                        scrollFlags = 0
+                    }
                 }
-                toolbar {
-                    //owner.setSupportActionBar(this.toolbar())
-                    title = "Edit preset"
-                    menu.apply {
-                        add("Save").apply {
-                            setIcon(R.drawable.ic_done_black_24dp)
-                            setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS)
-                            setOnMenuItemClickListener {
-                                owner.save()
-                                true
+                verticalLayout {
+                    presetName = editText(name) {
+                        hint = "name"
+                        textChangedListener {
+                            onTextChanged { chars, _, _, _ ->
+                                owner.updateName(chars.toString())
                             }
                         }
                     }
-                }.lparams(width = matchParent, height = wrapContent) {
-                    scrollFlags = 0
-                }
-            }
-            verticalLayout {
-                presetName = editText(name) {
-                    hint = "name"
-                    textChangedListener {
-                        onTextChanged { chars, _, _, _ ->
-                            owner.updateName(chars.toString())
+                    presetDescription = editText(description) {
+                        hint = "Description"
+                        textChangedListener {
+                            onTextChanged { chars, _, _, _ ->
+                                owner.updateDescription(chars.toString())
+                            }
                         }
                     }
-                }
-                presetDescription = editText(description) {
-                    hint = "Description"
-                    textChangedListener {
-                        onTextChanged { chars, _, _, _ ->
-                            owner.updateDescription(chars.toString())
+                    expandableListView {
+                        setAdapter(expandableAdapter)
+                        onChildClick { _, _, groupPosition, childPosition, _ ->
+                            when(groupPosition) {
+                                0 -> owner.processParameter(childPosition)
+                                1 -> owner.processRole(childPosition)
+                                2 -> owner.processScript(childPosition)
+                                3 -> owner.processLibrary(childPosition)
+                            }
                         }
                     }
+                }.lparams(width = matchParent, height = matchParent) {
+                    behavior = AppBarLayout.ScrollingViewBehavior()
                 }
-                expandableListView {
-                    setAdapter(expandableAdapter)
-                    onChildClick { _, _, groupPosition, childPosition, _ ->
-                        when(groupPosition) {
-                            0 -> owner.processParameter(childPosition)
-                            1 -> owner.processRole(childPosition)
-                            2 -> owner.processScript(childPosition)
-                            3 -> owner.processLibrary(childPosition)
+                floatingActionButton {
+                    onClick {
+                        selector("", listOf("Counter", "Role", "Action", "Library", "Import library")) { _, i ->
+                            when(i) {
+                                0 -> owner.addParameter()
+                                1 -> owner.addRole()
+                                2 -> owner.addScript()
+                                3 -> owner.createLibrary()
+                                4 -> owner.loadLibraryFromFile()
+                            }
                         }
                     }
+                    imageResource = R.drawable.ic_add_white_24dp
+                }.lparams(width = wrapContent, height = wrapContent) {
+                    gravity = Gravity.BOTTOM + Gravity.END
+                    margin = dip(16)
                 }
-            }.lparams(width = matchParent, height = matchParent) {
-                behavior = AppBarLayout.ScrollingViewBehavior()
-            }
-            floatingActionButton {
-                onClick {
-                    selector("", listOf("Counter", "Role", "Action", "Library", "Import library")) { _, i ->
-                        when(i) {
-                            0 -> owner.addParameter()
-                            1 -> owner.addRole()
-                            2 -> owner.addScript()
-                            3 -> owner.createLibrary()
-                            4 -> owner.loadLibraryFromFile()
-                        }
-                    }
-                }
-                imageResource = R.drawable.ic_add_white_24dp
-            }.lparams(width = wrapContent, height = wrapContent) {
-                gravity = Gravity.BOTTOM + Gravity.END
-                margin = dip(16)
             }
         }
     }
 }
+
 

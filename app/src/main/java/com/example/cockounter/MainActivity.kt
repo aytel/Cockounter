@@ -4,9 +4,11 @@ import android.Manifest
 import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
+import android.view.Gravity
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
+import androidx.core.view.marginTop
 import androidx.room.Room
 import com.example.cockounter.storage.Storage
 import org.jetbrains.anko.*
@@ -20,42 +22,34 @@ class MainActivity : AppCompatActivity() {
         private const val CODE_RUN_MULTI_PLAYER_GAME = 3
     }
 
-    fun initDatabase() {
+    private fun initDatabase() {
         Storage.database =
             Room.databaseBuilder(this, Storage::class.java, "storage").fallbackToDestructiveMigration().build()
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-
-
         MainUI().setContentView(this)
         ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.INTERNET), 1)
-
         doAsync {
             initDatabase()
         }
     }
 
-    fun createSinglePlayerGame() {
+    private fun createSinglePlayerGame() {
         startActivityForResult(intentFor<SelectPresetActivity>(), CODE_START_SINGLE_PLAYER_GAME)
     }
 
-    fun createMultiPlayerGame() {
+    private fun createMultiPlayerGame() {
         startActivityForResult(intentFor<SelectPresetActivity>(), CODE_START_MULTI_PLAYER_GAME)
     }
 
-    fun resumeGame() {
+    private fun resumeGame() {
         startActivity(intentFor<ResumeGameActivity>())
     }
 
-    fun joinGame() {
+    private fun joinGame() {
         startActivity(intentFor<JoinGameActivity>())
-    }
-
-    fun editPresets() {
-        startActivity(intentFor<SelectPresetActivity>())
     }
 
     private var selectedId: Int = 0
@@ -111,37 +105,36 @@ class MainActivity : AppCompatActivity() {
             }
         }
     }
-}
 
-private class MainUI : AnkoComponent<MainActivity> {
-    override fun createView(ui: AnkoContext<MainActivity>): View = with(ui) {
-        verticalLayout {
-            button("Create game") {
-                onClick {
-                    owner.createSinglePlayerGame()
+    private class MainUI : AnkoComponent<MainActivity> {
+        override fun createView(ui: AnkoContext<MainActivity>): View = with(ui) {
+            verticalLayout {
+                lparams(matchParent, wrapContent) {
+                    margin = dip(10)
                 }
-            }
-            button("Create multiplayer game") {
-                onClick {
-                    owner.createMultiPlayerGame()
+                button("Create game") {
+                    onClick {
+                        owner.createSinglePlayerGame()
+                    }
                 }
-            }
-            button("Resume game") {
-                onClick {
-                    owner.resumeGame()
+                button("Create multiplayer game") {
+                    onClick {
+                        owner.createMultiPlayerGame()
+                    }
                 }
-            }
-            button("Join game") {
-                onClick {
-                    owner.joinGame()
+                button("Resume game") {
+                    onClick {
+                        owner.resumeGame()
+                    }
                 }
-            }
-            button("Edit presets") {
-                onClick {
-                    owner.editPresets()
+                button("Join game") {
+                    onClick {
+                        owner.joinGame()
+                    }
                 }
             }
         }
     }
 }
+
 

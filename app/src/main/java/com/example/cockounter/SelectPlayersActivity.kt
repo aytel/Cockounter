@@ -4,6 +4,8 @@ import android.app.Activity
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.view.Gravity
+import android.view.MenuItem
 import android.view.View
 import android.widget.ArrayAdapter
 import androidx.lifecycle.*
@@ -12,7 +14,11 @@ import arrow.core.Option
 import arrow.core.Some
 import com.example.cockounter.adapters.PlayersAdapter
 import com.example.cockounter.core.PlayerDescription
+import com.google.android.material.appbar.AppBarLayout
 import org.jetbrains.anko.*
+import org.jetbrains.anko.design.appBarLayout
+import org.jetbrains.anko.design.coordinatorLayout
+import org.jetbrains.anko.design.floatingActionButton
 import org.jetbrains.anko.sdk27.coroutines.onClick
 
 class SelectPlayersViewModel(roles: Array<String>) : ViewModel() {
@@ -61,15 +67,22 @@ class SelectPlayersActivity : AppCompatActivity() {
                     val name = editText {
                         hint = "Name"
                     }
-                    val roleSpinner = spinner {
-                        adapter = roleAdapter
-                    }
-                    yesButton {
-                        when (val result = viewModel.addNewPlayer(name.text.toString(), roleSpinner.selectedItem as String)) {
-                            is Some -> toast(result.t)
+                    linearLayout {
+                        lparams {
+                            margin = dip(8)
                         }
+                        textView("Role")
+                        val roleSpinner = spinner {
+                            adapter = roleAdapter
+                        }
+                        yesButton {
+                            when (val result =
+                                viewModel.addNewPlayer(name.text.toString(), roleSpinner.selectedItem as String)) {
+                                is Some -> toast(result.t)
+                            }
+                        }
+                        noButton { }
                     }
-                    noButton { }
                 }
             }
         }.show()
@@ -86,19 +99,41 @@ class SelectPlayersActivity : AppCompatActivity() {
 
     private class SelectPlayersGameUI(private val playersAdapter: PlayersAdapter) : AnkoComponent<SelectPlayersActivity> {
         override fun createView(ui: AnkoContext<SelectPlayersActivity>): View = with(ui) {
-            verticalLayout {
-                listView {
-                    adapter = playersAdapter
-                }
-                button("Add new player") {
-                    onClick {
-                        ui.owner.addNewPlayer()
+            coordinatorLayout {
+                appBarLayout {
+                    lparams(matchParent, wrapContent) {
+                    }
+                    toolbar {
+                        title = "Add players"
+                        menu.apply {
+                            add("Save").apply {
+                                setIcon(R.drawable.ic_done_black_24dp)
+                                setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS)
+                                setOnMenuItemClickListener {
+                                    owner.startGame()
+                                    true
+                                }
+                            }
+                        }
+                    }.lparams(width = matchParent, height = wrapContent) {
+                        scrollFlags = 0
                     }
                 }
-                button("Start game") {
-                    onClick {
-                        ui.owner.startGame()
+                verticalLayout {
+                    listView {
+                        adapter = playersAdapter
                     }
+                }.lparams(width = matchParent, height = matchParent) {
+                    behavior = AppBarLayout.ScrollingViewBehavior()
+                }
+                floatingActionButton {
+                    onClick {
+                        owner.addNewPlayer()
+                    }
+                    imageResource = R.drawable.ic_add_white_24dp
+                }.lparams(width = wrapContent, height = wrapContent) {
+                    gravity = Gravity.BOTTOM + Gravity.END
+                    margin = dip(16)
                 }
             }
         }

@@ -9,16 +9,16 @@ import com.example.cockounter.core.PresetInfo
 import org.jetbrains.anko.*
 import kotlin.properties.Delegates
 
-class PresetInfoAdapter(val getData: () -> List<PresetInfo>, private val onItemClick: (Int) -> Unit, private val onLongItemClick: (Int) -> Unit) : RecyclerView.Adapter<PresetInfoAdapter.PresetViewHolder>() {
-
+class PresetInfoAdapter(private val onItemClick: (Int) -> Unit, private val onLongItemClick: (Int) -> Unit) : RecyclerView.Adapter<PresetInfoAdapter.PresetViewHolder>() {
+    private var data = listOf<PresetInfo>()
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PresetViewHolder {
         return PresetViewHolderUI().createView(AnkoContext.Companion.create(parent.context, parent)).tag as PresetViewHolder
     }
 
-    override fun getItemCount(): Int = getData().size
+    override fun getItemCount(): Int = data.size
 
     override fun onBindViewHolder(holder: PresetViewHolder, position: Int) {
-        val presets = getData()
+        val presets = data
         if(position >= presets.size) {
             holder.itemView
         } else {
@@ -28,8 +28,8 @@ class PresetInfoAdapter(val getData: () -> List<PresetInfo>, private val onItemC
 
     class PresetViewHolderUI() : AnkoComponent<ViewGroup> {
         override fun createView(ui: AnkoContext<ViewGroup>): View {
-            var name: TextView by Delegates.notNull<TextView>()
-            var description: TextView by Delegates.notNull<TextView>()
+            var name: TextView by Delegates.notNull()
+            var description: TextView by Delegates.notNull()
             val itemView = with(ui) {
                 verticalLayout {
                     lparams(matchParent, wrapContent)
@@ -55,7 +55,7 @@ class PresetInfoAdapter(val getData: () -> List<PresetInfo>, private val onItemC
         }
     }
 
-    class PresetViewHolder(itemView: View, val nameTextView: TextView, val descriptionTextView: TextView) : RecyclerView.ViewHolder(itemView) {
+    class PresetViewHolder(itemView: View, private val nameTextView: TextView, private val descriptionTextView: TextView) : RecyclerView.ViewHolder(itemView) {
         fun bind(name: String, description: String, position: Int, onItemClick: (Int) -> Unit, onLongItemClick: (Int) -> Unit) {
             nameTextView.text = name
             descriptionTextView.text = description
@@ -68,4 +68,11 @@ class PresetInfoAdapter(val getData: () -> List<PresetInfo>, private val onItemC
             }
         }
     }
+
+    fun update(list: List<PresetInfo>) {
+        data = list
+        notifyDataSetChanged()
+    }
+
+    operator fun get(index: Int) = data[index]
 }

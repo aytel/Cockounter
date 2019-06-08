@@ -59,21 +59,21 @@ class EditRoleActivity : AppCompatActivity() {
         private const val CODE_SCRIPT_CHANGED = 5
     }
 
-    sealed class HeaderViewer {
+    private sealed class HeaderViewer {
         object SharedParameter : HeaderViewer()
         object PrivateParameter : HeaderViewer()
         object PresetScript : HeaderViewer()
         companion object
     }
 
-    sealed class ElementViewer {
+    private sealed class ElementViewer {
         data class SharedParameter(val parameter: Parameter) : ElementViewer()
         data class PrivateParameter(val parameter: Parameter) : ElementViewer()
         data class PresetScript(val script: com.example.cockounter.core.PresetScript) : ElementViewer()
         companion object
     }
 
-    interface HeaderShow : ListHeaderShow<HeaderViewer> {
+    private interface HeaderShow : ListHeaderShow<HeaderViewer> {
         override fun HeaderViewer.buildView(context: Context, isSelected: Boolean): View = when (this) {
             HeaderViewer.SharedParameter -> SimpleHeader.listHeaderShow().run {
                 SimpleHeader("Shared parameters").buildView(context, isSelected)
@@ -89,7 +89,7 @@ class EditRoleActivity : AppCompatActivity() {
 
     private fun HeaderViewer.Companion.listHeaderShow() = object : HeaderShow {}
 
-    interface ElementShow : ListElementShow<ElementViewer> {
+    private interface ElementShow : ListElementShow<ElementViewer> {
         override fun ElementViewer.buildView(context: Context): View = when (this) {
             is ElementViewer.SharedParameter -> Parameter.listElementShow().run {
                 this@buildView.parameter.buildView(context)
@@ -133,7 +133,7 @@ class EditRoleActivity : AppCompatActivity() {
         EditRoleUI(viewModel.name, adapter).setContentView(this)
     }
 
-    fun editSharedParameter(index: Int) {
+    private fun editSharedParameter(index: Int) {
         startActivityForResult(
             intentFor<EditParameterActivity>(
                 EditParameterActivity.REQUEST to EditParameterActivity.REQUEST_NEW_PARAMETER,
@@ -143,11 +143,11 @@ class EditRoleActivity : AppCompatActivity() {
         )
     }
 
-    fun deleteSharedParameter(index: Int) {
+    private fun deleteSharedParameter(index: Int) {
         viewModel.sharedParameters.removeAt(index)
     }
 
-    fun editPrivateParameter(index: Int) {
+    private fun editPrivateParameter(index: Int) {
         startActivityForResult(
             intentFor<EditParameterActivity>(
                 EditParameterActivity.REQUEST to EditParameterActivity.REQUEST_NEW_PARAMETER,
@@ -157,11 +157,11 @@ class EditRoleActivity : AppCompatActivity() {
         )
     }
 
-    fun deletePrivateParameter(index: Int) {
+    private fun deletePrivateParameter(index: Int) {
         viewModel.privateParameters.removeAt(index)
     }
 
-    fun addSharedParameter() {
+    private fun addSharedParameter() {
         startActivityForResult(
             intentFor<EditParameterActivity>(
                 EditParameterActivity.REQUEST to EditParameterActivity.REQUEST_NEW_PARAMETER
@@ -170,7 +170,7 @@ class EditRoleActivity : AppCompatActivity() {
         )
     }
 
-    fun addPrivateParameter() {
+    private fun addPrivateParameter() {
         startActivityForResult(
             intentFor<EditParameterActivity>(
                 EditParameterActivity.REQUEST to EditParameterActivity.REQUEST_NEW_PARAMETER
@@ -179,7 +179,7 @@ class EditRoleActivity : AppCompatActivity() {
         )
     }
 
-    fun editAction(index: Int) {
+    private fun editAction(index: Int) {
         startActivityForResult(
             intentFor<EditPresetScriptActivity>(
                 EditPresetScriptActivity.ARG_PRESET_SCRIPT to viewModel.scripts[index],
@@ -188,18 +188,18 @@ class EditRoleActivity : AppCompatActivity() {
         )
     }
 
-    fun addAction() {
+    private fun addAction() {
         startActivityForResult(
             intentFor<EditPresetScriptActivity>(EditPresetScriptActivity.ARG_PRESET_SCRIPT to null),
             CODE_SCRIPT_ADDED
         )
     }
 
-    fun deleteAction(index: Int) {
+    private fun deleteAction(index: Int) {
         viewModel.scripts.removeAt(index)
     }
 
-    fun processSharedParameter(index: Int) {
+    private fun processSharedParameter(index: Int) {
         selector(null, listOf("Edit", "Delete")) { _, i ->
             when (i) {
                 0 -> editSharedParameter(index)
@@ -208,7 +208,7 @@ class EditRoleActivity : AppCompatActivity() {
         }
     }
 
-    fun processPrivateParameter(index: Int) {
+    private fun processPrivateParameter(index: Int) {
         selector(null, listOf("Edit", "Delete")) { _, i ->
             when (i) {
                 0 -> editPrivateParameter(index)
@@ -217,7 +217,7 @@ class EditRoleActivity : AppCompatActivity() {
         }
     }
 
-    fun processScript(index: Int) {
+    private fun processScript(index: Int) {
         selector(null, listOf("Edit", "Delete")) { _, i ->
             when (i) {
                 0 -> editAction(index)
@@ -226,7 +226,7 @@ class EditRoleActivity : AppCompatActivity() {
         }
     }
 
-    fun save() {
+    private fun save() {
         val result = Intent()
         val sharedParameters = viewModel.sharedParameters.data
         val privateParameters = viewModel.privateParameters.data
@@ -248,7 +248,7 @@ class EditRoleActivity : AppCompatActivity() {
         finish()
     }
 
-    fun updateName(name: String) {
+    private fun updateName(name: String) {
         viewModel.name = name
     }
 
@@ -258,8 +258,10 @@ class EditRoleActivity : AppCompatActivity() {
             yesButton {
                 save()
             }
-            noButton {  }
-        }
+            noButton {
+                finish()
+            }
+        }.show()
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {

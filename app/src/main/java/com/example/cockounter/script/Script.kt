@@ -173,7 +173,6 @@ fun buildScriptEvaluation(preset: Preset): ScriptEvaluation {
     val globals = JsePlatform.standardGlobals()
     return { context: Context ->
         mapFunctions(globals, buildInteractionFunctionsWithContext(context));
-        //FIXME load libraries
         preset.libraries.forEach {
             globals.load(it.script).call()
         };
