@@ -4,12 +4,9 @@ import android.util.Log
 import com.example.cockounter.MultiPlayerGameViewModel
 import com.example.cockounter.core.GameState
 import com.example.cockounter.core.StateCaptureConverter
-import com.google.android.gms.tasks.OnCompleteListener
-import com.google.android.gms.tasks.Task
 import com.google.firebase.iid.FirebaseInstanceId
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
-import java.util.*
 
 class StateUpdaterFirebaseMessagingService: FirebaseMessagingService() {
     companion object {
@@ -20,11 +17,19 @@ class StateUpdaterFirebaseMessagingService: FirebaseMessagingService() {
         }
 
         var multiPlayerGameViewModel: MultiPlayerGameViewModel? = null
+        set(value) {
+            setToken()
+            if (value == null) {
+                NetworkHandler.changeToken(field?.uuid, token, null)
+            } else {
+                NetworkHandler.changeToken(field?.uuid, null, token)
+            }
+            field = value
+        }
 
-        fun setToken() {
+        private fun setToken() {
             val tokenGetter = FirebaseInstanceId.getInstance().instanceId
                 .addOnSuccessListener { result ->
-
                     // Get new Instance ID token
                     token = result.token
 
@@ -47,7 +52,7 @@ class StateUpdaterFirebaseMessagingService: FirebaseMessagingService() {
     }
 
     override fun onMessageReceived(remoteMessage: RemoteMessage) {
-        Log.w("", "data = ${remoteMessage.data}")
+        Log.w("", "data = $remoteMessage")
         if (remoteMessage.data.isNotEmpty()) {
             multiPlayerGameViewModel?.updateGameState(StateCaptureConverter.gson.fromJson(
                 remoteMessage.data["state"],
