@@ -20,6 +20,24 @@ class StateUpdaterFirebaseMessagingService: FirebaseMessagingService() {
         }
 
         var multiPlayerGameViewModel: MultiPlayerGameViewModel? = null
+
+        fun setToken() {
+            val tokenGetter = FirebaseInstanceId.getInstance().instanceId
+                .addOnSuccessListener { result ->
+
+                    // Get new Instance ID token
+                    token = result.token
+
+                    // Log and toast
+                    //val msg = getString(R.string.msg_token_fmt, token)
+                    Log.d("", "token = ${result.token}")
+                }
+
+            while (!tokenGetter.isSuccessful) {
+                Thread.sleep(100)
+            }
+            token = tokenGetter.result?.token
+        }
     }
 
     override fun onNewToken(token: String) {
@@ -36,23 +54,5 @@ class StateUpdaterFirebaseMessagingService: FirebaseMessagingService() {
                 GameState::class.java
             ))
         }
-    }
-
-    fun setToken() {
-        val tokenGetter = FirebaseInstanceId.getInstance().instanceId
-            .addOnSuccessListener { result ->
-
-                // Get new Instance ID token
-                token = result.token
-
-                // Log and toast
-                //val msg = getString(R.string.msg_token_fmt, token)
-                Log.d("", "token = ${result.token}")
-            }
-
-        while (!tokenGetter.isSuccessful) {
-            Thread.sleep(100)
-        }
-        token = tokenGetter.result?.token
     }
 }
