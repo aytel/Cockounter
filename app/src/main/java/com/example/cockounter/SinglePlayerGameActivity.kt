@@ -24,6 +24,7 @@ import arrow.core.Option
 import arrow.core.Some
 import arrow.core.Try
 import com.example.cockounter.adapters.ExpandablePlayerRepresentationAdapter
+import com.example.cockounter.adapters.RoleAdapter
 import com.example.cockounter.core.*
 import com.example.cockounter.script.Action
 import com.example.cockounter.script.Evaluation
@@ -40,6 +41,7 @@ import org.jetbrains.anko.support.v4.act
 import org.jetbrains.anko.support.v4.ctx
 import org.jetbrains.anko.support.v4.find
 import org.jetbrains.anko.support.v4.viewPager
+import java.lang.IllegalStateException
 import java.util.*
 
 class SinglePlayerGameViewModel() : ViewModel() {
@@ -165,6 +167,16 @@ class SinglePlayerGameActivity : AppCompatActivity(), GameHolder, ActionPerforme
         }
     }
 
+    override fun onBackPressed() {
+        alert {
+            message = "Do you want to quit?"
+            yesButton {
+                finish()
+            }
+            noButton {  }
+        }
+    }
+
     fun saveState() {
         alert {
             customView {
@@ -226,7 +238,9 @@ class SinglePlayerGameActivity : AppCompatActivity(), GameHolder, ActionPerforme
             }
         }
         //viewModel.state.observe(this, androidx.lifecycle.Observer { _ -> pagerAdapter.notifyDataSetChanged() })
-        viewModel.representation.observe(this, androidx.lifecycle.Observer { _ -> pagerAdapter.notifyDataSetChanged() })
+        viewModel.representation.observe(this, androidx.lifecycle.Observer { _ ->
+            pagerAdapter.notifyDataSetChanged()
+        })
         coordinatorLayout {
             lparams(matchParent, matchParent)
 
@@ -312,36 +326,44 @@ class PlayerGameScreenFragment : Fragment(), ActionPerformer {
                     gameAdapter = ExpandablePlayerRepresentationAdapter(representation.players[index], ::performAction)
                     if(act is SinglePlayerGameActivity) {
                         val viewModel = ViewModelProviders.of(act).get(SinglePlayerGameViewModel::class.java)
+                        viewModel.state.removeObservers(this)
                         viewModel.state.observe(this, androidx.lifecycle.Observer {
                             (gameAdapter as ExpandablePlayerRepresentationAdapter).update(it)
                         })
-
                     } else if(act is MultiPlayerGameActivity) {
                         val viewModel = ViewModelProviders.of(act).get(MultiPlayerGameViewModel::class.java)
+                        viewModel.state.removeObservers(this)
                         viewModel.state.observe(this, androidx.lifecycle.Observer {
                             (gameAdapter as ExpandablePlayerRepresentationAdapter).update(it)
                         })
                     }
                 }
                 is Model.Game.ByRole -> {
-                    //gameAdapter = RoleRepresentationAdapter(representation.roles[index], ::getState, ::performAction)
+                    gameAdapter = RoleAdapter(representation.roles[index], ::performAction)
+                    if(act is SinglePlayerGameActivity) {
+                        val viewModel = ViewModelProviders.of(act).get(SinglePlayerGameViewModel::class.java)
+                        viewModel.state.removeObservers(this)
+                        viewModel.state.observe(this, androidx.lifecycle.Observer {
+                            (gameAdapter as RoleAdapter).update(it)
+                        })
+
+                    } else if(act is MultiPlayerGameActivity) {
+                        val viewModel = ViewModelProviders.of(act).get(MultiPlayerGameViewModel::class.java)
+                        viewModel.state.removeObservers(this)
+                        viewModel.state.observe(this, androidx.lifecycle.Observer {
+                            (gameAdapter as RoleAdapter).update(it)
+                        })
+                    }
                 }
             }
-
             return PlayerGameScreenUI(gameAdapter).createView(AnkoContext.Companion.create(ctx, this))
         } else {
-            //FIXME
-            return find(0)
+            throw IllegalStateException("index is -1")
         }
     }
 
     override fun performAction(action: Action) {
         (act as ActionPerformer).performAction(action)
-        /*
-        alert {
-            message = getState().toString()
-        }.listElementShow()
-        */
     }
 }
 

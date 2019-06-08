@@ -162,6 +162,36 @@ interface ActionElementShow : GameElementShow<Model.ActionButton> {
 
 fun Model.ActionButton.Companion.gameElementShow() = object : ActionElementShow {}
 
+interface GroupPrivateParameterElementShow: GameElementShow<Model.GroupPrivateParameter> {
+    override fun Model.GroupPrivateParameter.buildView(context: Context, gameState: GameState, perform: (Action) -> Unit): View = with(context) {
+        with(context) {
+            linearLayout {
+                verticalLayout {
+                    textView(playerName)
+                    textView(gameState[parameter.parameter].valueString())
+                }
+                horizontalScrollView {
+                    linearLayout {
+                        parameter.attachedButtons.forEach {
+                            val action = it.action
+                            button(it.text) {
+                                onClick {
+                                    perform(action)
+                                }
+                            }
+                        }
+                    }
+                }.lparams() {
+                    gravity = Gravity.END
+                }
+            }
+        }
+    }
+}
+
+fun Model.GroupPrivateParameter.Companion.gameElementShow() = object : GroupPrivateParameterElementShow {}
+
+
 
 interface ListHeaderShow<F> {
     fun F.buildView(context: Context, isSelected: Boolean): View

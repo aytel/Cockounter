@@ -89,7 +89,7 @@ class MultiPlayerGameViewModel() : ViewModel() {
                 return Some(it.message ?: "")
             }, {
                 context.runOnUiThread {
-                    state.value = NetworkHandler.updateGameState(uuid, it)
+                    NetworkHandler.updateGameState(uuid, it)
                 }
                 return None
             })

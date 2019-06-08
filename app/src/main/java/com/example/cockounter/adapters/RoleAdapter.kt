@@ -1,13 +1,17 @@
 package com.example.cockounter.adapters
 
+import android.content.Context
+import android.view.View
+import android.view.ViewGroup
 import android.widget.BaseExpandableListAdapter
+import com.example.cockounter.adapters.simpleheader.listHeaderShow.listHeaderShow
+import com.example.cockounter.core.GameState
 import com.example.cockounter.core.Model
 import com.example.cockounter.script.Action
 
 
-/*
 class RoleAdapter(
-    private val representation: Model.Player,
+    private val representation: Model.Role,
     private val perform: (Action) -> Unit
 ) : BaseExpandableListAdapter() {
 
@@ -22,6 +26,7 @@ class RoleAdapter(
         override fun ElementViewer.buildView(context: Context, gameState: GameState, perform: (Action) -> Unit): View = when(this) {
             is ElementViewer.Parameter -> Model.Parameter.gameElementShow().run { parameter.buildView(context, gameState, perform) }
             is ElementViewer.Button -> Model.ActionButton.gameElementShow().run { button.buildView(context, gameState, perform) }
+            is ElementViewer.GroupParameter -> Model.GroupPrivateParameter.gameElementShow().run { parameter.buildView(context, gameState, perform) }
         }
     }
     fun ElementViewer.Companion.gameElementShow() = object : ElementViewerGameElementShow {}
@@ -29,8 +34,8 @@ class RoleAdapter(
     sealed class HeaderViewer {
         object GlobalParameters : HeaderViewer()
         object SharedParameters : HeaderViewer()
-        object PrivateParameters : HeaderViewer()
-        object Buttons : HeaderViewer()
+        data class PrivateParameters(val name: String) : HeaderViewer()
+        data class Buttons(val player: String) : HeaderViewer()
         companion object
     }
 
@@ -38,22 +43,23 @@ class RoleAdapter(
         override fun HeaderViewer.buildView(context: Context, isSelected: Boolean): View = when(this){
             HeaderViewer.GlobalParameters -> SimpleHeader.listHeaderShow().run { SimpleHeader("Global parameters").buildView(context, isSelected) }
             HeaderViewer.SharedParameters -> SimpleHeader.listHeaderShow().run { SimpleHeader("Shared parameters").buildView(context, isSelected) }
-            HeaderViewer.PrivateParameters -> SimpleHeader.listHeaderShow().run { SimpleHeader("Private parameters").buildView(context, isSelected) }
-            HeaderViewer.Buttons -> SimpleHeader.listHeaderShow().run { SimpleHeader("Actions").buildView(context, isSelected) }
+            is HeaderViewer.PrivateParameters -> SimpleHeader.listHeaderShow().run { SimpleHeader(name).buildView(context, isSelected) }
+            is HeaderViewer.Buttons -> SimpleHeader.listHeaderShow().run { SimpleHeader(player).buildView(context, isSelected) }
         }
     }
     fun HeaderViewer.Companion.listHeaderShow() = object : HeaderViewerListHeaderShow {}
 
-    private val headers = listOf(HeaderViewer.GlobalParameters, HeaderViewer.SharedParameters, HeaderViewer.PrivateParameters, HeaderViewer.Buttons)
-    private val groups = headers.map { listOf<ElementViewer>() }.toMutableList()
+    private val headers = listOf(HeaderViewer.GlobalParameters, HeaderViewer.SharedParameters) +
+            representation.privateParameterBlocks.map { HeaderViewer.PrivateParameters(it.name) } +
+            representation.freeButtons.map { HeaderViewer.Buttons(it.player) }
+    private val groups = headers.map { header ->  when(header) {
+            HeaderViewer.GlobalParameters -> representation.globalParameters.map { ElementViewer.Parameter(it) }
+            HeaderViewer.SharedParameters -> representation.sharedParameters.map { ElementViewer.Parameter(it) }
+            is HeaderViewer.PrivateParameters -> representation.privateParameterBlocks.find { it.name == header.name }!!.parameters.map { ElementViewer.GroupParameter(it) }
+            is HeaderViewer.Buttons -> representation.freeButtons.find { it.player == header.player }!!.buttons.map { ElementViewer.Button(it) }
+        } }.toMutableList()
     private lateinit var state: GameState
 
-    init {
-        groups[0] = representation.globalParameters.map { ElementViewer.Parameter(it) }
-        groups[1] = representation.sharedParameters.map { ElementViewer.Parameter(it) }
-        groups[2] = representation.privateParameters.map { ElementViewer.Parameter(it) }
-        groups[3] = representation.freeButtons.map { ElementViewer.Button(it) }
-    }
 
     override fun getGroup(groupPosition: Int): Any = groups[groupPosition]
 
@@ -89,4 +95,3 @@ class RoleAdapter(
         notifyDataSetChanged()
     }
 }
-*/

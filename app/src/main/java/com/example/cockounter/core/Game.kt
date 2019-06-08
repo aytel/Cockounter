@@ -25,7 +25,7 @@ object Model {
         val globalParameters: List<Parameter>,
         val sharedParameters: List<Parameter>,
         val privateParameterBlocks: List<PrivateParameterBlock>,
-        val freeButtons: List<ActionButton>
+        val freeButtons: List<ActionButtonsBlock>
     ) {
         companion object
     }
@@ -37,10 +37,11 @@ object Model {
         companion object
     }
 
-    data class GroupPrivateParameter(
-        val playerName: String,
-        val parameter: Parameter
-    ) {
+    data class GroupPrivateParameter(val playerName: String, val parameter: Parameter) {
+        companion object
+    }
+
+    data class ActionButtonsBlock(val player: String, val buttons: List<ActionButton>) {
         companion object
     }
 
@@ -67,14 +68,18 @@ object Model {
         ScriptContextDescription.ALL -> ScriptContext.Full(player)
     }
 
-    private fun buildContext(context: ScriptContextDescription, player: PlayerDescription): ScriptContext = when (context) {
-        ScriptContextDescription.NONE -> ScriptContext.None
-        ScriptContextDescription.SINGLE_PARAMETER -> ScriptContext.None //Todo None
-        ScriptContextDescription.PLAYER_ONLY -> ScriptContext.PlayerOnly(player)
-        ScriptContextDescription.ALL -> ScriptContext.Full(player)
-    }
+    private fun buildContext(context: ScriptContextDescription, player: PlayerDescription): ScriptContext =
+        when (context) {
+            ScriptContextDescription.NONE -> ScriptContext.None
+            ScriptContextDescription.SINGLE_PARAMETER -> ScriptContext.None //Todo None
+            ScriptContextDescription.PLAYER_ONLY -> ScriptContext.PlayerOnly(player)
+            ScriptContextDescription.ALL -> ScriptContext.Full(player)
+        }
 
-    private fun buildGameParameterPointer(parameterPointer: ParameterPointer, player: PlayerDescription): GameParameterPointer =
+    private fun buildGameParameterPointer(
+        parameterPointer: ParameterPointer,
+        player: PlayerDescription
+    ): GameParameterPointer =
         when (parameterPointer) {
             is ParameterPointer.Global -> GameParameterPointer.Global(parameterPointer.name)
             is ParameterPointer.Shared -> GameParameterPointer.Shared(player.role, parameterPointer.name)
@@ -191,7 +196,7 @@ object Model {
             PrivateParameterBlock(it.key,
                 it.value.map { GroupPrivateParameter(it.first, it.second) })
         }
-        val freeButtons = buildFreeButtons(preset.actionButtons, players[0])
+        val freeButtons = players.filter { it.role == roleName }.map { ActionButtonsBlock(it.name, buildFreeButtons(preset.actionButtons, it)) }
         return Role(roleName, globalParameters, sharedParameters, blocks, freeButtons)
     }
 
