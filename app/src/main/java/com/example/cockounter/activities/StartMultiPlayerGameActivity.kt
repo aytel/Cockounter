@@ -1,4 +1,4 @@
-package com.example.cockounter
+package com.example.cockounter.activities
 
 import android.app.Activity
 import android.content.Intent

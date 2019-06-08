@@ -1,4 +1,4 @@
-package com.example.cockounter
+package com.example.cockounter.activities
 
 import android.app.Activity
 import android.content.Intent
@@ -6,7 +6,6 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import com.google.zxing.Result
 import me.dm7.barcodescanner.zxing.ZXingScannerView
-import org.jetbrains.anko.toast
 
 class QRCodeScannerActivity : AppCompatActivity(), ZXingScannerView.ResultHandler {
     companion object {

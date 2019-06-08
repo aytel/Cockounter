@@ -1,4 +1,4 @@
-package com.example.cockounter
+package com.example.cockounter.activities
 
 import android.app.Activity
 import android.content.Context
@@ -13,6 +13,8 @@ import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelProviders
+import com.example.cockounter.EditableList
+import com.example.cockounter.R
 import com.example.cockounter.adapters.*
 import com.example.cockounter.adapters.simpleheader.listHeaderShow.listHeaderShow
 import com.example.cockounter.core.Parameter
@@ -87,7 +89,8 @@ class EditRoleActivity : AppCompatActivity() {
         }
     }
 
-    private fun HeaderViewer.Companion.listHeaderShow() = object : HeaderShow {}
+    private fun HeaderViewer.Companion.listHeaderShow() = object :
+        HeaderShow {}
 
     private interface ElementShow : ListElementShow<ElementViewer> {
         override fun ElementViewer.buildView(context: Context): View = when (this) {
@@ -103,7 +106,8 @@ class EditRoleActivity : AppCompatActivity() {
         }
     }
 
-    private fun ElementViewer.Companion.listElementShow() = object : ElementShow {}
+    private fun ElementViewer.Companion.listElementShow() = object :
+        ElementShow {}
 
     private lateinit var viewModel: EditRoleViewModel
     private lateinit var adapter: EditPresetAdapter<HeaderViewer, ElementViewer>
@@ -127,9 +131,21 @@ class EditRoleActivity : AppCompatActivity() {
                 HeaderViewer.PresetScript
             ), ElementViewer.listElementShow(), HeaderViewer.listHeaderShow()
         )
-        viewModel.sharedParameters.liveData.observe(this, Observer { list -> adapter.update(0, list.map { ElementViewer.PrivateParameter(it) }) })
-        viewModel.privateParameters.liveData.observe(this, Observer { list -> adapter.update(1, list.map { ElementViewer.SharedParameter(it) }) })
-        viewModel.scripts.liveData.observe(this, Observer { list -> adapter.update(2, list.map { ElementViewer.PresetScript(it) }) })
+        viewModel.sharedParameters.liveData.observe(this, Observer { list -> adapter.update(0, list.map {
+            ElementViewer.PrivateParameter(
+                it
+            )
+        }) })
+        viewModel.privateParameters.liveData.observe(this, Observer { list -> adapter.update(1, list.map {
+            ElementViewer.SharedParameter(
+                it
+            )
+        }) })
+        viewModel.scripts.liveData.observe(this, Observer { list -> adapter.update(2, list.map {
+            ElementViewer.PresetScript(
+                it
+            )
+        }) })
         EditRoleUI(viewModel.name, adapter).setContentView(this)
     }
 
@@ -242,7 +258,9 @@ class EditRoleActivity : AppCompatActivity() {
                 )
             )
             //TODO add new scripts
-            putExtra(RETURN_POSITION, intent.getIntExtra(ARG_POSITION, -1))
+            putExtra(
+                RETURN_POSITION, intent.getIntExtra(
+                    ARG_POSITION, -1))
         }
         setResult(Activity.RESULT_OK, result)
         finish()

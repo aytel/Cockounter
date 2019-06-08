@@ -13,35 +13,35 @@
             android:roundIcon="@mipmap/ic_launcher_round"
             android:supportsRtl="true"
             android:theme="@style/AppTheme">
-        <activity android:name=".StartMultiPlayerGameActivity">
+        <activity android:name=".activities.StartMultiPlayerGameActivity">
         </activity>
-        <activity android:name=".MultiPlayerGameActivity">
+        <activity android:name=".activities.MultiPlayerGameActivity">
         </activity>
-        <activity android:name=".EditLibraryActivity">
+        <activity android:name=".activities.EditLibraryActivity">
         </activity>
-        <activity android:name=".QRCodeScannerActivity">
+        <activity android:name=".activities.QRCodeScannerActivity">
         </activity>
-        <activity android:name=".JoinGameActivity">
+        <activity android:name=".activities.JoinGameActivity">
         </activity>
-        <activity android:name=".ResumeGameActivity">
+        <activity android:name=".activities.ResumeGameActivity">
         </activity>
-        <activity android:name=".SelectPlayersActivity">
+        <activity android:name=".activities.SelectPlayersActivity">
         </activity>
-        <activity android:name=".SinglePlayerGameActivity">
+        <activity android:name=".activities.SinglePlayerGameActivity">
         </activity>
         <activity android:name=".GameScreenActivity">
         </activity>
-        <activity android:name=".EditPresetScriptActivity">
+        <activity android:name=".activities.EditPresetScriptActivity">
         </activity>
-        <activity android:name=".EditRoleActivity">
+        <activity android:name=".activities.EditRoleActivity">
         </activity>
-        <activity android:name=".EditParameterActivity">
+        <activity android:name=".activities.EditParameterActivity">
         </activity>
-        <activity android:name=".EditPresetActivity">
+        <activity android:name=".activities.EditPresetActivity">
         </activity>
-        <activity android:name=".SelectPresetActivity">
+        <activity android:name=".activities.SelectPresetActivity">
         </activity>
-        <activity android:name=".MainActivity">
+        <activity android:name=".activities.MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
 

@@ -1,7 +1,7 @@
 package com.example.cockounter.network
 
 import android.util.Log
-import com.example.cockounter.MultiPlayerGameViewModel
+import com.example.cockounter.activities.MultiPlayerGameViewModel
 import com.example.cockounter.core.GameState
 import com.example.cockounter.core.StateCaptureConverter
 import com.google.firebase.iid.FirebaseInstanceId

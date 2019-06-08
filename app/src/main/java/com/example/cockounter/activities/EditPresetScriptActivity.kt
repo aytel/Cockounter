@@ -1,4 +1,4 @@
-package com.example.cockounter
+package com.example.cockounter.activities
 
 import android.app.Activity
 import android.content.Intent
@@ -10,6 +10,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelProviders
+import com.example.cockounter.R
 import com.example.cockounter.core.PresetScript
 import com.example.cockounter.core.ScriptContextDescription
 import com.google.android.material.appbar.AppBarLayout
@@ -57,7 +58,11 @@ class EditPresetScriptActivity : AppCompatActivity() {
             }).get(EditPresetScriptViewModel::class.java)
         }
         with(viewModel) {
-            EditButtonDescriptionUI(visibleName, script, contextPosition)
+            EditButtonDescriptionUI(
+                visibleName,
+                script,
+                contextPosition
+            )
         }.setContentView(this)
     }
 
@@ -83,12 +88,15 @@ class EditPresetScriptActivity : AppCompatActivity() {
     private fun save() {
         val result = Intent()
         result.run {
-            putExtra(RETURN_PRESET_SCRIPT, PresetScript(
+            putExtra(
+                RETURN_PRESET_SCRIPT, PresetScript(
                 visibleName = viewModel.visibleName,
                 script = viewModel.script,
                 context = viewModel.context
             ))
-            putExtra(RETURN_POSITION, intent.getIntExtra(ARG_POSITION, -1))
+            putExtra(
+                RETURN_POSITION, intent.getIntExtra(
+                    ARG_POSITION, -1))
         }
         setResult(Activity.RESULT_OK, result)
         finish()

@@ -1,14 +1,12 @@
-package com.example.cockounter
+package com.example.cockounter.activities
 
 import android.Manifest
 import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
-import android.view.Gravity
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
-import androidx.core.view.marginTop
 import androidx.room.Room
 import com.example.cockounter.storage.Storage
 import org.jetbrains.anko.*
@@ -37,11 +35,15 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun createSinglePlayerGame() {
-        startActivityForResult(intentFor<SelectPresetActivity>(), CODE_START_SINGLE_PLAYER_GAME)
+        startActivityForResult(intentFor<SelectPresetActivity>(),
+            CODE_START_SINGLE_PLAYER_GAME
+        )
     }
 
     private fun createMultiPlayerGame() {
-        startActivityForResult(intentFor<SelectPresetActivity>(), CODE_START_MULTI_PLAYER_GAME)
+        startActivityForResult(intentFor<SelectPresetActivity>(),
+            CODE_START_MULTI_PLAYER_GAME
+        )
     }
 
     private fun resumeGame() {
@@ -65,7 +67,9 @@ class MainActivity : AppCompatActivity() {
                 doAsync {
                     val roles = Storage.getPresetInfoById(selectedId).preset.roles.keys.toTypedArray()
                     runOnUiThread {
-                        startActivityForResult(intentFor<SelectPlayersActivity>(SelectPlayersActivity.ARG_ROLES to roles), CODE_RUN_SINGLE_PLAYER_GAME)
+                        startActivityForResult(intentFor<SelectPlayersActivity>(SelectPlayersActivity.ARG_ROLES to roles),
+                            CODE_RUN_SINGLE_PLAYER_GAME
+                        )
                     }
                 }
             }
@@ -87,7 +91,9 @@ class MainActivity : AppCompatActivity() {
                 doAsync {
                     val roles = Storage.getPresetInfoById(selectedId).preset.roles.keys.toTypedArray()
                     runOnUiThread {
-                        startActivityForResult(intentFor<SelectPlayersActivity>(SelectPlayersActivity.ARG_ROLES to roles), CODE_RUN_MULTI_PLAYER_GAME)
+                        startActivityForResult(intentFor<SelectPlayersActivity>(SelectPlayersActivity.ARG_ROLES to roles),
+                            CODE_RUN_MULTI_PLAYER_GAME
+                        )
                     }
                 }
             }

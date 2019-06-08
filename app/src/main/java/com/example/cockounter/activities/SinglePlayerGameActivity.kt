@@ -1,4 +1,4 @@
-package com.example.cockounter
+package com.example.cockounter.activities
 
 import android.content.Context
 import android.os.Bundle
@@ -23,6 +23,7 @@ import arrow.core.None
 import arrow.core.Option
 import arrow.core.Some
 import arrow.core.Try
+import com.example.cockounter.R
 import com.example.cockounter.adapters.ExpandablePlayerRepresentationAdapter
 import com.example.cockounter.adapters.RoleAdapter
 import com.example.cockounter.core.*
@@ -39,7 +40,6 @@ import org.jetbrains.anko.design.tabItem
 import org.jetbrains.anko.design.themedTabLayout
 import org.jetbrains.anko.support.v4.act
 import org.jetbrains.anko.support.v4.ctx
-import org.jetbrains.anko.support.v4.find
 import org.jetbrains.anko.support.v4.viewPager
 import java.lang.IllegalStateException
 import java.util.*
@@ -135,7 +135,8 @@ class SinglePlayerGameViewModel() : ViewModel() {
 }
 
 
-class SinglePlayerGameActivity : AppCompatActivity(), GameHolder, ActionPerformer {
+class SinglePlayerGameActivity : AppCompatActivity(), GameHolder,
+    ActionPerformer {
 
     companion object {
         const val MODE = "MODE"
@@ -174,7 +175,6 @@ class SinglePlayerGameActivity : AppCompatActivity(), GameHolder, ActionPerforme
                 finish()
             }
             noButton {
-                finish()
             }
         }.show()
     }
@@ -204,9 +204,10 @@ class SinglePlayerGameActivity : AppCompatActivity(), GameHolder, ActionPerforme
     }
 
 
-    private val pagerAdapter by lazy { PlayerGameScreenAdapter(
-        supportFragmentManager
-    ) {viewModel.representation.value!!}
+    private val pagerAdapter by lazy {
+        PlayerGameScreenAdapter(
+            supportFragmentManager
+        ) { viewModel.representation.value!! }
     }
     private lateinit var myTabLayout: TabLayout
     private lateinit var myViewPager: ViewPager
@@ -214,7 +215,10 @@ class SinglePlayerGameActivity : AppCompatActivity(), GameHolder, ActionPerforme
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        when (intent.getIntExtra(MODE, MODE_ERROR)) {
+        when (intent.getIntExtra(
+            MODE,
+            MODE_ERROR
+        )) {
             MODE_ERROR -> {
                 toast("Error while loading preset")
                 finish()
@@ -355,7 +359,8 @@ class PlayerGameScreenFragment : Fragment(), ActionPerformer {
                     }
                 }
             }
-            return PlayerGameScreenUI(gameAdapter).createView(AnkoContext.Companion.create(ctx, this))
+            return PlayerGameScreenUI(gameAdapter)
+                .createView(AnkoContext.Companion.create(ctx, this))
         } else {
             throw IllegalStateException("index is -1")
         }

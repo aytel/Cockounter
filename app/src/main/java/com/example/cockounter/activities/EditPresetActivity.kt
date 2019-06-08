@@ -1,4 +1,4 @@
-package com.example.cockounter
+package com.example.cockounter.activities
 
 import android.app.Activity
 import android.content.Context
@@ -12,6 +12,8 @@ import android.widget.BaseExpandableListAdapter
 import android.widget.EditText
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.*
+import com.example.cockounter.EditableList
+import com.example.cockounter.R
 import com.example.cockounter.adapters.*
 import com.example.cockounter.adapters.simpleheader.listHeaderShow.listHeaderShow
 import com.example.cockounter.core.*
@@ -96,7 +98,8 @@ class EditPresetActivity : AppCompatActivity() {
             HeaderViewer.Library -> SimpleHeader.listHeaderShow().run { SimpleHeader("Libraries").buildView(context, isSelected) }
         }
     }
-    private fun HeaderViewer.Companion.listHeaderShow() = object : HeaderListHeaderShow {}
+    private fun HeaderViewer.Companion.listHeaderShow() = object :
+        HeaderListHeaderShow {}
 
     interface ViewerListElementShow : ListElementShow<ElementViewer> {
         override fun ElementViewer.buildView(context: Context): View = when(this) {
@@ -106,7 +109,8 @@ class EditPresetActivity : AppCompatActivity() {
             is ElementViewer.Library -> Library.listElementShow().run { this@buildView.library.buildView(context) }
         }
     }
-    private fun ElementViewer.Companion.listElementShow() = object : ViewerListElementShow {}
+    private fun ElementViewer.Companion.listElementShow() = object :
+        ViewerListElementShow {}
 
     companion object {
         const val ARG_PRESET_ID = "ARG_PRESET_ID"
@@ -124,7 +128,12 @@ class EditPresetActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val id = intent.getIntExtra(ARG_PRESET_ID, 0)
-        adapter = EditPresetAdapter(listOf(HeaderViewer.Parameter, HeaderViewer.Role, HeaderViewer.PresetScript, HeaderViewer.Library),
+        adapter = EditPresetAdapter(listOf(
+            HeaderViewer.Parameter,
+            HeaderViewer.Role,
+            HeaderViewer.PresetScript,
+            HeaderViewer.Library
+        ),
             ElementViewer.listElementShow(), HeaderViewer.listHeaderShow())
         val ui: EditPresetUI
         if (id != 0) {
@@ -134,17 +143,41 @@ class EditPresetActivity : AppCompatActivity() {
                 }
             }).get(EditPresetViewModel::class.java)
             //EditPresetUI(presetInfo, globalParametersAdapter, rolesAdapter, scriptsAdapter, librariesAdapter).setContentView(this@EditPresetActivity)
-            ui = EditPresetUI(viewModel.name, viewModel.description, adapter)
+            ui = EditPresetUI(
+                viewModel.name,
+                viewModel.description,
+                adapter
+            )
         } else {
             viewModel = ViewModelProviders.of(this).get(EditPresetViewModel::class.java)
             //EditPresetUI(null, globalParametersAdapter, rolesAdapter, scriptsAdapter, librariesAdapter).setContentView(this@EditPresetActivity)
-            ui = EditPresetUI(viewModel.name, viewModel.description, adapter)
+            ui = EditPresetUI(
+                viewModel.name,
+                viewModel.description,
+                adapter
+            )
         }
         ui.setContentView(this)
-        viewModel.globalParameters.liveData.observe(this, Observer { list -> Log.i("s", "ss"); adapter.update(0, list.map{ElementViewer.Parameter(it)}) })
-        viewModel.roles.liveData.observe(this, Observer { list -> adapter.update(1, list.map { ElementViewer.Role(it) }) })
-        viewModel.scripts.liveData.observe(this, Observer { list -> adapter.update(2, list.map { ElementViewer.PresetScript(it) }) })
-        viewModel.libraries.liveData.observe(this, Observer { list -> adapter.update(3, list.map { ElementViewer.Library(it) }) })
+        viewModel.globalParameters.liveData.observe(this, Observer { list -> Log.i("s", "ss"); adapter.update(0, list.map{
+            ElementViewer.Parameter(
+                it
+            )
+        }) })
+        viewModel.roles.liveData.observe(this, Observer { list -> adapter.update(1, list.map {
+            ElementViewer.Role(
+                it
+            )
+        }) })
+        viewModel.scripts.liveData.observe(this, Observer { list -> adapter.update(2, list.map {
+            ElementViewer.PresetScript(
+                it
+            )
+        }) })
+        viewModel.libraries.liveData.observe(this, Observer { list -> adapter.update(3, list.map {
+            ElementViewer.Library(
+                it
+            )
+        }) })
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -271,8 +304,11 @@ class EditPresetActivity : AppCompatActivity() {
 
     private fun editLibrary(index: Int) {
         selectedPosition = index
-        startActivityForResult(intentFor<EditLibraryActivity>(EditLibraryActivity.ARG_NAME to viewModel.libraries[index].name,
-            EditLibraryActivity.ARG_SOURCE to viewModel.libraries[index].script), CODE_LIBRARY_CHANGED)
+        startActivityForResult(intentFor<EditLibraryActivity>(
+            EditLibraryActivity.ARG_NAME to viewModel.libraries[index].name,
+            EditLibraryActivity.ARG_SOURCE to viewModel.libraries[index].script),
+            CODE_LIBRARY_CHANGED
+        )
 
     }
 
@@ -293,7 +329,9 @@ class EditPresetActivity : AppCompatActivity() {
     }
 
     private fun createLibrary() {
-        startActivityForResult(intentFor<EditLibraryActivity>(), CODE_ADD_LIBRARY)
+        startActivityForResult(intentFor<EditLibraryActivity>(),
+            CODE_ADD_LIBRARY
+        )
     }
 
     private fun updateName(name: String) {

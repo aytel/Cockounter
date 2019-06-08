@@ -1,4 +1,4 @@
-package com.example.cockounter
+package com.example.cockounter.activities
 
 import android.Manifest
 import android.app.Activity
@@ -22,7 +22,9 @@ class JoinGameActivity : AppCompatActivity() {
 
     private fun scanQRCode() {
         ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.CAMERA), 1)
-        startActivityForResult(intentFor<QRCodeScannerActivity>(), CODE_SCAN_QR_CODE)
+        startActivityForResult(intentFor<QRCodeScannerActivity>(),
+            CODE_SCAN_QR_CODE
+        )
     }
 
     private fun enterCode() {

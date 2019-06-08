@@ -1,4 +1,4 @@
-package com.example.cockounter
+package com.example.cockounter.activities
 
 import android.content.Context
 import android.graphics.Bitmap
@@ -18,6 +18,7 @@ import arrow.core.None
 import arrow.core.Option
 import arrow.core.Some
 import arrow.core.Try
+import com.example.cockounter.R
 import com.example.cockounter.core.*
 import com.example.cockounter.network.NetworkHandler
 import com.example.cockounter.network.StateUpdaterFirebaseMessagingService
@@ -124,7 +125,8 @@ class MultiPlayerGameViewModel() : ViewModel() {
     }
 }
 
-class MultiPlayerGameActivity : AppCompatActivity(), GameHolder, ActionPerformer {
+class MultiPlayerGameActivity : AppCompatActivity(), GameHolder,
+    ActionPerformer {
     override val getRepresentation: () -> Model.Game = { viewModel.representation.value!! }
     override val getState: () -> GameState = { viewModel.state.value!! }
 
@@ -162,7 +164,10 @@ class MultiPlayerGameActivity : AppCompatActivity(), GameHolder, ActionPerformer
                 }
             }
         }
-        when(intent.getIntExtra(MODE, MODE_ERROR)) {
+        when(intent.getIntExtra(
+            MODE,
+            MODE_ERROR
+        )) {
             MODE_CREATE_GAME -> {
                 val id = intent.getIntExtra(ARG_PRESET_ID, 0)
                 assert(id != 0)
@@ -178,14 +183,21 @@ class MultiPlayerGameActivity : AppCompatActivity(), GameHolder, ActionPerformer
             MODE_JOIN_GAME -> {
                 viewModel = ViewModelProviders.of(this, object : ViewModelProvider.Factory {
                     override fun <T : ViewModel?> create(modelClass: Class<T>): T {
-                        return MultiPlayerGameViewModel(UUID.fromString(intent.getStringExtra(ARG_UUID))) as T
+                        return MultiPlayerGameViewModel(
+                            UUID.fromString(
+                                intent.getStringExtra(
+                                    ARG_UUID
+                                )
+                            )
+                        ) as T
                     }
                 }).get(MultiPlayerGameViewModel::class.java)
             }
         }
         viewModel.representation.observe(this, androidx.lifecycle.Observer { _ -> pagerAdapter.notifyDataSetChanged() })
         evaluator = viewModel.evaluator(this)
-        pagerAdapter = PlayerGameScreenAdapter(supportFragmentManager, getRepresentation)
+        pagerAdapter =
+            PlayerGameScreenAdapter(supportFragmentManager, getRepresentation)
 
         coordinatorLayout {
             lparams(matchParent, matchParent)
@@ -257,7 +269,6 @@ class MultiPlayerGameActivity : AppCompatActivity(), GameHolder, ActionPerformer
                 finish()
             }
             noButton {
-                finish()
             }
         }.show()
     }

@@ -2,26 +2,17 @@ package com.example.cockounter.network
 
 import android.os.Build
 import androidx.annotation.RequiresApi
-import com.example.cockounter.EditPresetActivity
 import com.example.cockounter.core.GameState
-import com.example.cockounter.core.Preset
 import com.example.cockounter.core.StateCapture
 import com.example.cockounter.core.StateCaptureConverter
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.android.Android
 import io.ktor.client.request.forms.submitForm
 import io.ktor.client.request.get
-import io.ktor.client.request.parameter
-import io.ktor.client.request.post
 import io.ktor.http.Parameters
-import io.ktor.http.append
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
-import org.jetbrains.anko.doAsync
-import java.net.HttpURLConnection
-import java.net.URL
 import java.util.*
-import javax.net.ssl.HttpsURLConnection
 
 class NetworkHandler {
     companion object {

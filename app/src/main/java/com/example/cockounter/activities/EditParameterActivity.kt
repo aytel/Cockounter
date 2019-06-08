@@ -1,4 +1,4 @@
-package com.example.cockounter
+package com.example.cockounter.activities
 
 import android.app.Activity
 import android.content.Intent
@@ -13,6 +13,8 @@ import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelProviders
+import com.example.cockounter.EditableList
+import com.example.cockounter.R
 import com.example.cockounter.adapters.ListShowAdapter
 import com.example.cockounter.adapters.listElementShow
 import com.example.cockounter.core.Parameter
@@ -99,7 +101,9 @@ class EditParameterActivity : AppCompatActivity() {
                 val result = Intent()
                 result.apply {
                     putExtra(RETURN_PARAMETER, parameter)
-                    putExtra(RETURN_POSITION, intent.getIntExtra(ARG_POSITION, -1))
+                    putExtra(
+                        RETURN_POSITION, intent.getIntExtra(
+                            ARG_POSITION, -1))
                 }
                 setResult(Activity.RESULT_OK, result)
                 finish()
@@ -125,7 +129,9 @@ class EditParameterActivity : AppCompatActivity() {
     }
 
     private fun addScript() {
-        startActivityForResult(intentFor<EditPresetScriptActivity>(), CODE_NEW_SCRIPT_ADDED)
+        startActivityForResult(intentFor<EditPresetScriptActivity>(),
+            CODE_NEW_SCRIPT_ADDED
+        )
     }
 
     private fun deleteScript(index: Int) {

@@ -1,4 +1,4 @@
-package com.example.cockounter
+package com.example.cockounter.activities
 
 import android.app.Activity
 import android.content.Intent
@@ -10,6 +10,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.example.cockounter.R
 import com.example.cockounter.adapters.PresetInfoAdapter
 import com.example.cockounter.core.PresetInfo
 import com.example.cockounter.storage.Storage
@@ -117,7 +118,9 @@ class SelectPresetActivity : AppCompatActivity() {
     }
 
     private fun createPreset() {
-        startActivityForResult(intentFor<EditPresetActivity>(), CODE_PRESET_ADDED)
+        startActivityForResult(intentFor<EditPresetActivity>(),
+            CODE_PRESET_ADDED
+        )
     }
 
     private fun loadPresetFromFile() {

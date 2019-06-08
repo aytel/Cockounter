@@ -1,4 +1,4 @@
-package com.example.cockounter
+package com.example.cockounter.activities
 
 import android.app.Activity
 import android.content.Intent
@@ -12,6 +12,8 @@ import androidx.lifecycle.*
 import arrow.core.None
 import arrow.core.Option
 import arrow.core.Some
+import com.example.cockounter.EditableList
+import com.example.cockounter.R
 import com.example.cockounter.adapters.PlayersAdapter
 import com.example.cockounter.core.PlayerDescription
 import com.google.android.material.appbar.AppBarLayout
@@ -57,6 +59,10 @@ class SelectPlayersActivity : AppCompatActivity() {
 
         }).get(SelectPlayersViewModel::class.java)
         viewModel.players.liveData.observe(this, Observer { list -> playersAdapter.update(list) })
+        if(viewModel.roles.isEmpty()) {
+            toast("This preset contains no roles!")
+            finish()
+        }
         SelectPlayersGameUI(playersAdapter).setContentView(this)
     }
 
