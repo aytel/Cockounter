@@ -2,6 +2,7 @@ package com.example.cockounter.adapters
 
 import android.content.Context
 import android.util.Log
+import android.view.Gravity
 import android.view.View
 import arrow.extension
 import com.example.cockounter.core.*
@@ -73,6 +74,28 @@ interface LibraryElementShow : ListElementShow<Library> {
 
 //fun Library.Companion.listElementShow(): ListElementShow<Library> = object : LibraryElementShow {}
 
+interface StateCaptureElementShow : ListElementShow<StateCapture> {
+    override fun StateCapture.buildView(context: Context): View = with(context) {
+        relativeLayout() {
+            lparams(matchParent, wrapContent) {
+            }
+            textView {
+                text = name
+                textSize = 20f
+            }.lparams {
+                alignParentStart()
+            }
+            textView {
+                text = date.toString()
+            }.lparams() {
+                alignParentEnd()
+            }
+        }
+    }
+}
+
+fun StateCapture.Companion.listElementShow() = object : StateCaptureElementShow {}
+
 interface GameElementShow<F> {
     fun F.buildView(context: Context, gameState: GameState, perform: (Action) -> Unit): View
 }
@@ -95,6 +118,8 @@ interface ParameterRepresentationElementShow : GameElementShow<ParameterRepresen
                             }
                         }
                     }
+                }.lparams() {
+                    gravity = Gravity.END
                 }
             }
         }
@@ -104,6 +129,7 @@ fun ParameterRepresentation.Companion.gameElementShow() = object : ParameterRepr
 interface ActionElementShow : GameElementShow<ActionButtonRepresentation> {
     override fun ActionButtonRepresentation.buildView(context: Context, gameState: GameState, perform: (Action) -> Unit): View = with(context) {
         verticalLayout {
+            padding = dip(2)
             button(text) {
                 onClick {
                     perform(action)
@@ -138,3 +164,5 @@ interface SimpleHeaderListHeaderShow : ListHeaderShow<SimpleHeader> {
         }
     }
 }
+
+

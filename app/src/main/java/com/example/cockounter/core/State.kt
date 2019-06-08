@@ -21,7 +21,9 @@ data class StateCapture(
     val players: List<PlayerDescription>,
     val date: Date,
     val uuid: UUID
-)
+) {
+    companion object
+}
 
 data class GameState(
     val globalParameters: Map<String, GameParameter>,

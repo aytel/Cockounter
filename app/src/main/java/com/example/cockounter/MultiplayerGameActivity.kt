@@ -20,6 +20,7 @@ import arrow.core.Some
 import arrow.core.Try
 import com.example.cockounter.core.*
 import com.example.cockounter.network.NetworkHandler
+import com.example.cockounter.network.StateUpdaterFirebaseMessagingService
 import com.example.cockounter.script.Action
 import com.example.cockounter.script.Evaluation
 import com.example.cockounter.script.ScriptEvaluation
@@ -46,6 +47,10 @@ class MultiPlayerGameViewModel() : ViewModel() {
     private lateinit var name: String
     lateinit var uuid: UUID
     private var currentLayout = LayoutType.BY_PLAYER
+
+    init {
+        StateUpdaterFirebaseMessagingService.multiPlayerGameViewModel = this
+    }
 
     @RequiresApi(Build.VERSION_CODES.N)
     constructor(id: Int, names: Array<String>, roles: Array<String>) : this() {
@@ -112,6 +117,11 @@ class MultiPlayerGameViewModel() : ViewModel() {
         context.runOnUiThread {
             state.value = data
         }
+    }
+
+    fun updateGameState(gameState: GameState) {
+        state.value = gameState
+        state.notify()
     }
 }
 
@@ -246,8 +256,8 @@ class MultiplayerGameActivity : AppCompatActivity(), GameHolder, ActionPerformer
         alert {
             val qr = QRCodeWriter().encode(viewModel.uuid.toString(), BarcodeFormat.QR_CODE, 512, 512)
             val bitmap = Bitmap.createBitmap(qr.width, qr.height, Bitmap.Config.RGB_565)
-            for(i in 0..(qr.width - 1)) {
-                for(j in 0..(qr.height - 1)) {
+            for(i in 0 until qr.width) {
+                for(j in 0 until qr.height) {
                     bitmap.setPixel(i, j, if(qr.get(i, j)) Color.BLACK else Color.WHITE)
                 }
             }
@@ -262,5 +272,10 @@ class MultiplayerGameActivity : AppCompatActivity(), GameHolder, ActionPerformer
 
     private fun updateState() {
         viewModel.updateState(this)
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        StateUpdaterFirebaseMessagingService.multiPlayerGameViewModel = null
     }
 }

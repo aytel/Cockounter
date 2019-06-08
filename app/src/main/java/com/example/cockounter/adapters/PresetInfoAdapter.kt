@@ -1,17 +1,12 @@
 package com.example.cockounter.adapters
 
-import android.content.Context
 import android.util.TypedValue
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
-import androidx.lifecycle.LifecycleOwner
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.RecyclerView
 import com.example.cockounter.core.PresetInfo
 import org.jetbrains.anko.*
-import org.jetbrains.anko.sdk27.coroutines.onLongClick
 import kotlin.properties.Delegates
 
 class PresetInfoAdapter(val getData: () -> List<PresetInfo>, private val onItemClick: (Int) -> Unit, private val onLongItemClick: (Int) -> Unit) : RecyclerView.Adapter<PresetInfoAdapter.PresetViewHolder>() {

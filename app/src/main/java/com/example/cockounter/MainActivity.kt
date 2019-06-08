@@ -44,7 +44,6 @@ class MainActivity : AppCompatActivity() {
         doAsync {
             initDatabase()
         }
-        //Storage.nukePresets()
     }
 
     fun createSinglePlayerGame() {

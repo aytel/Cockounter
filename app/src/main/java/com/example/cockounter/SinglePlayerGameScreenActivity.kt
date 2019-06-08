@@ -104,7 +104,19 @@ private class SinglePlayerGameScreenViewModel() : ViewModel() {
     fun saveState(name: String) {
         //Log.i("Kek", StateCaptureConverter.gson.toJson(StateCapture(0, stateName.text.toString(), state, preset, players, Calendar.getInstance().time, UUID(1, 1))))
         //FIXME
-        Storage.insertGameState(StateCapture(0, name, state.value!!, preset, players, Calendar.getInstance().time, UUID(1, 1)))
+        doAsync {
+            Storage.insertGameState(
+                StateCapture(
+                    0,
+                    name,
+                    state.value!!,
+                    preset,
+                    players,
+                    Calendar.getInstance().time,
+                    UUID(1, 1)
+                )
+            )
+        }
     }
 
     fun changeLayout() {

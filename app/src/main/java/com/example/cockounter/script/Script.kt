@@ -1,9 +1,8 @@
 package com.example.cockounter.script
 
 import android.content.Context
-import android.util.Log
-import arrow.core.*
-import arrow.core.extensions.`try`.monad.binding
+import arrow.core.Try
+import arrow.core.Tuple2
 import com.example.cockounter.core.*
 import com.github.andrewoma.dexx.kollection.toImmutableMap
 import org.luaj.vm2.Globals
@@ -11,12 +10,10 @@ import org.luaj.vm2.LuaFunction
 import org.luaj.vm2.LuaTable
 import org.luaj.vm2.LuaValue
 import org.luaj.vm2.lib.jse.JsePlatform
-import kotlin.random.Random
 
 private object Constants {
     const val GLOBAL_PARAMETERS = "gl"
     const val SHARED_PARAMETERS = "sh"
-    const val SAVED_STATE = "saved"
     const val PLAYER = "pl"
     const val SINGLE_PARAMETER_NAME = "x"
     const val META_NAME = "__name"
@@ -62,12 +59,6 @@ private fun LuaTable.addAll(items: Map<String, GameParameter>) {
     items.forEach { set(it.key, it.value) }
 }
 
-private fun addToTable(table: LuaTable, items: Map<String, GameParameter>) {
-    items.forEach {
-        setValue(table, it.key, it.value)
-    }
-}
-
 private fun mapSingleParameter(state: GameState, parameter: GameParameterPointer, globals: Globals): Try<Globals> =
     Try {
         globals[Constants.SINGLE_PARAMETER_NAME] = state[parameter]
@@ -98,7 +89,6 @@ private fun mapAll(state: GameState, player: PlayerDescription, globals: Globals
     }
     globals
 }
-
 
 private fun unpackValue(value: LuaValue, old: GameParameter): GameParameter = when (old) {
     is IntegerGameParameter -> IntegerGameParameter(old.name, old.visibleName, value.toint())
@@ -184,14 +174,17 @@ fun buildScriptEvaluation(preset: Preset, players: List<PlayerDescription>): Scr
         preset.libraries.forEach {
             globals.load(it.script)
         };
-        //FIXME init saved state
-        globals[Constants.SAVED_STATE] = LuaValue.tableOf();
-        //TODO initialization
-        //TODO load actions
         { action: Action ->
             Try { performAction(globals, action) }
         }
     }
+}
+
+fun runScript(context: Context, script: String): Try<Unit> {
+    val globals = JsePlatform.standardGlobals()
+    mapFunctions(globals, buildInteractionFunctionsWithContext(context))
+    val action = Action.PlayerScript(ScriptContext.None, script)
+    return performAction(globals, action)(dummyState).map { Unit }
 }
 
 fun buildAction(button: ActionButtonModel, context: ScriptContext): Action = when (button) {

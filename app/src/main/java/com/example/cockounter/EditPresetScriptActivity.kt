@@ -67,8 +67,9 @@ class EditPresetScriptActivity : AppCompatActivity() {
     }
 
     fun runScript() {
-        //TODO run actionButton without building
-        //performScript(dummyState, PlayerDescription("None", "None"), actionButton, ScriptContext.NONE, this)
+        doAsync {
+            com.example.cockounter.script.runScript(this@EditPresetScriptActivity, viewModel.script)
+        }
     }
 
     fun save() {

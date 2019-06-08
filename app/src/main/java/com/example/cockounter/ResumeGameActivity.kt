@@ -2,17 +2,20 @@ package com.example.cockounter
 
 import android.os.Bundle
 import android.view.View
+import android.widget.ListAdapter
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Observer
-import com.example.cockounter.adapters.StateCaptureAdapter
+import com.example.cockounter.adapters.ShowListAdapter
+import com.example.cockounter.adapters.listElementShow
+import com.example.cockounter.core.StateCapture
 import com.example.cockounter.storage.Storage
 import org.jetbrains.anko.*
 import org.jetbrains.anko.sdk27.coroutines.onItemClick
+import org.jetbrains.anko.sdk27.coroutines.onItemLongClick
 
 
 class ResumeGameActivity : AppCompatActivity() {
-
-    private val captureAdapter by lazy { StateCaptureAdapter() }
+    private val captureAdapter by lazy { ShowListAdapter<StateCapture>(StateCapture.listElementShow()) }
     private val states = Storage.getAllGameStates()
 
     
@@ -31,7 +34,7 @@ class ResumeGameActivity : AppCompatActivity() {
     }
 }
 
-private class ResumeGameUI(val captureAdapter: StateCaptureAdapter) : AnkoComponent<ResumeGameActivity> {
+private class ResumeGameUI(val captureAdapter: ListAdapter) : AnkoComponent<ResumeGameActivity> {
     override fun createView(ui: AnkoContext<ResumeGameActivity>): View = with(ui) {
         verticalLayout {
             listView {
@@ -39,6 +42,7 @@ private class ResumeGameUI(val captureAdapter: StateCaptureAdapter) : AnkoCompon
                 onItemClick { _, _, index, _ ->
                     owner.resumeGame(index)
                 }
+                onItemLongClick { p0, p1, p2, p3 ->  }
             }
         }
     }

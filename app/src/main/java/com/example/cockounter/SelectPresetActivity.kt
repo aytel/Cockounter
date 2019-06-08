@@ -33,8 +33,6 @@ class SelectPresetActivity : AppCompatActivity() {
         const val RETURN_PRESET_ID = "RETURN_PRESET_ID"
         private const val CODE_PRESET_ADDED = 0
         private const val CODE_PRESET_CHANGED = 1
-        private const val CODE_START_GAME = 2
-        private const val CODE_START_MULTI_PLAYER_GAME = 3
         private const val CODE_LOAD_FILE = 4;
         private const val CODE_SAVE_FILE = 5;
     }
@@ -64,48 +62,6 @@ class SelectPresetActivity : AppCompatActivity() {
             CODE_PRESET_CHANGED -> if (resultCode == Activity.RESULT_OK) {
                 presetsAdapter.notifyDataSetChanged()
             }
-            /*
-            CODE_START_GAME -> if (resultCode == Activity.RESULT_OK) {
-                val position = data.getIntExtra("position", -1)
-                val names = data.getStringArrayExtra("names")!!
-                val roles = data.getStringArrayExtra("roles")!!
-                startActivity(
-                    intentFor<SinglePlayerGameScreenActivity>(
-                        SinglePlayerGameScreenActivity.MODE to SinglePlayerGameScreenActivity.MODE_BUILD_NEW_STATE,
-                        SinglePlayerGameScreenActivity.ARG_PLAYER_NAMES to names,
-                        SinglePlayerGameScreenActivity.ARG_PLAYER_ROLES to roles,
-                        SinglePlayerGameScreenActivity.ARG_PRESET to presetsList[position].preset
-                    )
-                )
-                finish()
-            }
-            CODE_START_MULTI_PLAYER_GAME -> if (resultCode == Activity.RESULT_OK) {
-                val position = data.getIntExtra("position", -1)
-                val names = data.getStringArrayExtra("names")!!
-                val roles = data.getStringArrayExtra("roles")!!
-                Log.i("Multi", "Start game")
-                alert {
-                    customView {
-                        val name = editText {
-                            hint = "Your in-game name"
-                        }
-                        yesButton {
-                            startActivity(
-                                intentFor<MultiplayerGameActivity>(
-                                    MultiplayerGameActivity.MODE to MultiplayerGameActivity.MODE_CREATE_GAME,
-                                    MultiplayerGameActivity.ARG_NAME to name.text.toString(),
-                                    MultiplayerGameActivity.ARG_PRESET to presetsList[position].preset,
-                                    MultiplayerGameActivity.ARG_PLAYER_NAMES to names,
-                                    MultiplayerGameActivity.ARG_PLAYER_ROLES to roles
-                                    //MultiplayerGameActivity.ARG_UUID to uuid
-                                )
-                            )
-                        }
-                    }
-                }.listElementShow()
-
-            }
-            */
             //FIXME
             CODE_LOAD_FILE -> if (resultCode == Activity.RESULT_OK) {
                 val uri = data.data!!
