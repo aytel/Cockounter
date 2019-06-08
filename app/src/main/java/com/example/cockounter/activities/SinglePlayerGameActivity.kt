@@ -85,26 +85,22 @@ class SinglePlayerGameViewModel() : ViewModel() {
         }
     }
 
-    fun performAction(action: Action, evaluator: (Action) -> Try<Evaluation>, context: Context): Option<String> {
+    fun performAction(action: Action, evaluator: (Action) -> Evaluation, context: Context): Option<String> {
         try {
-            evaluator(action).flatMap { it(state.value!!) }.fold({
-                return Some(it.message ?: "")
-            }, {
-                stack.push(state.value!!)
-                with(context) {
-                    runOnUiThread {
-                        state.value = it
-                    }
+            val newState = evaluator(action)(state.value!!)
+            stack.push(newState)
+            with(context) {
+                runOnUiThread {
+                    state.value = newState
                 }
-                return None
-            })
+            }
+            return None
         } catch (e: Exception) {
             return Some(e.toString())
         }
     }
 
     fun saveState(name: String) {
-        //FIXME
         doAsync {
             Storage.insertGameState(
                 StateCapture(

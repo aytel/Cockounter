@@ -84,18 +84,15 @@ class MultiPlayerGameViewModel() : ViewModel() {
         BY_PLAYER, BY_ROLE
     }
 
-    fun performAction(action: Action, evaluator: (Action) -> Try<Evaluation>, context: Context): Option<String> {
-        try {
-            evaluator(action).flatMap { it(state.value!!) }.fold({
-                return Some(it.message ?: "")
-            }, {
-                context.runOnUiThread {
-                    NetworkHandler.updateGameState(uuid, it)
-                }
-                return None
-            })
+    fun performAction(action: Action, evaluator: (Action) -> Evaluation, context: Context): Option<String> {
+        return try {
+            val newState = evaluator(action)(state.value!!)
+            context.runOnUiThread {
+                NetworkHandler.updateGameState(uuid, newState)
+            }
+            None
         } catch (e: Exception) {
-            return Some(e.toString())
+            Some(e.toString())
         }
     }
 
@@ -147,7 +144,7 @@ class MultiPlayerGameActivity : AppCompatActivity(), GameHolder,
     }
 
     private lateinit var pagerAdapter: PlayerGameScreenAdapter
-    private lateinit var evaluator: (Action) -> Try<Evaluation>
+    private lateinit var evaluator: (Action) -> Evaluation
     private lateinit var myTabLayout: TabLayout
     private lateinit var myViewPager: ViewPager
     private lateinit var viewModel: MultiPlayerGameViewModel

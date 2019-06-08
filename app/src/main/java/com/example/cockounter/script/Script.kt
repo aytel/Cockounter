@@ -1,7 +1,6 @@
 package com.example.cockounter.script
 
 import android.content.Context
-import arrow.core.Try
 import arrow.core.Tuple2
 import com.example.cockounter.core.*
 import com.github.andrewoma.dexx.kollection.toImmutableMap
@@ -24,9 +23,9 @@ private fun mapFunctions(globals: Globals, functions: List<Tuple2<String, LuaFun
     return globals
 }
 
-private fun mapFromGameState(context: ScriptContext, globals: Globals, state: GameState): Try<Globals> =
+private fun mapFromGameState(context: ScriptContext, globals: Globals, state: GameState): Globals =
     when (context) {
-        ScriptContext.None -> Try { globals }
+        ScriptContext.None ->  globals
         is ScriptContext.PlayerOnly -> mapPlayerOnly(state, context.player, globals)
         is ScriptContext.Full -> mapAll(state, context.player, globals)
     }
@@ -57,15 +56,16 @@ private fun LuaTable.addAll(items: Map<String, GameParameter>) {
     items.forEach { set(it.key, it.value) }
 }
 
-private fun mapPlayerOnly(state: GameState, player: PlayerDescription, globals: Globals): Try<Globals> = Try {
+private fun mapPlayerOnly(state: GameState, player: PlayerDescription, globals: Globals): Globals {
     globals[Constants.META_NAME] = player.name
     globals[Constants.META_ROLE] = player.role
     globals.addAll(state[player].privateParameters)
     globals[Constants.SHARED_PARAMETERS] = createTable(state[player.role].sharedParameters)
-    globals
+    globals[Constants.GLOBAL_PARAMETERS] = createTable(state.globalParameters)
+    return globals
 }
 
-private fun mapAll(state: GameState, player: PlayerDescription, globals: Globals): Try<Globals> = Try {
+private fun mapAll(state: GameState, player: PlayerDescription, globals: Globals): Globals {
     globals[Constants.GLOBAL_PARAMETERS] = createTable(state.globalParameters)
     state.roles.forEach {
         val roleName = it.key
@@ -79,7 +79,7 @@ private fun mapAll(state: GameState, player: PlayerDescription, globals: Globals
             }
         }
     }
-    globals
+    return globals
 }
 
 private fun unpackValue(value: LuaValue, old: GameParameter): GameParameter = when (old) {
@@ -92,27 +92,31 @@ private fun unpackValue(value: LuaValue, old: GameParameter): GameParameter = wh
 private fun unpackTable(table: LuaTable, old: Map<String, GameParameter>) =
     old.mapValues { unpackValue(table[it.key], it.value) }.toImmutableMap()
 
-private fun unmapGameState(context: ScriptContext, globals: Globals, oldState: GameState): Try<GameState> =
+private fun unmapGameState(context: ScriptContext, globals: Globals, oldState: GameState): GameState =
     when (context) {
-        ScriptContext.None -> Try { oldState }
+        ScriptContext.None -> oldState
         is ScriptContext.PlayerOnly -> unmapPlayerOnly(oldState, context.player, globals)
-        is ScriptContext.Full -> unmapAll(oldState, context.player, globals)
+        is ScriptContext.Full -> unmapAll(oldState, globals)
     }
 
-private fun unmapPlayerOnly(oldState: GameState, player: PlayerDescription, globals: Globals): Try<GameState> = Try {
+private fun unmapPlayerOnly(oldState: GameState, player: PlayerDescription, globals: Globals): GameState {
     val newSharedParameters = unpackTable(
-        globals[Constants.GLOBAL_PARAMETERS] as LuaTable,
+        globals[Constants.SHARED_PARAMETERS] as LuaTable,
         oldState.roles.getValue(player.role).sharedParameters
     )
+    val newGlobalParameters = unpackTable(
+        globals[Constants.GLOBAL_PARAMETERS] as LuaTable,
+        oldState.globalParameters
+    )
     val newPrivateParameters = unpackTable(globals, oldState[player].privateParameters)
-    oldState.copy(roles = oldState.roles.toImmutableMap().modify(player.role) {
+    return oldState.copy(globalParameters = newGlobalParameters, roles = oldState.roles.toImmutableMap().modify(player.role) {
         it.copy(sharedParameters = newSharedParameters, players = it.players.toImmutableMap().modify(player.name) {
             it.copy(privateParameters = newPrivateParameters)
         })
     })
 }
 
-private fun unmapAll(oldState: GameState, player: PlayerDescription, globals: Globals): Try<GameState> = Try {
+private fun unmapAll(oldState: GameState, globals: Globals): GameState {
     val newGlobalParameters =
         unpackTable(globals[Constants.GLOBAL_PARAMETERS].checktable()!!, oldState.globalParameters)
     val newRoles = oldState.roles.mapValues { (roleName, role) ->
@@ -128,24 +132,26 @@ private fun unmapAll(oldState: GameState, player: PlayerDescription, globals: Gl
             }.toImmutableMap()
         )
     }.toImmutableMap()
-    oldState.copy(globalParameters = newGlobalParameters, roles = newRoles)
+    return oldState.copy(globalParameters = newGlobalParameters, roles = newRoles)
 }
 
-typealias ScriptEvaluation = (Context) -> ((Action) -> Try<Evaluation>)
-typealias Evaluation = (GameState) -> Try<GameState>
+typealias ScriptEvaluation = (Context) -> ((Action) -> Evaluation)
+typealias Evaluation = (GameState) -> GameState
 
-private fun evalAction(globals: Globals, action: Action) = when(action) {
-    is Action.PlayerScript -> Try {
-        globals.load(action.script).call()
-        globals
+private fun evalAction(globals: Globals, action: Action): Globals {
+    when(action) {
+        is Action.PlayerScript -> {
+            globals.load(action.script).call()
+            return globals
+        }
     }
 }
 
-private fun performAction(globals: Globals, action: Action): (GameState) -> Try<GameState> = { state ->
+private fun performAction(globals: Globals, action: Action): (GameState) -> GameState = { state ->
     when (action) {
-        is Action.PlayerScript -> mapFromGameState(action.context, globals, state)
-            .flatMap { evalAction(it, action) }
-            .flatMap { unmapGameState(action.context, globals, state) }
+        is Action.PlayerScript -> {
+            unmapGameState(action.context, evalAction(mapFromGameState(action.context, globals, state), action), state)
+        }
     }
 }
 
@@ -160,7 +166,7 @@ fun buildScriptEvaluation(preset: Preset): ScriptEvaluation {
             globals.load(it.script).call()
         };
         { action: Action ->
-            Try { performAction(globals, action) }
+            performAction(globals, action)
         }
     }
 }
@@ -171,11 +177,11 @@ fun buildScriptEvaluation(preset: Preset): ScriptEvaluation {
  * @param context context to use
  * @param script script to run
  */
-fun runScript(context: Context, script: String): Try<Unit> {
+fun runScript(context: Context, script: String): Unit {
     val globals = JsePlatform.standardGlobals()
     mapFunctions(globals, buildInteractionFunctionsWithContext(context))
     val action = Action.PlayerScript(ScriptContext.None, script)
-    return performAction(globals, action)(dummyState).map { Unit }
+    performAction(globals, action)(dummyState)
 }
 
 /**
