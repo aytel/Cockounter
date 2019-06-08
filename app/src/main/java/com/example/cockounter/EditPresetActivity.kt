@@ -12,14 +12,7 @@ import android.widget.BaseExpandableListAdapter
 import android.widget.EditText
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.*
-import com.example.cockounter.adapters.EditPresetAdapter
-import com.example.cockounter.adapters.ListElementShow
-import com.example.cockounter.adapters.ListHeaderShow
-import com.example.cockounter.adapters.SimpleHeader
-import com.example.cockounter.adapters.library.listElementShow.listElementShow
-import com.example.cockounter.adapters.parameter.listElementShow.listElementShow
-import com.example.cockounter.adapters.presetscript.listElementShow.listElementShow
-import com.example.cockounter.adapters.role.listElementShow.listElementShow
+import com.example.cockounter.adapters.*
 import com.example.cockounter.adapters.simpleheader.listHeaderShow.listHeaderShow
 import com.example.cockounter.core.*
 import com.example.cockounter.storage.Storage
@@ -32,10 +25,6 @@ import org.jetbrains.anko.design.floatingActionButton
 import org.jetbrains.anko.sdk27.coroutines.onChildClick
 import org.jetbrains.anko.sdk27.coroutines.onClick
 import org.jetbrains.anko.sdk27.coroutines.textChangedListener
-
-fun <T> MutableLiveData<T>.notify() {
-    this.postValue(this.value)
-}
 
 class EditPresetViewModel() : ViewModel() {
     val globalParameters = EditableList<Parameter>()

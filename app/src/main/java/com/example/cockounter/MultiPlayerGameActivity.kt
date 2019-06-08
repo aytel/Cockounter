@@ -42,7 +42,7 @@ class MultiPlayerGameViewModel() : ViewModel() {
     lateinit var state: MutableLiveData<GameState>
     lateinit var preset: Preset
     lateinit var players: List<PlayerDescription>
-    lateinit var representation: MutableLiveData<GameRepresentation>
+    lateinit var representation: MutableLiveData<Model.Game>
     lateinit var evaluator: ScriptEvaluation
     private lateinit var name: String
     lateinit var uuid: UUID
@@ -61,10 +61,10 @@ class MultiPlayerGameViewModel() : ViewModel() {
         state = MutableLiveData()
         state.value = buildState(preset, players)
         representation = MutableLiveData()
-        representation.value = buildByPlayerRepresentation(preset, players)
+        representation.value = Model.buildByPlayer(preset, players)
         val stateCapture = StateCapture(0, "", state.value!!, preset, players, Date(0), uuid)
         NetworkHandler.createGame(stateCapture)
-        evaluator = buildScriptEvaluation(preset, players)
+        evaluator = buildScriptEvaluation(preset)
     }
 
     constructor(uuid: UUID) : this() {
@@ -74,8 +74,8 @@ class MultiPlayerGameViewModel() : ViewModel() {
         state = MutableLiveData()
         state.value = stateCapture.state
         representation = MutableLiveData()
-        representation.value = buildByPlayerRepresentation(preset, players)
-        evaluator = buildScriptEvaluation(preset, players)
+        representation.value = Model.buildByPlayer(preset, players)
+        evaluator = buildScriptEvaluation(preset)
         this.uuid = uuid
     }
 
@@ -101,11 +101,11 @@ class MultiPlayerGameViewModel() : ViewModel() {
     fun changeLayout() {
         when(currentLayout) {
             LayoutType.BY_PLAYER -> {
-                representation.value = buildByRoleRepresentation(preset, players)
+                representation.value = Model.buildByRole(preset, players)
                 currentLayout = LayoutType.BY_ROLE
             }
             LayoutType.BY_ROLE -> {
-                representation.value = buildByPlayerRepresentation(preset, players)
+                representation.value = Model.buildByPlayer(preset, players)
                 currentLayout = LayoutType.BY_PLAYER
             }
         }
@@ -120,13 +120,12 @@ class MultiPlayerGameViewModel() : ViewModel() {
     }
 
     fun updateGameState(gameState: GameState) {
-        state.value = gameState
-        state.notify()
+        state.postValue(gameState)
     }
 }
 
-class MultiplayerGameActivity : AppCompatActivity(), GameHolder, ActionPerformer {
-    override val getRepresentation: () -> GameRepresentation = { viewModel.representation.value!! }
+class MultiPlayerGameActivity : AppCompatActivity(), GameHolder, ActionPerformer {
+    override val getRepresentation: () -> Model.Game = { viewModel.representation.value!! }
     override val getState: () -> GameState = { viewModel.state.value!! }
 
     companion object {
@@ -243,7 +242,7 @@ class MultiplayerGameActivity : AppCompatActivity(), GameHolder, ActionPerformer
     }
 
     override fun performAction(action: Action) {
-        when(val result = doAsyncResult { viewModel.performAction(action, evaluator, this@MultiplayerGameActivity) }.get()) {
+        when(val result = doAsyncResult { viewModel.performAction(action, evaluator, this@MultiPlayerGameActivity) }.get()) {
             is Some -> scriptFailure(result.t)
         }
     }

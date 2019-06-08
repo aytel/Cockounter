@@ -9,16 +9,11 @@ import android.view.MenuItem
 import android.view.View
 import android.widget.BaseExpandableListAdapter
 import androidx.appcompat.app.AppCompatActivity
-import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelProviders
-import com.example.cockounter.adapters.EditPresetAdapter
-import com.example.cockounter.adapters.ListElementShow
-import com.example.cockounter.adapters.ListHeaderShow
-import com.example.cockounter.adapters.SimpleHeader
-import com.example.cockounter.adapters.parameter.listElementShow.listElementShow
-import com.example.cockounter.adapters.presetscript.listElementShow.listElementShow
+import com.example.cockounter.adapters.*
 import com.example.cockounter.adapters.simpleheader.listHeaderShow.listHeaderShow
 import com.example.cockounter.core.Parameter
 import com.example.cockounter.core.PresetScript
@@ -31,41 +26,6 @@ import org.jetbrains.anko.design.floatingActionButton
 import org.jetbrains.anko.sdk27.coroutines.onChildClick
 import org.jetbrains.anko.sdk27.coroutines.onClick
 import org.jetbrains.anko.sdk27.coroutines.textChangedListener
-
-class EditableList<T> {
-    private val list: MutableList<T> = mutableListOf()
-    val liveData = MutableLiveData<MutableList<T>>()
-
-    init {
-        liveData.value = list
-    }
-
-    fun add(element: T) {
-        list.add(element)
-        liveData.notify()
-    }
-
-    fun removeAt(index: Int) {
-        list.removeAt(index)
-        liveData.notify()
-    }
-
-    fun addAll(items: Collection<T>) {
-        list.addAll(items)
-        liveData.notify()
-    }
-
-    operator fun get(index: Int) = list[index]
-
-    operator fun set(index: Int, element: T) {
-        list[index] = element
-        liveData.notify()
-    }
-
-    val data
-    get() = list
-
-}
 
 class EditRoleViewModel() : ViewModel() {
     val sharedParameters = EditableList<Parameter>()
@@ -114,25 +74,39 @@ class EditRoleActivity : AppCompatActivity() {
     }
 
     interface HeaderShow : ListHeaderShow<HeaderViewer> {
-        override fun HeaderViewer.buildView(context: Context, isSelected: Boolean): View = when(this) {
-            HeaderViewer.SharedParameter -> SimpleHeader.listHeaderShow().run { SimpleHeader("Shared parameters").buildView(context, isSelected) }
-            HeaderViewer.PrivateParameter -> SimpleHeader.listHeaderShow().run { SimpleHeader("Private parameters").buildView(context, isSelected) }
-            HeaderViewer.PresetScript -> SimpleHeader.listHeaderShow().run { SimpleHeader("Actions").buildView(context, isSelected) }
+        override fun HeaderViewer.buildView(context: Context, isSelected: Boolean): View = when (this) {
+            HeaderViewer.SharedParameter -> SimpleHeader.listHeaderShow().run {
+                SimpleHeader("Shared parameters").buildView(context, isSelected)
+            }
+            HeaderViewer.PrivateParameter -> SimpleHeader.listHeaderShow().run {
+                SimpleHeader("Private parameters").buildView(context, isSelected)
+            }
+            HeaderViewer.PresetScript -> SimpleHeader.listHeaderShow().run {
+                SimpleHeader("Actions").buildView(context, isSelected)
+            }
         }
     }
+
     private fun HeaderViewer.Companion.listHeaderShow() = object : HeaderShow {}
 
     interface ElementShow : ListElementShow<ElementViewer> {
-        override fun ElementViewer.buildView(context: Context): View = when(this) {
-            is ElementViewer.SharedParameter -> Parameter.listElementShow().run { this@buildView.parameter.buildView(context) }
-            is ElementViewer.PrivateParameter -> Parameter.listElementShow().run { this@buildView.parameter.buildView(context) }
-            is ElementViewer.PresetScript -> PresetScript.listElementShow().run { this@buildView.script.buildView(context) }
+        override fun ElementViewer.buildView(context: Context): View = when (this) {
+            is ElementViewer.SharedParameter -> Parameter.listElementShow().run {
+                this@buildView.parameter.buildView(context)
+            }
+            is ElementViewer.PrivateParameter -> Parameter.listElementShow().run {
+                this@buildView.parameter.buildView(context)
+            }
+            is ElementViewer.PresetScript -> PresetScript.listElementShow().run {
+                this@buildView.script.buildView(context)
+            }
         }
     }
+
     private fun ElementViewer.Companion.listElementShow() = object : ElementShow {}
 
     private lateinit var viewModel: EditRoleViewModel
-    private lateinit var adapter: EditPresetAdapter<*, *>
+    private lateinit var adapter: EditPresetAdapter<HeaderViewer, ElementViewer>
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -146,7 +120,16 @@ class EditRoleActivity : AppCompatActivity() {
         } else {
             viewModel = ViewModelProviders.of(this).get(EditRoleViewModel::class.java)
         }
-        adapter = EditPresetAdapter(listOf(HeaderViewer.SharedParameter, HeaderViewer.PrivateParameter, HeaderViewer.PresetScript), ElementViewer.listElementShow(), HeaderViewer.listHeaderShow())
+        adapter = EditPresetAdapter(
+            listOf(
+                HeaderViewer.SharedParameter,
+                HeaderViewer.PrivateParameter,
+                HeaderViewer.PresetScript
+            ), ElementViewer.listElementShow(), HeaderViewer.listHeaderShow()
+        )
+        viewModel.sharedParameters.liveData.observe(this, Observer { list -> adapter.update(0, list.map { ElementViewer.PrivateParameter(it) }) })
+        viewModel.privateParameters.liveData.observe(this, Observer { list -> adapter.update(1, list.map { ElementViewer.SharedParameter(it) }) })
+        viewModel.scripts.liveData.observe(this, Observer { list -> adapter.update(2, list.map { ElementViewer.PresetScript(it) }) })
         EditRoleUI(viewModel.name, adapter).setContentView(this)
     }
 
@@ -256,7 +239,7 @@ class EditRoleActivity : AppCompatActivity() {
                     sharedParameters = sharedParameters.map { it.name }.zip(sharedParameters).toMap(),
                     privateParameters = privateParameters.map { it.name }.zip(privateParameters).toMap(),
                     actionsStubs = scriptsList.toList()
-                    )
+                )
             )
             //TODO add new scripts
             putExtra(RETURN_POSITION, intent.getIntExtra(ARG_POSITION, -1))
@@ -282,89 +265,93 @@ class EditRoleActivity : AppCompatActivity() {
             }
             CODE_SHARED_PARAMETER_CHANGED -> if (resultCode == Activity.RESULT_OK) {
                 val index = data.getIntExtra(EditParameterActivity.RETURN_POSITION, -1)
-                viewModel.sharedParameters[index] = data.getSerializableExtra(EditParameterActivity.RETURN_PARAMETER) as Parameter
+                viewModel.sharedParameters[index] =
+                    data.getSerializableExtra(EditParameterActivity.RETURN_PARAMETER) as Parameter
             }
             CODE_PRIVATE_PARAMETER_CHANGED -> if (resultCode == Activity.RESULT_OK) {
                 val index = data.getIntExtra(EditParameterActivity.RETURN_POSITION, -1)
-                viewModel.privateParameters[index] = data.getSerializableExtra(EditParameterActivity.RETURN_PARAMETER) as Parameter
+                viewModel.privateParameters[index] =
+                    data.getSerializableExtra(EditParameterActivity.RETURN_PARAMETER) as Parameter
             }
             CODE_SCRIPT_ADDED -> if (resultCode == Activity.RESULT_OK) {
-                val presetScript = data.getSerializableExtra(EditPresetScriptActivity.RETURN_PRESET_SCRIPT) as PresetScript
+                val presetScript =
+                    data.getSerializableExtra(EditPresetScriptActivity.RETURN_PRESET_SCRIPT) as PresetScript
                 viewModel.scripts.add(presetScript)
             }
             CODE_SCRIPT_CHANGED -> if (requestCode == Activity.RESULT_OK) {
                 val index = data.getIntExtra(EditPresetScriptActivity.RETURN_POSITION, -1)
-                val presetScript = data.getSerializableExtra(EditPresetScriptActivity.RETURN_PRESET_SCRIPT) as PresetScript
+                val presetScript =
+                    data.getSerializableExtra(EditPresetScriptActivity.RETURN_PRESET_SCRIPT) as PresetScript
                 viewModel.scripts[index] = presetScript
             }
         }
     }
-}
 
-private class EditRoleUI(
-    val name: String,
-    val expandableAdapter: BaseExpandableListAdapter
-) : AnkoComponent<EditRoleActivity> {
-    override fun createView(ui: AnkoContext<EditRoleActivity>): View = with(ui) {
-        coordinatorLayout {
-            appBarLayout {
-                lparams(matchParent, wrapContent) {
+    private class EditRoleUI(val name: String, val expandableAdapter: BaseExpandableListAdapter) :
+        AnkoComponent<EditRoleActivity> {
+        override fun createView(ui: AnkoContext<EditRoleActivity>): View = with(ui) {
+            coordinatorLayout {
+                appBarLayout {
+                    lparams(matchParent, wrapContent) {
 
+                    }
+                    toolbar {
+                        //owner.setSupportActionBar(this.toolbar())
+                        title = "Edit role"
+                        menu.apply {
+                            add("Save").apply {
+                                setIcon(R.drawable.ic_done_black_24dp)
+                                setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS)
+                                setOnMenuItemClickListener {
+                                    owner.save()
+                                    true
+                                }
+                            }
+                        }
+                    }.lparams(width = matchParent, height = wrapContent) {
+                        scrollFlags = 0
+                    }
                 }
-                toolbar {
-                    //owner.setSupportActionBar(this.toolbar())
-                    title = "Edit role"
-                    menu.apply {
-                        add("Save").apply {
-                            setIcon(R.drawable.ic_done_black_24dp)
-                            setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS)
-                            setOnMenuItemClickListener {
-                                owner.save()
-                                true
+                verticalLayout {
+                    editText(name) {
+                        hint = "name"
+                        textChangedListener {
+                            onTextChanged { chars, _, _, _ ->
+                                owner.updateName(chars.toString())
                             }
                         }
                     }
-                }.lparams(width = matchParent, height = wrapContent) {
-                    scrollFlags = 0
-                }
-            }
-            verticalLayout {
-                editText(name) {
-                    hint = "name"
-                    textChangedListener {
-                        onTextChanged { chars, _, _, _ ->
-                            owner.updateName(chars.toString())
+                    expandableListView {
+                        setAdapter(expandableAdapter)
+                        onChildClick { _, _, groupPosition, childPosition, _ ->
+                            when(groupPosition) {
+                                0 -> owner.processSharedParameter(childPosition)
+                                1 -> owner.processPrivateParameter(childPosition)
+                                2 -> owner.processScript(childPosition)
+                            }
                         }
                     }
+                }.lparams(width = matchParent, height = matchParent) {
+                    behavior = AppBarLayout.ScrollingViewBehavior()
                 }
-                expandableListView {
-                    setAdapter(expandableAdapter)
-                    onChildClick { _, _, groupPosition, childPosition, _ ->
-                        when(groupPosition) {
-
-                        }
-
-                    }
-                }
-            }.lparams(width = matchParent, height = matchParent) {
-                behavior = AppBarLayout.ScrollingViewBehavior()
-            }
-            floatingActionButton {
-                onClick {
-                    selector("", listOf("Shared parameter", "Private parameter", "Action")) { _, i ->
-                        when(i) {
-                            0 -> owner.addSharedParameter()
-                            1 -> owner.addPrivateParameter()
-                            2 -> owner.addAction()
+                floatingActionButton {
+                    onClick {
+                        selector("", listOf("Shared parameter", "Private parameter", "Action")) { _, i ->
+                            when (i) {
+                                0 -> owner.addSharedParameter()
+                                1 -> owner.addPrivateParameter()
+                                2 -> owner.addAction()
+                            }
                         }
                     }
+                    imageResource = R.drawable.ic_add_white_24dp
+                }.lparams(width = wrapContent, height = wrapContent) {
+                    gravity = Gravity.BOTTOM + Gravity.END
+                    margin = dip(16)
                 }
-                imageResource = R.drawable.ic_add_white_24dp
-            }.lparams(width = wrapContent, height = wrapContent) {
-                gravity = Gravity.BOTTOM + Gravity.END
-                margin = dip(16)
             }
         }
     }
 }
+
 

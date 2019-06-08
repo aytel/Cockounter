@@ -1,6 +1,5 @@
 package com.example.cockounter
 
-import android.R
 import android.app.Activity
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
@@ -13,7 +12,7 @@ import org.jetbrains.anko.*
 import org.jetbrains.anko.sdk27.coroutines.onClick
 
 class StartMultiPlayerGameActivity : AppCompatActivity() {
-    protected val players = mutableListOf<PlayerDescription>()
+    private val players = mutableListOf<PlayerDescription>()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         StartMultiPlayerGameUI(PlayersAdapter(players)).setContentView(this)
@@ -42,7 +41,7 @@ class StartMultiPlayerGameActivity : AppCompatActivity() {
     fun addNewPlayer() {
         val roles = intent.getStringArrayExtra("roles")!!
         val usedNames = players.map { it.name }
-        val roleAdapter = ArrayAdapter(this, R.layout.simple_list_item_1, roles)
+        val roleAdapter = ArrayAdapter(this, android.R.layout.simple_list_item_1, roles)
         alert {
             customView {
                 verticalLayout {

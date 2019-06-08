@@ -14,7 +14,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelProviders
 import com.example.cockounter.adapters.ListShowAdapter
-import com.example.cockounter.adapters.presetscript.listElementShow.listElementShow
+import com.example.cockounter.adapters.listElementShow
 import com.example.cockounter.core.*
 import com.google.android.material.appbar.AppBarLayout
 import org.jetbrains.anko.*
@@ -192,7 +192,9 @@ private class EditParameterUI(val visibleName: String, val name: String, val typ
                     adapter = typeAdapter
                     setSelection(typePosition)
                     onItemSelectedListener {
-                        owner.updateType(selectedItem as ParameterType, selectedItemId.toInt())
+                        onItemSelected { _, _, i, _ ->
+                            owner.updateType(selectedItem as ParameterType, i)
+                        }
                     }
                 }
                 val defaultValue = editText(initialValue) {

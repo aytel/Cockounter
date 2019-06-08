@@ -1,16 +1,12 @@
 package com.example.cockounter.adapters
 
-import android.content.Context
-import android.view.View
-import android.view.ViewGroup
 import android.widget.BaseExpandableListAdapter
-import com.example.cockounter.adapters.simpleheader.listHeaderShow.listHeaderShow
-import com.example.cockounter.core.GameState
 import com.example.cockounter.core.Model
 import com.example.cockounter.script.Action
 
 
-class ExpandablePlayerRepresentationAdapter(
+/*
+class RoleAdapter(
     private val representation: Model.Player,
     private val perform: (Action) -> Unit
 ) : BaseExpandableListAdapter() {
@@ -18,6 +14,7 @@ class ExpandablePlayerRepresentationAdapter(
     sealed class ElementViewer {
         data class Parameter(val parameter: Model.Parameter) : ElementViewer()
         data class Button(val button: Model.ActionButton) : ElementViewer()
+        data class GroupParameter(val parameter: Model.GroupPrivateParameter) : ElementViewer()
         companion object
     }
 
@@ -92,3 +89,4 @@ class ExpandablePlayerRepresentationAdapter(
         notifyDataSetChanged()
     }
 }
+*/

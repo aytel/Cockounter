@@ -15,7 +15,7 @@
             android:theme="@style/AppTheme">
         <activity android:name=".StartMultiPlayerGameActivity">
         </activity>
-        <activity android:name=".MultiplayerGameActivity">
+        <activity android:name=".MultiPlayerGameActivity">
         </activity>
         <activity android:name=".EditLibraryActivity">
         </activity>
@@ -25,11 +25,11 @@
         </activity>
         <activity android:name=".ResumeGameActivity">
         </activity>
-        <activity android:name=".StartSinglePlayerGameActivity">
+        <activity android:name=".SelectPlayersActivity">
         </activity>
-        <activity android:name=".SinglePlayerGameScreenActivity">
+        <activity android:name=".SinglePlayerGameActivity">
         </activity>
-        <activity android:name=".PlayerGameScreenActivity">
+        <activity android:name=".GameScreenActivity">
         </activity>
         <activity android:name=".EditPresetScriptActivity">
         </activity>

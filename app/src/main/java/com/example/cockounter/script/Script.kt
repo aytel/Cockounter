@@ -166,7 +166,10 @@ private fun performAction(globals: Globals, action: Action): (GameState) -> Try<
     }
 }
 
-fun buildScriptEvaluation(preset: Preset, players: List<PlayerDescription>): ScriptEvaluation {
+/**
+ * Builds [ScriptEvaluation] from [Preset]
+ */
+fun buildScriptEvaluation(preset: Preset): ScriptEvaluation {
     val globals = JsePlatform.standardGlobals()
     return { context: Context ->
         mapFunctions(globals, buildInteractionFunctionsWithContext(context));
@@ -180,6 +183,12 @@ fun buildScriptEvaluation(preset: Preset, players: List<PlayerDescription>): Scr
     }
 }
 
+/**
+ * Runs script without any mapped parameters
+ *
+ * @param context context to use
+ * @param script script to run
+ */
 fun runScript(context: Context, script: String): Try<Unit> {
     val globals = JsePlatform.standardGlobals()
     mapFunctions(globals, buildInteractionFunctionsWithContext(context))
@@ -187,6 +196,9 @@ fun runScript(context: Context, script: String): Try<Unit> {
     return performAction(globals, action)(dummyState).map { Unit }
 }
 
+/**
+ * Builds an [Action] from [ActionButtonModel] and [ScriptContext]
+ */
 fun buildAction(button: ActionButtonModel, context: ScriptContext): Action = when (button) {
     is ActionButtonModel.Attached -> Action.PlayerScript(context, button.script.script)
     is ActionButtonModel.Global -> Action.PlayerScript(context, button.script.script)

@@ -14,9 +14,8 @@ import com.example.cockounter.adapters.PlayersAdapter
 import com.example.cockounter.core.PlayerDescription
 import org.jetbrains.anko.*
 import org.jetbrains.anko.sdk27.coroutines.onClick
-import kotlin.properties.Delegates
 
-class StartSinglePlayerGameViewModel(roles: Array<String>) : ViewModel() {
+class SelectPlayersViewModel(roles: Array<String>) : ViewModel() {
     val players = EditableList<PlayerDescription>()
     val roles: List<String> = roles.toList()
 
@@ -33,13 +32,13 @@ class StartSinglePlayerGameViewModel(roles: Array<String>) : ViewModel() {
     }
 }
 
-open class StartSinglePlayerGameActivity : AppCompatActivity() {
+class SelectPlayersActivity : AppCompatActivity() {
     companion object {
         const val ARG_ROLES = "ARG_ROLES"
         const val RETURN_NAMES = "RETURN_NAMES"
         const val RETURN_ROLES = "RETURN_ROLES"
     }
-    private lateinit var viewModel: StartSinglePlayerGameViewModel
+    private lateinit var viewModel: SelectPlayersViewModel
     private val playersAdapter = PlayersAdapter(mutableListOf())
     private val roleAdapter by lazy { ArrayAdapter(this, android.R.layout.simple_list_item_1, viewModel.roles) }
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -47,15 +46,15 @@ open class StartSinglePlayerGameActivity : AppCompatActivity() {
         viewModel = ViewModelProviders.of(this, object : ViewModelProvider.Factory {
             override fun <T : ViewModel?> create(modelClass: Class<T>): T {
                 val roles = intent.getStringArrayExtra(ARG_ROLES)
-                return StartSinglePlayerGameViewModel(roles) as T
+                return SelectPlayersViewModel(roles) as T
             }
 
-        }).get(StartSinglePlayerGameViewModel::class.java)
+        }).get(SelectPlayersViewModel::class.java)
         viewModel.players.liveData.observe(this, Observer { list -> playersAdapter.update(list) })
-        StartSinglePlayerGameUI(playersAdapter).setContentView(this)
+        SelectPlayersGameUI(playersAdapter).setContentView(this)
     }
 
-    fun addNewPlayer() {
+    private fun addNewPlayer() {
         alert {
             customView {
                 verticalLayout {
@@ -77,32 +76,33 @@ open class StartSinglePlayerGameActivity : AppCompatActivity() {
     }
 
 
-    open fun startGame() {
+    private fun startGame() {
         val result = Intent();
         result.putExtra(RETURN_NAMES, viewModel.players.data.map { it.name }.toTypedArray())
         result.putExtra(RETURN_ROLES, viewModel.players.data.map { it.role }.toTypedArray())
         setResult(Activity.RESULT_OK, result)
         finish()
     }
-}
 
-class StartSinglePlayerGameUI(private val playersAdapter: PlayersAdapter) : AnkoComponent<StartSinglePlayerGameActivity> {
-    override fun createView(ui: AnkoContext<StartSinglePlayerGameActivity>): View = with(ui) {
-        verticalLayout {
-            listView {
-                adapter = playersAdapter
-            }
-            button("Add new player") {
-                onClick {
-                    ui.owner.addNewPlayer()
+    private class SelectPlayersGameUI(private val playersAdapter: PlayersAdapter) : AnkoComponent<SelectPlayersActivity> {
+        override fun createView(ui: AnkoContext<SelectPlayersActivity>): View = with(ui) {
+            verticalLayout {
+                listView {
+                    adapter = playersAdapter
                 }
-            }
-            button("Start game") {
-                onClick {
-                    ui.owner.startGame()
+                button("Add new player") {
+                    onClick {
+                        ui.owner.addNewPlayer()
+                    }
+                }
+                button("Start game") {
+                    onClick {
+                        ui.owner.startGame()
+                    }
                 }
             }
         }
     }
 }
+
 

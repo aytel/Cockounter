@@ -199,7 +199,7 @@ fun buildState(preset: Preset, players: List<PlayerDescription>): GameState {
         GameRole(
             key,
             v.sharedParameters.mapValues { buildGameParameter(it.value) }.toImmutableMap(),
-            byRole.getValue(key).map { Pair(it.name, it) }.toImmutableMap()
+            byRole[key]?.map { Pair(it.name, it) }?.toImmutableMap() ?: immutableMapOf()
         )
     }
     return GameState(globalParameters, roles.toImmutableMap())

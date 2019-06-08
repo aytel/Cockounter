@@ -3,7 +3,6 @@ package com.example.cockounter
 import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log
 import android.view.Gravity
 import android.view.MenuItem
 import android.view.View
@@ -26,10 +25,12 @@ import org.jetbrains.anko.recyclerview.v7.recyclerView
 import org.jetbrains.anko.sdk27.coroutines.onClick
 
 
-
 class SelectPresetActivity : AppCompatActivity() {
 
     companion object {
+        /**
+         * Key for returned to the previous activity id of the selected preset
+         */
         const val RETURN_PRESET_ID = "RETURN_PRESET_ID"
         private const val CODE_PRESET_ADDED = 0
         private const val CODE_PRESET_CHANGED = 1
@@ -101,7 +102,7 @@ class SelectPresetActivity : AppCompatActivity() {
         SelectPresetUI(presetsAdapter).setContentView(this@SelectPresetActivity)
     }
 
-    fun editPreset(index: Int) {
+    private fun editPreset(index: Int) {
         startActivityForResult(
             intentFor<EditPresetActivity>(
                 EditPresetActivity.ARG_PRESET_ID to presetsList[index].id
@@ -109,82 +110,85 @@ class SelectPresetActivity : AppCompatActivity() {
         )
     }
 
-    fun deletePreset(index: Int) {
-        Storage.deletePreset(presetsList[index])
+    private fun deletePreset(index: Int) {
+        doAsync {
+            Storage.deletePreset(presetsList[index])
+        }
         presetsList.removeAt(index)
         presetsAdapter.notifyDataSetChanged()
     }
 
-    fun returnPreset(index: Int) {
+    private fun returnPreset(index: Int) {
         val result = Intent()
         result.putExtra(RETURN_PRESET_ID, presetsList[index].id)
         setResult(Activity.RESULT_OK, result)
         finish()
     }
 
-    fun createPreset() {
+    private fun createPreset() {
         startActivityForResult(intentFor<EditPresetActivity>(), CODE_PRESET_ADDED)
     }
 
-    fun loadPresetFromFile() {
+    private fun loadPresetFromFile() {
         val intent = Intent(Intent.ACTION_OPEN_DOCUMENT)
         intent.type = "*/*"
         startActivityForResult(intent, CODE_LOAD_FILE)
     }
 
-    fun loadPresetToFile(index: Int) {
+    private fun loadPresetToFile(index: Int) {
         val intent = Intent(Intent.ACTION_CREATE_DOCUMENT)
         intent.type = "*/*"
         presetToSave = presetsList[index]
         startActivityForResult(intent, CODE_SAVE_FILE)
     }
-}
 
-private class SelectPresetUI(val presetsAdapter: PresetInfoAdapter) : AnkoComponent<SelectPresetActivity> {
-    override fun createView(ui: AnkoContext<SelectPresetActivity>): View = with(ui) {
-        coordinatorLayout {
-            appBarLayout {
-                lparams(matchParent, wrapContent) {
+    private class SelectPresetUI(val presetsAdapter: PresetInfoAdapter) : AnkoComponent<SelectPresetActivity> {
+        override fun createView(ui: AnkoContext<SelectPresetActivity>): View = with(ui) {
+            coordinatorLayout {
+                appBarLayout {
+                    lparams(matchParent, wrapContent) {
 
-                }
-                toolbar {
-                    //owner.setSupportActionBar(this.toolbar())
-                    title = "Select preset"
-                    menu.apply {
-                        add("Import").apply {
-                            //setIcon(R.drawable.ic_folder_open_black_24dp)
-                            setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS)
-                            setOnMenuItemClickListener {
-                                owner.loadPresetFromFile()
-                                true
+                    }
+                    toolbar {
+                        //owner.setSupportActionBar(this.toolbar())
+                        title = "Select preset"
+                        menu.apply {
+                            add("Import").apply {
+                                //setIcon(R.drawable.ic_folder_open_black_24dp)
+                                setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS)
+                                setOnMenuItemClickListener {
+                                    owner.loadPresetFromFile()
+                                    true
+                                }
                             }
                         }
+                    }.lparams(width = matchParent, height = wrapContent) {
+                        scrollFlags = 0
                     }
-                }.lparams(width = matchParent, height = wrapContent) {
-                    scrollFlags = 0
-                }
 
-            }
-            recyclerView {
-                adapter = presetsAdapter
-                layoutManager = LinearLayoutManager(ui.owner)
-                addItemDecoration(DividerItemDecoration(owner, LinearLayoutManager.VERTICAL))
-            }.lparams(width = matchParent, height = matchParent) {
-                behavior = AppBarLayout.ScrollingViewBehavior()
-            }
-            floatingActionButton {
-                onClick {
-                    owner.createPreset()
                 }
-                imageResource = R.drawable.ic_add_white_24dp
-            }.lparams {
-                width = wrapContent
-                height = wrapContent
-                margin = dip(16)
-                gravity = Gravity.BOTTOM or Gravity.END
+                recyclerView {
+                    adapter = presetsAdapter
+                    layoutManager = LinearLayoutManager(ui.owner)
+                    addItemDecoration(DividerItemDecoration(owner, LinearLayoutManager.VERTICAL))
+                }.lparams(width = matchParent, height = matchParent) {
+                    behavior = AppBarLayout.ScrollingViewBehavior()
+                }
+                floatingActionButton {
+                    onClick {
+                        owner.createPreset()
+                    }
+                    imageResource = R.drawable.ic_add_white_24dp
+                }.lparams {
+                    width = wrapContent
+                    height = wrapContent
+                    margin = dip(16)
+                    gravity = Gravity.BOTTOM or Gravity.END
+                }
             }
         }
     }
 }
+
 
 

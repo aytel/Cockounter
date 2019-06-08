@@ -95,7 +95,6 @@ class EditPresetScriptActivity : AppCompatActivity() {
     fun updateContext(context: ScriptContextDescription, position: Int) {
         viewModel.context = context
         viewModel.contextPosition = position
-        Log.d("pos", position.toString())
     }
 }
 

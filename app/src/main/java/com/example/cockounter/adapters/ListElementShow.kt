@@ -14,65 +14,82 @@ interface ListElementShow<F> {
     fun F.buildView(context: Context): View
 }
 
-@extension
 interface ParameterListElementShow : ListElementShow<Parameter> {
     override fun Parameter.buildView(context: Context): View = with(context) {
         verticalLayout {
             padding = dip(8)
             textView {
-                setPadding(dimenAttr(android.R.attr.expandableListPreferredChildPaddingLeft), paddingTop, paddingRight, paddingBottom)
+                setPadding(
+                    dimenAttr(android.R.attr.expandableListPreferredChildPaddingLeft),
+                    paddingTop,
+                    paddingRight,
+                    paddingBottom
+                )
                 textSize = 17f
                 text = this@buildView.name
             }
         }
     }
 }
-//fun Parameter.Companion.listElementShow(): ListElementShow<Parameter> = object : ParameterListElementShow {}
 
-@extension
+fun Parameter.Companion.listElementShow(): ListElementShow<Parameter> = object : ParameterListElementShow {}
+
 interface RoleListElementShow : ListElementShow<Role> {
     override fun Role.buildView(context: Context): View = with(context) {
         verticalLayout {
             padding = dip(8)
             textView {
-                setPadding(dimenAttr(android.R.attr.expandableListPreferredChildPaddingLeft), paddingTop, paddingRight, paddingBottom)
+                setPadding(
+                    dimenAttr(android.R.attr.expandableListPreferredChildPaddingLeft),
+                    paddingTop,
+                    paddingRight,
+                    paddingBottom
+                )
                 text = this@buildView.name
             }
         }
     }
 }
 
-//fun Role.Companion.listElementShow(): ListElementShow<Role> = object : RoleListElementShow {}
+fun Role.Companion.listElementShow(): ListElementShow<Role> = object : RoleListElementShow {}
 
-@extension
 interface PresetScriptListElementShow : ListElementShow<PresetScript> {
     override fun PresetScript.buildView(context: Context): View = with(context) {
         verticalLayout {
             padding = dip(8)
             textView {
-                setPadding(dimenAttr(android.R.attr.expandableListPreferredChildPaddingLeft), paddingTop, paddingRight, paddingBottom)
+                setPadding(
+                    dimenAttr(android.R.attr.expandableListPreferredChildPaddingLeft),
+                    paddingTop,
+                    paddingRight,
+                    paddingBottom
+                )
                 text = this@buildView.visibleName
             }
         }
     }
 }
 
-//fun PresetScript.Companion.listElementShow(): ListElementShow<PresetScript> = object : PresetScriptListElementShow {}
+fun PresetScript.Companion.listElementShow(): ListElementShow<PresetScript> = object : PresetScriptListElementShow {}
 
-@extension
 interface LibraryElementShow : ListElementShow<Library> {
     override fun Library.buildView(context: Context): View = with(context) {
         verticalLayout {
             padding = dip(8)
             textView {
-                setPadding(dimenAttr(android.R.attr.expandableListPreferredChildPaddingLeft), paddingTop, paddingRight, paddingBottom)
+                setPadding(
+                    dimenAttr(android.R.attr.expandableListPreferredChildPaddingLeft),
+                    paddingTop,
+                    paddingRight,
+                    paddingBottom
+                )
                 text = this@buildView.name
             }
         }
     }
 }
 
-//fun Library.Companion.listElementShow(): ListElementShow<Library> = object : LibraryElementShow {}
+fun Library.Companion.listElementShow(): ListElementShow<Library> = object : LibraryElementShow {}
 
 interface StateCaptureElementShow : ListElementShow<StateCapture> {
     override fun StateCapture.buildView(context: Context): View = with(context) {
@@ -100,8 +117,9 @@ interface GameElementShow<F> {
     fun F.buildView(context: Context, gameState: GameState, perform: (Action) -> Unit): View
 }
 
-interface ParameterRepresentationElementShow : GameElementShow<ParameterRepresentation> {
-    override fun ParameterRepresentation.buildView(context: Context, gameState: GameState, perform: (Action) -> Unit): View = with(context) {
+interface ParameterRepresentationElementShow : GameElementShow<Model.Parameter> {
+    override fun Model.Parameter.buildView(context: Context, gameState: GameState, perform: (Action) -> Unit): View =
+        with(context) {
             linearLayout {
                 verticalLayout {
                     textView(name)
@@ -123,23 +141,26 @@ interface ParameterRepresentationElementShow : GameElementShow<ParameterRepresen
                 }
             }
         }
-    }
-fun ParameterRepresentation.Companion.gameElementShow() = object : ParameterRepresentationElementShow {}
+}
 
-interface ActionElementShow : GameElementShow<ActionButtonRepresentation> {
-    override fun ActionButtonRepresentation.buildView(context: Context, gameState: GameState, perform: (Action) -> Unit): View = with(context) {
-        verticalLayout {
-            padding = dip(2)
-            button(text) {
-                onClick {
-                    perform(action)
-                    Log.d("Action", "Action: $text performed")
+fun Model.Parameter.Companion.gameElementShow() = object : ParameterRepresentationElementShow {}
+
+interface ActionElementShow : GameElementShow<Model.ActionButton> {
+    override fun Model.ActionButton.buildView(context: Context, gameState: GameState, perform: (Action) -> Unit): View =
+        with(context) {
+            verticalLayout {
+                padding = dip(2)
+                button(text) {
+                    onClick {
+                        perform(action)
+                        Log.d("Action", "Action: $text performed")
+                    }
                 }
             }
         }
-    }
 }
-fun ActionButtonRepresentation.Companion.gameElementShow() = object : ActionElementShow {}
+
+fun Model.ActionButton.Companion.gameElementShow() = object : ActionElementShow {}
 
 
 interface ListHeaderShow<F> {
@@ -152,11 +173,16 @@ data class SimpleHeader(val text: String) {
 
 @extension
 interface SimpleHeaderListHeaderShow : ListHeaderShow<SimpleHeader> {
-    override fun SimpleHeader.buildView(context: Context, isSelected: Boolean): View  = with(context) {
+    override fun SimpleHeader.buildView(context: Context, isSelected: Boolean): View = with(context) {
         verticalLayout {
             padding = dip(8)
             textView {
-                setPadding(dimenAttr(android.R.attr.expandableListPreferredItemPaddingLeft), paddingTop, paddingRight, paddingBottom)
+                setPadding(
+                    dimenAttr(android.R.attr.expandableListPreferredItemPaddingLeft),
+                    paddingTop,
+                    paddingRight,
+                    paddingBottom
+                )
                 textSize = 17f
 
                 text = this@buildView.text

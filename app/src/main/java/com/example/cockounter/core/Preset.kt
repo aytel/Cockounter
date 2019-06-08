@@ -203,7 +203,7 @@ fun Role.sharedParameterPointers(): List<ParameterPointer> =
     sharedParameters.values.map { ParameterPointer.Shared(RolePointer(name), it.name) }
 
 fun Role.privateParameterPointers(): List<ParameterPointer> =
-    privateParameters.values.map { ParameterPointer.Shared(RolePointer(name), it.name) }
+    privateParameters.values.map { ParameterPointer.Private(RolePointer(name), it.name) }
 
 
 enum class ScriptContextDescription : Serializable {

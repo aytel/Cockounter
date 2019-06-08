@@ -26,9 +26,9 @@ class ResumeGameActivity : AppCompatActivity() {
     }
 
     fun resumeGame(index: Int) {
-        startActivity(intentFor<SinglePlayerGameScreenActivity>(
-            SinglePlayerGameScreenActivity.MODE to SinglePlayerGameScreenActivity.MODE_USE_STATE,
-            SinglePlayerGameScreenActivity.ARG_STATE_ID to states.value!![index].id
+        startActivity(intentFor<SinglePlayerGameActivity>(
+            SinglePlayerGameActivity.MODE to SinglePlayerGameActivity.MODE_USE_STATE,
+            SinglePlayerGameActivity.ARG_STATE_ID to states.value!![index].id
         ))
         finish()
     }

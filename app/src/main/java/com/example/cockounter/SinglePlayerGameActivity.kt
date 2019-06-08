@@ -42,12 +42,12 @@ import org.jetbrains.anko.support.v4.find
 import org.jetbrains.anko.support.v4.viewPager
 import java.util.*
 
-class SinglePlayerGameScreenViewModel() : ViewModel() {
+class SinglePlayerGameViewModel() : ViewModel() {
     lateinit var state: MutableLiveData<GameState>
     lateinit var preset: Preset
     lateinit var players: List<PlayerDescription>
-    val stack: Stack<GameState> = Stack()
-    lateinit var representation: MutableLiveData<GameRepresentation>
+    private val stack: Stack<GameState> = Stack()
+    lateinit var representation: MutableLiveData<Model.Game>
     private var currentLayout = LayoutType.BY_PLAYER
 
     constructor(id: Int, names: Array<String>, roles: Array<String>) : this() {
@@ -57,7 +57,7 @@ class SinglePlayerGameScreenViewModel() : ViewModel() {
         state = MutableLiveData()
         state.value = buildState(preset, players)
         representation = MutableLiveData()
-        representation.value = buildByPlayerRepresentation(preset, players)
+        representation.value = Model.buildByPlayer(preset, players)
     }
 
     constructor(id: Int) : this() {
@@ -67,7 +67,7 @@ class SinglePlayerGameScreenViewModel() : ViewModel() {
         state = MutableLiveData()
         state.value = stateCapture.state
         representation = MutableLiveData()
-        representation.value = buildByPlayerRepresentation(preset, players)
+        representation.value = Model.buildByPlayer(preset, players)
     }
 
     enum class LayoutType {
@@ -102,7 +102,6 @@ class SinglePlayerGameScreenViewModel() : ViewModel() {
     }
 
     fun saveState(name: String) {
-        //Log.i("Kek", StateCaptureConverter.gson.toJson(StateCapture(0, stateName.text.toString(), state, preset, players, Calendar.getInstance().time, UUID(1, 1))))
         //FIXME
         doAsync {
             Storage.insertGameState(
@@ -122,11 +121,11 @@ class SinglePlayerGameScreenViewModel() : ViewModel() {
     fun changeLayout() {
         when(currentLayout) {
             LayoutType.BY_PLAYER -> {
-                representation.value = buildByRoleRepresentation(preset, players)
+                representation.value = Model.buildByRole(preset, players)
                 currentLayout = LayoutType.BY_ROLE
             }
             LayoutType.BY_ROLE -> {
-                representation.value = buildByPlayerRepresentation(preset, players)
+                representation.value = Model.buildByPlayer(preset, players)
                 currentLayout = LayoutType.BY_PLAYER
             }
         }
@@ -134,7 +133,7 @@ class SinglePlayerGameScreenViewModel() : ViewModel() {
 }
 
 
-class SinglePlayerGameScreenActivity : AppCompatActivity(), GameHolder, ActionPerformer {
+class SinglePlayerGameActivity : AppCompatActivity(), GameHolder, ActionPerformer {
 
     companion object {
         const val MODE = "MODE"
@@ -148,7 +147,7 @@ class SinglePlayerGameScreenActivity : AppCompatActivity(), GameHolder, ActionPe
         const val ARG_STATE_ID = "ARG_STATE_ID"
     }
 
-    private val evaluator by lazy { buildScriptEvaluation(viewModel.preset, viewModel.players)(this) }
+    private val evaluator by lazy { buildScriptEvaluation(viewModel.preset)(this) }
 
     private fun scriptFailure(message: String) {
         alert(message).show()
@@ -156,7 +155,7 @@ class SinglePlayerGameScreenActivity : AppCompatActivity(), GameHolder, ActionPe
 
     override fun performAction(action: Action) {
         doAsync {
-            when (val result = viewModel.performAction(action, evaluator, this@SinglePlayerGameScreenActivity)) {
+            when (val result = viewModel.performAction(action, evaluator, this@SinglePlayerGameActivity)) {
                 is Some -> {
                     runOnUiThread {
                         scriptFailure(result.t)
@@ -196,7 +195,7 @@ class SinglePlayerGameScreenActivity : AppCompatActivity(), GameHolder, ActionPe
         {viewModel.representation.value!!}) }
     private lateinit var myTabLayout: TabLayout
     private lateinit var myViewPager: ViewPager
-    private lateinit var viewModel: SinglePlayerGameScreenViewModel
+    private lateinit var viewModel: SinglePlayerGameViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -211,19 +210,19 @@ class SinglePlayerGameScreenActivity : AppCompatActivity(), GameHolder, ActionPe
                         val id = intent.getIntExtra(ARG_PRESET_ID, 0)
                         val names = intent.getStringArrayExtra(ARG_PLAYER_NAMES)
                         val roles = intent.getStringArrayExtra(ARG_PLAYER_ROLES)
-                        return SinglePlayerGameScreenViewModel(id, names, roles) as T
+                        return SinglePlayerGameViewModel(id, names, roles) as T
                     }
 
-                }).get(SinglePlayerGameScreenViewModel::class.java)
+                }).get(SinglePlayerGameViewModel::class.java)
             }
             MODE_USE_STATE -> {
                 viewModel = ViewModelProviders.of(this, object : ViewModelProvider.Factory {
                     override fun <T : ViewModel?> create(modelClass: Class<T>): T {
                         val id = intent.getIntExtra(ARG_STATE_ID, 0)
-                        return SinglePlayerGameScreenViewModel(id) as T
+                        return SinglePlayerGameViewModel(id) as T
                     }
 
-                }).get(SinglePlayerGameScreenViewModel::class.java)
+                }).get(SinglePlayerGameViewModel::class.java)
             }
         }
         //viewModel.state.observe(this, androidx.lifecycle.Observer { _ -> pagerAdapter.notifyDataSetChanged() })
@@ -309,22 +308,22 @@ class PlayerGameScreenFragment : Fragment(), ActionPerformer {
         if(index != -1) {
             val representation = (act as GameHolder).getRepresentation()
             when(representation) {
-                is ByPlayerRepresentation -> {
+                is Model.Game.ByPlayer -> {
                     gameAdapter = ExpandablePlayerRepresentationAdapter(representation.players[index], ::performAction)
-                    if(act is SinglePlayerGameScreenActivity) {
-                        val viewModel = ViewModelProviders.of(act).get(SinglePlayerGameScreenViewModel::class.java)
+                    if(act is SinglePlayerGameActivity) {
+                        val viewModel = ViewModelProviders.of(act).get(SinglePlayerGameViewModel::class.java)
                         viewModel.state.observe(this, androidx.lifecycle.Observer {
                             (gameAdapter as ExpandablePlayerRepresentationAdapter).update(it)
                         })
 
-                    } else if(act is MultiplayerGameActivity) {
+                    } else if(act is MultiPlayerGameActivity) {
                         val viewModel = ViewModelProviders.of(act).get(MultiPlayerGameViewModel::class.java)
                         viewModel.state.observe(this, androidx.lifecycle.Observer {
                             (gameAdapter as ExpandablePlayerRepresentationAdapter).update(it)
                         })
                     }
                 }
-                is ByRoleRepresentation -> {
+                is Model.Game.ByRole -> {
                     //gameAdapter = RoleRepresentationAdapter(representation.roles[index], ::getState, ::performAction)
                 }
             }
@@ -335,8 +334,6 @@ class PlayerGameScreenFragment : Fragment(), ActionPerformer {
             return find(0)
         }
     }
-
-    fun getState() = (act as GameHolder).getState()
 
     override fun performAction(action: Action) {
         (act as ActionPerformer).performAction(action)
@@ -361,7 +358,7 @@ class PlayerGameScreenUI(val playerAdapter: ExpandableListAdapter) : AnkoCompone
 
 class PlayerGameScreenAdapter(
     fm: FragmentManager,
-    val getRepresentation: () -> GameRepresentation
+    val getRepresentation: () -> Model.Game
 ) :
     FragmentPagerAdapter(fm) {
     override fun getItem(position: Int): Fragment =
@@ -370,16 +367,16 @@ class PlayerGameScreenAdapter(
     override fun getCount(): Int {
         val representation = getRepresentation()
         return when(representation) {
-            is ByPlayerRepresentation -> representation.players.size
-            is ByRoleRepresentation -> representation.roles.size
+            is Model.Game.ByPlayer -> representation.players.size
+            is Model.Game.ByRole -> representation.roles.size
         }
     }
 
     override fun getPageTitle(position: Int): CharSequence? {
         val representation = getRepresentation()
         return when(representation) {
-            is ByPlayerRepresentation -> representation.players[position].name
-            is ByRoleRepresentation -> representation.roles[position].role
+            is Model.Game.ByPlayer -> representation.players[position].name
+            is Model.Game.ByRole -> representation.roles[position].role
         }
     }
 
@@ -388,9 +385,9 @@ class PlayerGameScreenAdapter(
 
 interface GameHolder {
     val getState: () -> GameState
-    val getRepresentation: () -> GameRepresentation
+    val getRepresentation: () -> Model.Game
 }
 
 interface ActionPerformer {
-    fun performAction(action: Action): Unit
+    fun performAction(action: Action)
 }

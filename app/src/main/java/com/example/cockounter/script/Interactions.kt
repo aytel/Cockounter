@@ -15,8 +15,14 @@ private val interactionFunctionsWithoutContext = listOf(
     "confirm" toT ::LuaConfirm
 )
 
+/**
+ * Builds interaction functions using context
+ */
 fun buildInteractionFunctionsWithContext(context: Context) = interactionFunctionsWithoutContext.map{ it.map { it(context) }}
 
+/**
+ * Lua function that shows the toast
+ */
 private class LuaToastShort(val context: Context) : OneArgFunction() {
     override fun call(arg: LuaValue?): LuaValue {
         val string = arg?.tojstring() ?: ""
@@ -29,6 +35,10 @@ private class LuaToastShort(val context: Context) : OneArgFunction() {
     }
 }
 
+/**
+ * Lua function that asks user to enter a string
+ * Returns lua string
+ */
 private class LuaAskString(val context: Context) : OneArgFunction() {
     private var result: String? = null
     private var isDone = false
@@ -105,6 +115,12 @@ private class LuaSelect(val context: Context) : VarArgFunction() {
     }
 }
 
+/**
+ * Ask user to confirm some action
+ * Returns 0 if user answered positively
+ * Returns 1 if user answered negatively
+ * Returns -1 if user dismissed
+ */
 private class LuaConfirm(val context: Context) : OneArgFunction() {
     private fun ask(text: String): Int {
         var isDone: Boolean
