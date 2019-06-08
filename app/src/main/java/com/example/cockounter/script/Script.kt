@@ -15,7 +15,6 @@ private object Constants {
     const val GLOBAL_PARAMETERS = "gl"
     const val SHARED_PARAMETERS = "sh"
     const val PLAYER = "pl"
-    const val SINGLE_PARAMETER_NAME = "x"
     const val META_NAME = "__name"
     const val META_ROLE = "__role"
 }
@@ -28,7 +27,6 @@ private fun mapFunctions(globals: Globals, functions: List<Tuple2<String, LuaFun
 private fun mapFromGameState(context: ScriptContext, globals: Globals, state: GameState): Try<Globals> =
     when (context) {
         ScriptContext.None -> Try { globals }
-        is ScriptContext.SingleParameter -> mapSingleParameter(state, context.parameter, globals)
         is ScriptContext.PlayerOnly -> mapPlayerOnly(state, context.player, globals)
         is ScriptContext.Full -> mapAll(state, context.player, globals)
     }
@@ -58,12 +56,6 @@ private fun createTable(items: Map<String, GameParameter>) =
 private fun LuaTable.addAll(items: Map<String, GameParameter>) {
     items.forEach { set(it.key, it.value) }
 }
-
-private fun mapSingleParameter(state: GameState, parameter: GameParameterPointer, globals: Globals): Try<Globals> =
-    Try {
-        globals[Constants.SINGLE_PARAMETER_NAME] = state[parameter]
-        globals
-    }
 
 private fun mapPlayerOnly(state: GameState, player: PlayerDescription, globals: Globals): Try<Globals> = Try {
     globals[Constants.META_NAME] = player.name
@@ -103,18 +95,9 @@ private fun unpackTable(table: LuaTable, old: Map<String, GameParameter>) =
 private fun unmapGameState(context: ScriptContext, globals: Globals, oldState: GameState): Try<GameState> =
     when (context) {
         ScriptContext.None -> Try { oldState }
-        is ScriptContext.SingleParameter -> unmapSingleParameter(oldState, context.parameter, globals)
         is ScriptContext.PlayerOnly -> unmapPlayerOnly(oldState, context.player, globals)
         is ScriptContext.Full -> unmapAll(oldState, context.player, globals)
     }
-
-private fun unmapSingleParameter(
-    oldState: GameState,
-    parameter: GameParameterPointer,
-    globals: Globals
-): Try<GameState> = Try {
-    oldState.set(parameter, unpackValue(globals[Constants.SINGLE_PARAMETER_NAME], oldState[parameter]))
-}
 
 private fun unmapPlayerOnly(oldState: GameState, player: PlayerDescription, globals: Globals): Try<GameState> = Try {
     val newSharedParameters = unpackTable(

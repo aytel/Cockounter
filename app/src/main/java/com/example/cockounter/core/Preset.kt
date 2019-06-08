@@ -210,9 +210,6 @@ enum class ScriptContextDescription : Serializable {
     NONE {
         override fun toString(): String = "Nothing"
     },
-    SINGLE_PARAMETER {
-        override fun toString(): String = "Single parameter (x)"
-    },
     PLAYER_ONLY {
         override fun toString(): String = "Current player only"
     },

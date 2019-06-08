@@ -250,6 +250,18 @@ class MultiPlayerGameActivity : AppCompatActivity(), GameHolder, ActionPerformer
         }
     }
 
+    override fun onBackPressed() {
+        alert {
+            message = "Do you want to quit?"
+            yesButton {
+                finish()
+            }
+            noButton {
+                finish()
+            }
+        }.show()
+    }
+
     private fun changeLayout() {
         viewModel.changeLayout()
     }
@@ -264,10 +276,12 @@ class MultiPlayerGameActivity : AppCompatActivity(), GameHolder, ActionPerformer
                 }
             }
             customView {
-                imageView {
-                    setImageBitmap(bitmap)
+                verticalLayout {
+                    imageView {
+                        setImageBitmap(bitmap)
+                    }
+                    textView(viewModel.uuid.toString())
                 }
-                textView(viewModel.uuid.toString())
             }
 
         }.show()

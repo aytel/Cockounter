@@ -173,8 +173,10 @@ class SinglePlayerGameActivity : AppCompatActivity(), GameHolder, ActionPerforme
             yesButton {
                 finish()
             }
-            noButton {  }
-        }
+            noButton {
+                finish()
+            }
+        }.show()
     }
 
     fun saveState() {

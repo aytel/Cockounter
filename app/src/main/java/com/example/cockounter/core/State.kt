@@ -207,7 +207,6 @@ fun buildState(preset: Preset, players: List<PlayerDescription>): GameState {
 
 sealed class ScriptContext {
     object None : ScriptContext()
-    data class SingleParameter(val parameter: GameParameterPointer) : ScriptContext()
     data class PlayerOnly(val player: PlayerDescription) : ScriptContext()
     data class Full(val player: PlayerDescription) : ScriptContext()
 }

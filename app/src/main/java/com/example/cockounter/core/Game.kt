@@ -63,7 +63,6 @@ object Model {
         player: PlayerDescription
     ): ScriptContext = when (context) {
         ScriptContextDescription.NONE -> ScriptContext.None
-        ScriptContextDescription.SINGLE_PARAMETER -> ScriptContext.SingleParameter(parameter)
         ScriptContextDescription.PLAYER_ONLY -> ScriptContext.PlayerOnly(player)
         ScriptContextDescription.ALL -> ScriptContext.Full(player)
     }
@@ -71,7 +70,6 @@ object Model {
     private fun buildContext(context: ScriptContextDescription, player: PlayerDescription): ScriptContext =
         when (context) {
             ScriptContextDescription.NONE -> ScriptContext.None
-            ScriptContextDescription.SINGLE_PARAMETER -> ScriptContext.None //Todo None
             ScriptContextDescription.PLAYER_ONLY -> ScriptContext.PlayerOnly(player)
             ScriptContextDescription.ALL -> ScriptContext.Full(player)
         }
