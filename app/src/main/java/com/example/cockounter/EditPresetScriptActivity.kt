@@ -22,7 +22,7 @@ import org.jetbrains.anko.sdk27.coroutines.onItemSelectedListener
 import org.jetbrains.anko.sdk27.coroutines.textChangedListener
 import java.text.FieldPosition
 
-private class EditPresetScriptViewModel() : ViewModel() {
+class EditPresetScriptViewModel() : ViewModel() {
     var visibleName: String = ""
     var script: String = ""
     var context: ScriptContextDescription = ScriptContextDescription.NONE

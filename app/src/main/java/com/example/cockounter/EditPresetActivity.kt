@@ -37,7 +37,7 @@ fun <T> MutableLiveData<T>.notify() {
     this.postValue(this.value)
 }
 
-private class EditPresetViewModel() : ViewModel() {
+class EditPresetViewModel() : ViewModel() {
     val globalParameters = EditableList<Parameter>()
     val roles = EditableList<Role>()
     val scripts = EditableList<PresetScript>()

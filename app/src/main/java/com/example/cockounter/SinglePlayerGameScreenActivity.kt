@@ -42,7 +42,7 @@ import org.jetbrains.anko.support.v4.find
 import org.jetbrains.anko.support.v4.viewPager
 import java.util.*
 
-private class SinglePlayerGameScreenViewModel() : ViewModel() {
+class SinglePlayerGameScreenViewModel() : ViewModel() {
     lateinit var state: MutableLiveData<GameState>
     lateinit var preset: Preset
     lateinit var players: List<PlayerDescription>

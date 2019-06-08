@@ -27,7 +27,7 @@ import org.jetbrains.anko.sdk27.coroutines.onItemSelectedListener
 import org.jetbrains.anko.sdk27.coroutines.textChangedListener
 import java.text.FieldPosition
 
-private class EditParameterViewModel() : ViewModel() {
+class EditParameterViewModel() : ViewModel() {
     var visibleName: String = ""
     var name: String = ""
     var initialValue: String = ""

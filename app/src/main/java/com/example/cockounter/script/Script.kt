@@ -172,7 +172,7 @@ fun buildScriptEvaluation(preset: Preset, players: List<PlayerDescription>): Scr
         mapFunctions(globals, buildInteractionFunctionsWithContext(context));
         //FIXME load libraries
         preset.libraries.forEach {
-            globals.load(it.script)
+            globals.load(it.script).call()
         };
         { action: Action ->
             Try { performAction(globals, action) }

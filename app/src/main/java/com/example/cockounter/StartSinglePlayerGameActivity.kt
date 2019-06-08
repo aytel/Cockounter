@@ -16,7 +16,7 @@ import org.jetbrains.anko.*
 import org.jetbrains.anko.sdk27.coroutines.onClick
 import kotlin.properties.Delegates
 
-private class StartSinglePlayerGameViewModel(roles: Array<String>) : ViewModel() {
+class StartSinglePlayerGameViewModel(roles: Array<String>) : ViewModel() {
     val players = EditableList<PlayerDescription>()
     val roles: List<String> = roles.toList()
 

@@ -67,7 +67,7 @@ class EditableList<T> {
 
 }
 
-private class EditRoleViewModel() : ViewModel() {
+class EditRoleViewModel() : ViewModel() {
     val sharedParameters = EditableList<Parameter>()
     val privateParameters = EditableList<Parameter>()
     val scripts = EditableList<PresetScript>()
